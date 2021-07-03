@@ -8,6 +8,7 @@ import {
   InputType,
   Mutation,
   ObjectType,
+  Query,
   Resolver,
 } from "type-graphql";
 
@@ -57,7 +58,7 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async createUser(
     @Arg("userInput") userInput: UserInputs,
-    @Ctx() { em }: Mycontext
+    @Ctx() { em, req }: Mycontext
   ): Promise<UserResponse> {
     const email = userInput.email.toLowerCase();
     const regexp = new RegExp(
@@ -103,7 +104,7 @@ export class UserResolver {
         };
       }
     }
-
+    req.session.userId = user.email; //keep a new user logged in
     return { user };
   }
 
@@ -111,7 +112,7 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
-    @Ctx() { em }: Mycontext
+    @Ctx() { em, req }: Mycontext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, {
       email: userInput.email.toLowerCase(),
@@ -132,7 +133,16 @@ export class UserResolver {
         ],
       };
     }
-
+    req.session.userId = user.email;
     return { user };
+  }
+
+  //fetch current logged in user
+  @Query(() => User, { nullable: true })
+  async loggedInUser(@Ctx() { req, em }: Mycontext): Promise<User | null> {
+    if (!req.session.userId) {
+      return null;
+    }
+    return await em.findOne(User, { email: req.session.userId });
   }
 }
