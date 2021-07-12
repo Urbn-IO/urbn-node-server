@@ -1,57 +1,13 @@
 import { User } from "../entities/User";
-import { Mycontext } from "src/types";
+import { Mycontext } from "../types";
 import argon2 from "argon2";
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { UserCategories } from "../entities/UserCategories";
 import {
-  Arg,
-  Ctx,
-  Field,
-  InputType,
-  Mutation,
-  ObjectType,
-  Query,
-  Resolver,
-} from "type-graphql";
-
-@InputType()
-class UserInputs {
-  @Field()
-  firstName: string;
-  @Field()
-  lastName: string;
-  @Field({ nullable: true })
-  nickName?: string;
-  @Field()
-  password: string;
-  @Field()
-  email: string;
-}
-
-@InputType()
-class UserInputsLogin {
-  @Field()
-  password: string;
-  @Field()
-  email: string;
-}
-//remove the field propery in future
-@ObjectType()
-class FieldWithError {
-  @Field()
-  field: string;
-
-  @Field()
-  errorMessage: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => User, { nullable: true })
-  user?: User;
-
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
-}
-
+  UserInputs,
+  UserInputsLogin,
+  UserResponse,
+} from "../utils/graphqlTypes";
 @Resolver()
 export class UserResolver {
   //create User resolver
@@ -87,6 +43,7 @@ export class UserResolver {
       firstName: userInput.firstName,
       lastName: userInput.lastName,
       nickName: userInput.nickName,
+      celebrity: userInput.celebrity,
       email: email,
       password: hashedPassword,
     });
@@ -135,6 +92,53 @@ export class UserResolver {
     }
     req.session.userId = user.email;
     return { user };
+  }
+
+  @Mutation(() => UserResponse, { nullable: true })
+  async updateUserDetails(
+    @Arg("email") email: string,
+    @Arg("nickName") nickName: string,
+    @Ctx() { em }: Mycontext
+  ): Promise<UserResponse> {
+    const user = await em.findOne(User, { email });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: "email",
+            errorMessage: "User not found",
+          },
+        ],
+      };
+    }
+    if (nickName === null || nickName === undefined) {
+      return {
+        errors: [
+          {
+            field: "nickName",
+            errorMessage: "nick name not supplied",
+          },
+        ],
+      };
+    }
+    user.nickName = nickName;
+    await em.persistAndFlush(user);
+
+    return { user };
+  }
+  //delete user
+  @Mutation(() => Boolean)
+  async deleteUser(
+    @Arg("id") id: number,
+    @Ctx() { em }: Mycontext
+  ): Promise<boolean> {
+    try {
+      await em.nativeDelete(User, { id });
+      await em.nativeDelete(UserCategories, { userId: id });
+    } catch {
+      return false;
+    }
+    return true;
   }
 
   //fetch current logged in user

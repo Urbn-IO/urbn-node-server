@@ -3,9 +3,10 @@ import { Post } from "./entities/post";
 import { MikroORM } from "@mikro-orm/core";
 import path from "path";
 import { User } from "./entities/User";
+import { Categories } from "./entities/Categories";
 
 export default {
-  entities: [Post, User],
+  entities: [Post, User, Categories],
   migrations: {
     path: path.join(__dirname, "./migrations"),
     pattern: /^[\w-]+\d+\.[tj]s$/,

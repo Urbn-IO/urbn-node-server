@@ -1,37 +1,61 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
-import { Field, ObjectType } from "type-graphql";
+import { Mycontext } from "src/types";
+import { Ctx, Field, ObjectType } from "type-graphql";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Categories } from "./Categories";
+import { UserCategories } from "./UserCategories";
 
 @ObjectType()
 @Entity()
 export class User {
   @Field()
-  @PrimaryKey()
+  @PrimaryGeneratedColumn()
   id!: number;
 
   @Field()
-  @Property({ type: "text" })
+  @Column()
   firstName: string;
 
   @Field()
-  @Property({ type: "text" })
+  @Column()
   lastName: string;
 
   @Field({ nullable: true })
-  @Property({ type: "text", nullable: true })
+  @Column({ nullable: true })
   nickName?: string;
 
+  @Field(() => Boolean)
+  @Column()
+  celebrity!: boolean;
+
   @Field()
-  @Property({ type: "text", unique: true })
+  @Column({ unique: true })
   email!: string;
 
-  @Property({ type: "text" })
+  @Column()
   password!: string;
 
   @Field()
-  @Property()
-  createdAt: Date = new Date();
+  @CreateDateColumn()
+  createdAt: Date;
 
   @Field()
-  @Property({ onUpdate: () => new Date() })
-  updatedAt: Date = new Date();
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @OneToMany(() => UserCategories, (userCat) => userCat.user)
+  categoriesConn: Promise<UserCategories[]>;
+
+  @Field(() => [Categories])
+  async categories(
+    @Ctx() { categoriesLoader }: Mycontext
+  ): Promise<Categories[]> {
+    return categoriesLoader.load(this.id);
+  }
 }
