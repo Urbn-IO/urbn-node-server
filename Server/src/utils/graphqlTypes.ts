@@ -1,5 +1,6 @@
 import { User } from "../entities/User";
 import { InputType, Field, ObjectType } from "type-graphql";
+import { Categories } from "../entities/Categories";
 
 @InputType()
 export class UserInputs {
@@ -38,6 +39,15 @@ export class FieldWithError {
 export class UserResponse {
   @Field(() => User, { nullable: true })
   user?: User;
+
+  @Field(() => [FieldWithError], { nullable: true })
+  errors?: FieldWithError[];
+}
+
+@ObjectType()
+export class CategoryResponse {
+  @Field(() => Categories, { nullable: true })
+  category?: Categories;
 
   @Field(() => [FieldWithError], { nullable: true })
   errors?: FieldWithError[];

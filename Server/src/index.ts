@@ -1,35 +1,36 @@
-import { MikroORM } from "@mikro-orm/core";
 import { createConnection } from "typeorm";
-import mikroOrmConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/userResolver";
 import cors from "cors";
-import redis from "redis";
+import Redis from "ioredis";
 import session from "express-session";
 import connecRedis from "connect-redis";
-import { Mycontext } from "./types";
-import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { __prod__ } from "./constants";
+// import { createCategoriesLoader } from "./utils/categoriesLoader";
+import { COOKIE_NAME, __prod__ } from "./constants";
+import { CategoryResolver } from "./resolvers/categoryResolver";
+// import { UserCategoriesResolver } from "./resolvers/userCategoryResolver";
+import path from "path";
+import { Categories } from "./entities/Categories";
+import { User } from "./entities/User";
 
 const main = async () => {
   const Port = process.env.PORT || 8000;
-  const conn = createConnection({
+  createConnection({
     type: "postgres",
-    database: "shoutout",
+    database: "ShoutOut",
     username: "admin",
-    password: "InfinityFarmery",
+    // password: "InfinityFarmery",
     logging: true,
     synchronize: true,
-    entities: [],
+    migrations: [path.join(__dirname, "./migrations/*")],
+    entities: [User, Categories],
   });
-  const orm = await MikroORM.init(mikroOrmConfig);
-  await orm.getMigrator().up();
+
   const app = express();
   const RedisStore = connecRedis(session);
-  const redisClient = redis.createClient();
+  const redis = new Redis();
   app.use(
     cors({
       origin: "*",
@@ -38,8 +39,8 @@ const main = async () => {
   );
   app.use(
     session({
-      name: "cookieId",
-      store: new RedisStore({ client: redisClient, disableTouch: true }),
+      name: COOKIE_NAME,
+      store: new RedisStore({ client: redis, disableTouch: true }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 150, //max cookie age of 150 days
         httpOnly: true,
@@ -47,20 +48,20 @@ const main = async () => {
         secure: __prod__, // cookie only works using https (we use https in production)
       },
       saveUninitialized: false,
-      secret: "keyboard cat",
+      secret: "process.env.SESSION_SECRET",
       resave: false,
     })
   );
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [CategoryResolver, UserResolver], //UserCategoriesResolver
       validate: false,
     }),
-    context: ({ req, res }): Mycontext => ({
-      em: orm.em,
+    context: ({ req, res }) => ({
       req,
       res,
-      categoriesLoader: createCategoriesLoader(),
+      redis,
+      // categoriesLoader: createCategoriesLoader(),
     }),
   });
   apolloServer.applyMiddleware({ app, cors: false });

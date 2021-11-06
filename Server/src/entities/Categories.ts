@@ -1,17 +1,18 @@
 import { Field, ObjectType } from "type-graphql";
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  // OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { UserCategories } from "./UserCategories";
+// import { UserCategories } from "./UserCategories";
 
 @ObjectType()
 @Entity()
-export class Categories {
+export class Categories extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;
@@ -24,14 +25,12 @@ export class Categories {
   @Column()
   recommendable!: boolean;
 
-  @Field()
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field()
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => UserCategories, (userCat) => userCat.category)
-  UserConn: Promise<UserCategories[]>;
+  // @OneToMany(() => UserCategories, (userCat) => userCat.category)
+  // UserConn: Promise<UserCategories[]>;
 }

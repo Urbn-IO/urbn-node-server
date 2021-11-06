@@ -1,20 +1,22 @@
 import { User } from "../entities/User";
-import { Mycontext } from "../types";
+import { MyContext } from "../types";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
-import { UserCategories } from "../entities/UserCategories";
 import {
   UserInputs,
   UserInputsLogin,
   UserResponse,
 } from "../utils/graphqlTypes";
+import { v4 } from "uuid";
+import { sendEmail } from "../utils/sendMail";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 @Resolver()
 export class UserResolver {
   //create User resolver
   @Mutation(() => UserResponse, { nullable: true })
   async createUser(
     @Arg("userInput") userInput: UserInputs,
-    @Ctx() { em, req }: Mycontext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const email = userInput.email.toLowerCase();
     const regexp = new RegExp(
@@ -39,16 +41,20 @@ export class UserResolver {
       };
     }
     const hashedPassword = await argon2.hash(userInput.password);
-    const user = em.create(User, {
-      firstName: userInput.firstName,
-      lastName: userInput.lastName,
-      nickName: userInput.nickName,
-      celebrity: userInput.celebrity,
-      email: email,
-      password: hashedPassword,
-    });
+    const id = v4();
+    let user;
     try {
-      await em.persistAndFlush(user);
+      const createUser = User.create({
+        firstName: userInput.firstName,
+        lastName: userInput.lastName,
+        nickName: userInput.nickName,
+        celebrity: userInput.celebrity,
+        email: email,
+        password: hashedPassword,
+        userId: id,
+      });
+      user = createUser;
+      await user.save();
     } catch (err) {
       if (err.code === "23505") {
         return {
@@ -61,7 +67,7 @@ export class UserResolver {
         };
       }
     }
-    req.session.userId = user.email; //keep a new user logged in
+    req.session.userId = user?.userId; //keep a new user logged in
     return { user };
   }
 
@@ -69,10 +75,12 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
-    @Ctx() { em, req }: Mycontext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, {
-      email: userInput.email.toLowerCase(),
+    const user = await User.findOne({
+      where: {
+        email: userInput.email.toLowerCase(),
+      },
     });
     if (!user) {
       return {
@@ -90,17 +98,95 @@ export class UserResolver {
         ],
       };
     }
-    req.session.userId = user.email;
+    req.session.userId = user.userId;
     return { user };
   }
 
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg("email") email: string,
+    @Ctx() { redis }: MyContext
+  ): Promise<boolean> {
+    const user = await User.findOne({ where: { email: email.toLowerCase() } });
+    if (!user) {
+      //user doesn't exist
+      return true;
+    }
+    const token = v4();
+    redis.set(FORGET_PASSWORD_PREFIX + token, email, "ex", 1000 * 60 * 60 * 24); //one day to use forget password token
+    await sendEmail(email, `Hello there it works ${token}`);
+
+    return true;
+  }
+
+  //change password
+  @Mutation(() => UserResponse)
+  async changePassword(
+    @Arg("token") token: string,
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { redis, req }: MyContext
+  ): Promise<UserResponse> {
+    if (newPassword.length < 8) {
+      return {
+        errors: [
+          {
+            field: "newPassword",
+            errorMessage: "Password must contain at least 8 characters ",
+          },
+        ],
+      };
+    }
+
+    const key = FORGET_PASSWORD_PREFIX + token;
+    const userEmail = await redis.get(key);
+    if (!userEmail) {
+      return {
+        errors: [
+          {
+            field: "token",
+            errorMessage: "token expired",
+          },
+        ],
+      };
+    }
+
+    const user = await User.findOne({
+      where: { email: userEmail.toLowerCase() },
+    });
+
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: "token",
+            errorMessage: "user no longer exists",
+          },
+        ],
+      };
+    }
+
+    await User.update(
+      { id: user.id },
+      {
+        password: await argon2.hash(newPassword),
+      }
+    );
+
+    await redis.del(key);
+
+    // log in user after change password
+    req.session.userId = user.userId;
+
+    return { user };
+  }
+
+  //update user details
   @Mutation(() => UserResponse, { nullable: true })
   async updateUserDetails(
     @Arg("email") email: string,
-    @Arg("nickName") nickName: string,
-    @Ctx() { em }: Mycontext
+    @Arg("nickName") nickName: string
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, { email });
+    const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
       return {
         errors: [
@@ -122,31 +208,58 @@ export class UserResolver {
       };
     }
     user.nickName = nickName;
-    await em.persistAndFlush(user);
+    await User.update({ id: user.id }, { nickName: user.nickName });
 
     return { user };
   }
-  //delete user
+  //logout user
   @Mutation(() => Boolean)
-  async deleteUser(
-    @Arg("id") id: number,
-    @Ctx() { em }: Mycontext
-  ): Promise<boolean> {
-    try {
-      await em.nativeDelete(User, { id });
-      await em.nativeDelete(UserCategories, { userId: id });
-    } catch {
-      return false;
-    }
-    return true;
+  logout(@Ctx() { req, res }: MyContext): Promise<unknown> {
+    return new Promise((resolve) =>
+      req.session.destroy((err: any) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+
+        resolve(true);
+      })
+    );
   }
 
+  //delete user
+  // @Mutation(() => Boolean)
+  // async deleteUser(@Arg("id") id: number): Promise<boolean> {
+  //   const user = await User.findOne({ id });
+  //   try {
+  //     await User.delete({ id: user?.id });
+  //   } catch {
+  //     return false;
+  //   }
+  //   return true;
+  // }
+
   //fetch current logged in user
-  @Query(() => User, { nullable: true })
-  async loggedInUser(@Ctx() { req, em }: Mycontext): Promise<User | null> {
+  @Query(() => UserResponse, { nullable: true })
+  async loggedInUser(@Ctx() { req }: MyContext): Promise<UserResponse> {
     if (!req.session.userId) {
-      return null;
+      return {
+        errors: [{ field: "", errorMessage: "No session Id" }],
+      };
     }
-    return await em.findOne(User, { email: req.session.userId });
+    const user = await User.findOne({ where: { userId: req.session.userId } });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: "",
+            errorMessage: "User not found",
+          },
+        ],
+      };
+    }
+    return { user };
   }
 }

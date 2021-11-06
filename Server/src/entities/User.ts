@@ -1,22 +1,25 @@
-import { Mycontext } from "src/types";
-import { Ctx, Field, ObjectType } from "type-graphql";
+// import { MyContext } from "../types";
+import { Field, ObjectType } from "type-graphql";
 import {
+  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  // OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Categories } from "./Categories";
-import { UserCategories } from "./UserCategories";
+// import { Categories } from "./Categories";
+// import { UserCategories } from "./UserCategories";
 
 @ObjectType()
 @Entity()
-export class User {
-  @Field()
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
+
+  @Column({ unique: true })
+  userId!: string;
 
   @Field()
   @Column()
@@ -41,21 +44,19 @@ export class User {
   @Column()
   password!: string;
 
-  @Field()
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field()
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => UserCategories, (userCat) => userCat.user)
-  categoriesConn: Promise<UserCategories[]>;
+  // @OneToMany(() => UserCategories, (userCat) => userCat.user)
+  // categoriesConn: Promise<UserCategories[]>;
 
-  @Field(() => [Categories])
-  async categories(
-    @Ctx() { categoriesLoader }: Mycontext
-  ): Promise<Categories[]> {
-    return categoriesLoader.load(this.id);
-  }
+  // @Field(() => [Categories])
+  // async categories(
+  //   @Ctx() { categoriesLoader }: MyContext
+  // ): Promise<Categories[]> {
+  //   return categoriesLoader.load(this.id);
+  // }
 }

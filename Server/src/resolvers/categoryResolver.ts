@@ -1,64 +1,77 @@
-import { Mycontext } from "src/types";
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
-import { Categories } from "src/entities/Categories";
-import { UserCategories } from "src/entities/UserCategories";
-import { groupEnd } from "console";
+import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { Categories } from "../entities/Categories";
+import { CategoryResponse } from "../utils/graphqlTypes";
 
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  allCategories(@Ctx() { em }: Mycontext): Promise<Categories[] | null> {
-    return em.find(Categories, {});
+  async allCategories(): Promise<Categories[] | null> {
+    return await Categories.find();
   }
 
-  @Query(() => Categories, { nullable: true })
-  findCategory(
-    @Arg("id") id: number,
-    @Ctx() { em }: Mycontext
-  ): Promise<Categories | null> {
-    return em.findOne(Categories, { id });
+  @Query(() => CategoryResponse, { nullable: true })
+  async findCategory(@Arg("id") id: number): Promise<CategoryResponse> {
+    const category = await Categories.findOne({ id });
+    if (!category) {
+      return {
+        errors: [
+          { field: "find category", errorMessage: "Category not found" },
+        ],
+      };
+    }
+    return { category };
   }
 
-  @Mutation(() => Categories)
+  @Mutation(() => CategoryResponse)
   async createCategory(
     @Arg("name") name: string,
-    @Arg("recommendable") recommendable: boolean,
-    @Ctx() { em }: Mycontext
-  ): Promise<Categories> {
-    const category = em.create(Categories, { name, recommendable });
-    await em.persistAndFlush(category);
-    return category;
+    @Arg("recommendable") recommendable: boolean
+  ): Promise<CategoryResponse> {
+    const category = Categories.create({ name, recommendable });
+    try {
+      await category.save();
+    } catch (err) {
+      return {
+        errors: [
+          {
+            field: "create category",
+            errorMessage: "An Error occured while creating a category",
+          },
+        ],
+      };
+    }
+
+    return { category };
   }
 
   @Mutation(() => Categories, { nullable: true })
   async updateCategory(
     @Arg("id") id: number,
-    @Arg("name") name: string,
-    @Ctx() { em }: Mycontext
-  ): Promise<Categories | null> {
-    const category = await em.findOne(Categories, { id });
+    @Arg("name") name: string
+  ): Promise<Categories | boolean> {
+    const category = await Categories.findOne({ id });
     if (!category) {
-      return null;
+      return false;
     }
     if (typeof name != undefined) {
       category.name = name;
-      await em.persistAndFlush(category);
+      await Categories.update({ id: category.id }, { name: category.name });
     }
 
     return category;
   }
 
-  @Mutation(() => Boolean)
-  async deleteCategory(
-    @Arg("id") id: number,
-    @Ctx() { em }: Mycontext
-  ): Promise<boolean> {
-    try {
-      await em.nativeDelete(Categories, { id });
-      await em.nativeDelete(UserCategories, { categoryId: id });
-    } catch {
-      return false;
-    }
-    return true;
-  }
+  // @Mutation(() => Boolean)
+  // async deleteCategory(
+  //   @Arg("id") id: number,
+  //   @Ctx() { em }: MyContext
+  // ): Promise<boolean> {
+  //   try {
+  //     await em.nativeDelete(Categories, { id });
+  //     await em.nativeDelete(UserCategories, { categoryId: id });
+  //   } catch {
+  //     return false;
+  //   }
+  //   return true;
+  // }
 }

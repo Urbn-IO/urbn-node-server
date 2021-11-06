@@ -1,12 +1,12 @@
-import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import { Request, Response } from "express";
-import { createCategoriesLoader } from "./utils/categoriesLoader";
+import { Redis } from "ioredis";
+// import { createCategoriesLoader } from "./utils/categoriesLoader";
 
-export type Mycontext = {
-  em: EntityManager<IDatabaseDriver<Connection>>;
+export type MyContext = {
   req: Request;
   res: Response;
-  categoriesLoader: ReturnType<typeof createCategoriesLoader>;
+  redis: Redis;
+  // categoriesLoader: ReturnType<typeof createCategoriesLoader>;
 };
 
 declare module "express-session" {
