@@ -6,7 +6,7 @@ import { UserResolver } from "./resolvers/userResolver";
 import cors from "cors";
 import Redis from "ioredis";
 import session from "express-session";
-import connecRedis from "connect-redis";
+import connectRedis from "connect-redis";
 // import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { CategoryResolver } from "./resolvers/categoryResolver";
@@ -29,14 +29,9 @@ const main = async () => {
   });
 
   const app = express();
-  const RedisStore = connecRedis(session);
+  const RedisStore = connectRedis(session);
   const redis = new Redis();
-  app.use(
-    cors({
-      origin: "*",
-      credentials: true,
-    })
-  );
+
   app.use(
     session({
       name: COOKIE_NAME,
@@ -52,6 +47,13 @@ const main = async () => {
       resave: false,
     })
   );
+  app.use(
+    cors({
+      origin: "*",
+      credentials: true,
+    })
+  );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [CategoryResolver, UserResolver], //UserCategoriesResolver
