@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Redis } from "ioredis";
 // import { createCategoriesLoader } from "./utils/categoriesLoader";
 
-export type MyContext = {
+export type AppContext = {
   req: Request;
   res: Response;
   redis: Redis;

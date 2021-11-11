@@ -54,7 +54,7 @@ export class User extends BaseEntity {
 
   // @Field(() => [Categories])
   // async categories(
-  //   @Ctx() { categoriesLoader }: MyContext
+  //   @Ctx() { categoriesLoader }: AppContext
   // ): Promise<Categories[]> {
   //   return categoriesLoader.load(this.id);
   // }

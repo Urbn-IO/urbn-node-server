@@ -64,7 +64,7 @@ export class CategoryResolver {
   // @Mutation(() => Boolean)
   // async deleteCategory(
   //   @Arg("id") id: number,
-  //   @Ctx() { em }: MyContext
+  //   @Ctx() { em }: AppContext
   // ): Promise<boolean> {
   //   try {
   //     await em.nativeDelete(Categories, { id });

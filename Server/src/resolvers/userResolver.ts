@@ -1,7 +1,14 @@
 import { User } from "../entities/User";
-import { MyContext } from "../types";
+import { AppContext } from "../types";
 import argon2 from "argon2";
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import {
   UserInputs,
   UserInputsLogin,
@@ -10,13 +17,14 @@ import {
 import { v4 } from "uuid";
 import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
+import { isAuth } from "../middleware/isAuth";
 @Resolver()
 export class UserResolver {
   //create User resolver
   @Mutation(() => UserResponse, { nullable: true })
   async createUser(
     @Arg("userInput") userInput: UserInputs,
-    @Ctx() { req }: MyContext
+    @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const email = userInput.email.toLowerCase();
     const regexp = new RegExp(
@@ -75,7 +83,7 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
-    @Ctx() { req }: MyContext
+    @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const user = await User.findOne({
       where: {
@@ -105,7 +113,7 @@ export class UserResolver {
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg("email") email: string,
-    @Ctx() { redis }: MyContext
+    @Ctx() { redis }: AppContext
   ): Promise<boolean> {
     const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
@@ -124,7 +132,7 @@ export class UserResolver {
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
-    @Ctx() { redis, req }: MyContext
+    @Ctx() { redis, req }: AppContext
   ): Promise<UserResponse> {
     if (newPassword.length < 8) {
       return {
@@ -182,6 +190,7 @@ export class UserResolver {
 
   //update user details
   @Mutation(() => UserResponse, { nullable: true })
+  @UseMiddleware(isAuth)
   async updateUserDetails(
     @Arg("email") email: string,
     @Arg("nickName") nickName: string
@@ -214,7 +223,7 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
-  logout(@Ctx() { req, res }: MyContext): Promise<unknown> {
+  logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
         res.clearCookie(COOKIE_NAME);
@@ -243,7 +252,8 @@ export class UserResolver {
 
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
-  async loggedInUser(@Ctx() { req }: MyContext): Promise<UserResponse> {
+  @UseMiddleware(isAuth)
+  async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     if (!req.session.userId) {
       return {
         errors: [{ field: "", errorMessage: "No session Id" }],
