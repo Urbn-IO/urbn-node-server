@@ -1,19 +1,21 @@
-import { Field, ObjectType } from "type-graphql";
+import { AppContext } from "src/types";
+import { Ctx, Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  // OneToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-// import { Categories } from "./Categories";
-// import { UserCategories } from "./UserCategories";
+import { Categories } from "./Categories";
+import { UserCategories } from "./UserCategories";
 
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -49,13 +51,13 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // @OneToMany(() => UserCategories, (userCat) => userCat.user)
-  // categoriesConn: Promise<UserCategories[]>;
+  @OneToMany(() => UserCategories, (userCat) => userCat.user)
+  categoriesConn: Promise<UserCategories[]>;
 
-  // @Field(() => [Categories])
-  // async categories(
-  //   @Ctx() { categoriesLoader }: AppContext
-  // ): Promise<Categories[]> {
-  //   return categoriesLoader.load(this.id);
-  // }
+  @Field(() => [Categories])
+  async categories(
+    @Ctx() { categoriesLoader }: AppContext
+  ): Promise<Categories[]> {
+    return categoriesLoader.load(this.id);
+  }
 }

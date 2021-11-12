@@ -7,13 +7,14 @@ import cors from "cors";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-// import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { CategoryResolver } from "./resolvers/categoryResolver";
-// import { UserCategoriesResolver } from "./resolvers/userCategoryResolver";
 import path from "path";
 import { Categories } from "./entities/Categories";
 import { User } from "./entities/User";
+import { createCategoriesLoader } from "./utils/categoriesLoader";
+import { UserCategoriesResolver } from "./resolvers/userCategoryResolver";
+import { UserCategories } from "./entities/UserCategories";
 
 const main = async () => {
   const Port = process.env.PORT || 8000;
@@ -25,7 +26,7 @@ const main = async () => {
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [User, Categories],
+    entities: [User, Categories, UserCategories],
   });
 
   const app = express();
@@ -56,14 +57,14 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [CategoryResolver, UserResolver], //UserCategoriesResolver
+      resolvers: [CategoryResolver, UserResolver, UserCategoriesResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({
       req,
       res,
       redis,
-      // categoriesLoader: createCategoriesLoader(),
+      categoriesLoader: createCategoriesLoader(),
     }),
   });
   apolloServer.applyMiddleware({ app, cors: false });
