@@ -13,7 +13,7 @@ import path from "path";
 import { Categories } from "./entities/Categories";
 import { User } from "./entities/User";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { UserCategoriesResolver } from "./resolvers/userCategoryResolver";
+import { UserCategoriesResolver } from "./resolvers/UserCategoriesResolver";
 import { UserCategories } from "./entities/UserCategories";
 
 const main = async () => {
