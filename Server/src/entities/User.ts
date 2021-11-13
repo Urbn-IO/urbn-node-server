@@ -54,6 +54,7 @@ export class User extends BaseEntity {
   @OneToMany(() => UserCategories, (userCat) => userCat.user)
   categoriesConn: Promise<UserCategories[]>;
 
+  //dataloader takes in the userId and mappes the Id to the categories
   @Field(() => [Categories])
   async categories(
     @Ctx() { categoriesLoader }: AppContext
