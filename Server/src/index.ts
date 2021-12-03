@@ -19,9 +19,9 @@ const main = async () => {
   const Port = process.env.PORT || 8000;
   createConnection({
     type: "postgres",
-    database: "ShoutOut",
-    username: "admin",
-    // password: "InfinityFarmery",
+    database: "shoutout",
+    username: "postgres",
+    password: "password",
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
