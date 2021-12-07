@@ -4,11 +4,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  // OneToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-// import { UserCategories } from "./UserCategories";
+import { UserCategories } from "./UserCategories";
 
 @ObjectType()
 @Entity()
@@ -31,6 +31,6 @@ export class Categories extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // @OneToMany(() => UserCategories, (userCat) => userCat.category)
-  // UserConn: Promise<UserCategories[]>;
+  @OneToMany(() => UserCategories, (userCat) => userCat.category)
+  UserConn: Promise<UserCategories[]>;
 }
