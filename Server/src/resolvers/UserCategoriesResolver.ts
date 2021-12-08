@@ -21,8 +21,8 @@ export class UserCategoriesResolver {
   }
 
   //returns all users with their categories regardless of if the user has been mapped to a category
-  @Query(() => [User])
-  async users(): Promise<User[]> {
+  @Query(() => [User], { nullable: true })
+  async users(): Promise<User[] | null> {
     return User.find();
   }
 

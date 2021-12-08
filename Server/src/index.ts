@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createConnection } from "typeorm";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -15,6 +16,7 @@ import { User } from "./entities/User";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { UserCategoriesResolver } from "./resolvers/UserCategoriesResolver";
 import { UserCategories } from "./entities/UserCategories";
+import { S3Resolver } from "./resolvers/AWShandlers/S3Resolver";
 
 const main = async () => {
   const Port = process.env.PORT || 8000;
@@ -50,14 +52,19 @@ const main = async () => {
   );
   app.use(
     cors({
-      origin: "*",
+      origin: "*", //to be revisited when making web version of  app
       credentials: true,
     })
   );
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [CategoryResolver, UserResolver, UserCategoriesResolver],
+      resolvers: [
+        CategoryResolver,
+        UserResolver,
+        UserCategoriesResolver,
+        S3Resolver,
+      ],
       validate: false,
     }),
     context: ({ req, res }) => ({
