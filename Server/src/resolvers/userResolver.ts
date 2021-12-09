@@ -57,7 +57,7 @@ export class UserResolver {
         lastName: userInput.lastName,
         nickName: userInput.nickName,
         celebrity: userInput.celebrity,
-        email: email,
+        email,
         password: hashedPassword,
         userId: id,
       });

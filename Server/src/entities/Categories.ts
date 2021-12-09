@@ -1,4 +1,5 @@
-import { Field, ObjectType } from "type-graphql";
+import { AppContext } from "src/types";
+import { Ctx, Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -8,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { User } from "./User";
 import { UserCategories } from "./UserCategories";
 
 @ObjectType()
@@ -33,4 +35,9 @@ export class Categories extends BaseEntity {
 
   @OneToMany(() => UserCategories, (userCat) => userCat.category)
   UserConn: Promise<UserCategories[]>;
+  //dataloader takes in the categoryId and mappes the Id to the users
+  @Field(() => [User], { nullable: true })
+  async users(@Ctx() { usersLoader }: AppContext): Promise<User[] | null> {
+    return usersLoader.load(this.id);
+  }
 }

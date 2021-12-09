@@ -27,8 +27,8 @@ export class UserCategoriesResolver {
   }
 
   //not yet implemented from the enitiy side
-  @Query(() => [Categories])
-  async categories(): Promise<Categories[]> {
+  @Query(() => [Categories], { nullable: true })
+  async categories(): Promise<Categories[] | null> {
     return Categories.find();
   }
 }

@@ -55,10 +55,10 @@ export class User extends BaseEntity {
   categoriesConn: Promise<UserCategories[]>;
 
   //dataloader takes in the userId and mappes the Id to the categories
-  @Field(() => [Categories])
+  @Field(() => [Categories], { nullable: true })
   async categories(
     @Ctx() { categoriesLoader }: AppContext
-  ): Promise<Categories[]> {
+  ): Promise<Categories[] | null> {
     return categoriesLoader.load(this.id);
   }
 }

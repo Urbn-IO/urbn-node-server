@@ -12,7 +12,6 @@ import { AppContext } from "../../types";
 import { exec } from "shelljs";
 import path from "path";
 import dayjs from "dayjs";
-// import { getCloudFrontSignedUrl } from "./cloudFrontSigner";
 
 @Resolver()
 export class S3Resolver {

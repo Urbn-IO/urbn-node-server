@@ -17,6 +17,7 @@ import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { UserCategoriesResolver } from "./resolvers/UserCategoriesResolver";
 import { UserCategories } from "./entities/UserCategories";
 import { S3Resolver } from "./resolvers/AWShandlers/S3Resolver";
+import { createUsersLoader } from "./utils/UsersLoader";
 
 const main = async () => {
   const Port = process.env.PORT || 8000;
@@ -72,6 +73,7 @@ const main = async () => {
       res,
       redis,
       categoriesLoader: createCategoriesLoader(),
+      usersLoader: createUsersLoader(),
     }),
   });
   apolloServer.applyMiddleware({ app, cors: false });
