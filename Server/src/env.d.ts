@@ -6,5 +6,9 @@ declare namespace NodeJS {
     AWS_SECRET_ACCESS_KEY: string;
     AWS_CLOUD_FRONT_DOMAIN: string;
     AWS_CLOUD_FRONT_KEY_PAIR_ID: string;
+    DATABASE_URL: string;
+    REDIS_URL: string;
+    PORT: string;
+    SESSION_SECRET: string;
   }
 }

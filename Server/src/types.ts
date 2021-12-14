@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Redis } from "ioredis";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { createUsersLoader } from "./utils/UsersLoader";
+import { createUsersLoader } from "./utils/usersLoader";
 
 export type AppContext = {
   req: Request;
