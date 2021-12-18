@@ -14,10 +14,12 @@ import path from "path";
 import { Categories } from "./entities/Categories";
 import { User } from "./entities/User";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { UserCategoriesResolver } from "./resolvers/userCategoriesResolver";
-import { UserCategories } from "./entities/UserCategories";
+import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
+import { CelebCategories } from "./entities/CelebCategories";
 import { S3Resolver } from "./resolvers/aws/S3Resolver";
-import { createUsersLoader } from "./utils/usersLoader";
+import { createCelebsLoader } from "./utils/celebsLoader";
+import { Celebrity } from "./entities/Celebrity";
+import { celebrityResolver } from "./resolvers/celebrityResolver";
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
@@ -27,7 +29,7 @@ const main = async () => {
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [User, Categories, UserCategories],
+    entities: [User, Categories, CelebCategories, Celebrity],
   });
 
   await connection.runMigrations();
@@ -65,6 +67,7 @@ const main = async () => {
         UserResolver,
         UserCategoriesResolver,
         S3Resolver,
+        celebrityResolver,
       ],
       validate: false,
     }),
@@ -73,7 +76,7 @@ const main = async () => {
       res,
       redis,
       categoriesLoader: createCategoriesLoader(),
-      usersLoader: createUsersLoader(),
+      celebsLoader: createCelebsLoader(),
     }),
   });
   apolloServer.applyMiddleware({ app, cors: false });

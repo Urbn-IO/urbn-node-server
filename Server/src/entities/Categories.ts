@@ -9,13 +9,12 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { User } from "./User";
-import { UserCategories } from "./UserCategories";
+import { Celebrity } from "./Celebrity";
+import { CelebCategories } from "./CelebCategories";
 
 @ObjectType()
 @Entity()
 export class Categories extends BaseEntity {
-  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -33,11 +32,13 @@ export class Categories extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => UserCategories, (userCat) => userCat.category)
-  UserConn: Promise<UserCategories[]>;
-  //dataloader takes in the categoryId and mappes the Id to the users
-  @Field(() => [User], { nullable: true })
-  async users(@Ctx() { usersLoader }: AppContext): Promise<User[] | null> {
-    return usersLoader.load(this.id);
+  @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
+  celebConn: Promise<CelebCategories[]>;
+  //dataloader takes in the categoryId and mappes the Id to the celebs
+  @Field(() => [Celebrity], { nullable: true })
+  async celebs(
+    @Ctx() { celebsLoader }: AppContext
+  ): Promise<Celebrity[] | null> {
+    return celebsLoader.load(this.id);
   }
 }

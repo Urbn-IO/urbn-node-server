@@ -5,29 +5,31 @@ import { CategoryResponse } from "../utils/graphqlTypes";
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  async allCategories(): Promise<Categories[] | null> {
+  async categories(
+    @Arg("categoryId", { nullable: true }) id: number,
+    @Arg("name", { nullable: true }) name: string
+  ) {
+    if (id) {
+      const category = await Categories.findOne({ id });
+      return [category];
+    }
+    if (name) {
+      const category = await Categories.findOne({
+        where: { name: name.toLowerCase() },
+      });
+      return [category];
+    }
     return await Categories.find();
   }
-
-  @Query(() => CategoryResponse, { nullable: true })
-  async findCategory(@Arg("id") id: number): Promise<CategoryResponse> {
-    const category = await Categories.findOne({ id });
-    if (!category) {
-      return {
-        errors: [
-          { field: "find category", errorMessage: "Category not found" },
-        ],
-      };
-    }
-    return { category };
-  }
-
   @Mutation(() => CategoryResponse)
   async createCategory(
     @Arg("name") name: string,
     @Arg("recommendable") recommendable: boolean
   ): Promise<CategoryResponse> {
-    const category = Categories.create({ name, recommendable });
+    const category = Categories.create({
+      name: name.toLowerCase(),
+      recommendable,
+    });
     try {
       await category.save();
     } catch (err) {

@@ -1,42 +1,37 @@
-import { AppContext } from "src/types";
-import { Ctx, Field, ObjectType } from "type-graphql";
+import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Categories } from "./Categories";
-import { UserCategories } from "./UserCategories";
+import { Celebrity } from "./Celebrity";
 
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
-  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Field()
   @Column({ unique: true })
   userId!: string;
 
   @Field()
   @Column()
-  firstName: string;
+  firstName!: string;
 
   @Field()
   @Column()
-  lastName: string;
+  lastName!: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  nickName?: string;
-
-  @Field(() => Boolean)
+  @Field()
   @Column()
-  celebrity!: boolean;
+  nationality!: string;
 
   @Field()
   @Column({ unique: true })
@@ -51,14 +46,12 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => UserCategories, (userCat) => userCat.user)
-  categoriesConn: Promise<UserCategories[]>;
-
-  //dataloader takes in the userId and mappes the Id to the categories
-  @Field(() => [Categories], { nullable: true })
-  async categories(
-    @Ctx() { categoriesLoader }: AppContext
-  ): Promise<Categories[] | null> {
-    return categoriesLoader.load(this.id);
-  }
+  @Field({ nullable: true })
+  @OneToOne(() => Celebrity, {
+    nullable: true,
+    onDelete: "CASCADE",
+    orphanedRowAction: "delete",
+  })
+  @JoinColumn()
+  celebrity?: Celebrity;
 }

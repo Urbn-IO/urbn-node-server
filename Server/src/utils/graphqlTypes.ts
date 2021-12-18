@@ -8,14 +8,25 @@ export class UserInputs {
   firstName: string;
   @Field()
   lastName: string;
-  @Field({ nullable: true })
-  nickName?: string;
   @Field()
-  celebrity: boolean;
+  nationality: string;
   @Field()
   email!: string;
   @Field()
   password!: string;
+}
+@InputType()
+export class CreateCelebrityInputs {
+  @Field()
+  alias: string;
+  @Field()
+  acceptsVideoRequests: boolean;
+  @Field()
+  acceptsCallRequets: boolean;
+  @Field()
+  videoRequestRatesInNaira: string;
+  @Field()
+  callRequestRatesInNaira: string;
 }
 
 @InputType()
@@ -25,6 +36,7 @@ export class UserInputsLogin {
   @Field()
   email: string;
 }
+
 //remove the field propery in future
 @ObjectType()
 export class FieldWithError {
