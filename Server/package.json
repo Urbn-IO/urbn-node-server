@@ -4,8 +4,10 @@
   "description": "A platform for connecting individuals to their heroes/role models",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon dist/index.js",
-    "dev": "node dist/index.js"
+    "watch": "tsc -w",
+    "build": "tsc",
+    "dev": "nodemon dist/index.js",
+    "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,7 @@
     "@types/ioredis": "^4.28.1",
     "@types/node": "^16.11.7",
     "@types/nodemailer": "^6.4.4",
+    "@types/redis": "^2.8.32",
     "@types/shelljs": "^0.8.9",
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^5.4.0",

@@ -5,7 +5,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FilemetaData } from "../../utils/s3Types";
+import { FilemetaData, PutSignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { AppContext } from "../../types";
@@ -29,18 +29,17 @@ export class S3Resolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Mutation(() => String)
+  @Mutation(() => PutSignedObject)
   @UseMiddleware(isAuth)
   async signFileToS3(
     @Arg("metaData") metaData: FilemetaData,
     @Ctx() { req }: AppContext
-  ): Promise<string> {
+  ): Promise<PutSignedObject> {
     const datetime = dayjs().format("DD-MM-YYYY");
     const sanitizedFileName = metaData.fileName
       .trim()
       .replace(/[^a-zA-Z0-9.]/g, "-");
     const Key = `${req.session.userId}/${datetime}-${sanitizedFileName}`;
-    console.log(Key);
 
     const s3Command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -51,7 +50,7 @@ export class S3Resolver {
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
       expiresIn: 900,
     });
-    return signedUrl;
+    return { signedUrl, fileName: Key };
   }
 
   @Mutation(() => String)

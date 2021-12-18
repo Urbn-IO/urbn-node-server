@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "dotenv-safe/config";
 import { createConnection } from "typeorm";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -14,27 +14,29 @@ import path from "path";
 import { Categories } from "./entities/Categories";
 import { User } from "./entities/User";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { UserCategoriesResolver } from "./resolvers/UserCategoriesResolver";
-import { UserCategories } from "./entities/UserCategories";
-import { S3Resolver } from "./resolvers/AWShandlers/S3Resolver";
-import { createUsersLoader } from "./utils/UsersLoader";
+import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
+import { CelebCategories } from "./entities/CelebCategories";
+import { S3Resolver } from "./resolvers/aws/S3Resolver";
+import { createCelebsLoader } from "./utils/celebsLoader";
+import { Celebrity } from "./entities/Celebrity";
+import { celebrityResolver } from "./resolvers/celebrityResolver";
 
 const main = async () => {
-  const Port = process.env.PORT || 8000;
-  createConnection({
+  const Port = parseInt(process.env.PORT) || 4000;
+  const connection = await createConnection({
     type: "postgres",
-    database: "ShoutOut",
-    username: "admin",
-    // password: "InfinityFarmery",
+    url: process.env.DATABASE_URL,
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [User, Categories, UserCategories],
+    entities: [User, Categories, CelebCategories, Celebrity],
   });
+
+  await connection.runMigrations();
 
   const app = express();
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  const redis = new Redis(process.env.REDIS_URL);
 
   app.use(
     session({
@@ -47,7 +49,7 @@ const main = async () => {
         secure: __prod__, // cookie only works using https (we use https in production)
       },
       saveUninitialized: false,
-      secret: "process.env.SESSION_SECRET",
+      secret: process.env.SESSION_SECRET,
       resave: false,
     })
   );
@@ -65,6 +67,7 @@ const main = async () => {
         UserResolver,
         UserCategoriesResolver,
         S3Resolver,
+        celebrityResolver,
       ],
       validate: false,
     }),
@@ -73,7 +76,7 @@ const main = async () => {
       res,
       redis,
       categoriesLoader: createCategoriesLoader(),
-      usersLoader: createUsersLoader(),
+      celebsLoader: createCelebsLoader(),
     }),
   });
   apolloServer.applyMiddleware({ app, cors: false });

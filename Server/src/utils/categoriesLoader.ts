@@ -1,32 +1,35 @@
 import DataLoader from "dataloader";
 import { In } from "typeorm";
 import { Categories } from "../entities/Categories";
-import { UserCategories } from "../entities/UserCategories";
+import { CelebCategories } from "../entities/CelebCategories";
 
-const batchCategories = async (userIds: readonly number[]) => {
-  const userCategories = await UserCategories.find({
+const batchCategories = async (celebIds: readonly number[]) => {
+  const celebCategories = await CelebCategories.find({
     join: {
-      alias: "userCategory",
+      alias: "celebCategory",
       innerJoinAndSelect: {
-        Categories: "userCategory.category",
+        Categories: "celebCategory.category",
       },
     },
     where: {
-      userId: In(userIds as number[]),
+      celebId: In(celebIds as number[]),
     },
   });
 
-  const userIdToCategories: { [key: number]: Categories[] } = {};
+  const celebIdToCategories: { [key: number]: Categories[] } = {};
 
-  userCategories.forEach((userCat) => {
-    if (userCat.userId in userIdToCategories) {
-      userIdToCategories[userCat.userId].push((userCat as any).__category__);
+  celebCategories.forEach((celebCat) => {
+    if (celebCat.celebId in celebIdToCategories) {
+      celebIdToCategories[celebCat.celebId].push(
+        (celebCat as any).__category__
+      );
     } else {
-      userIdToCategories[userCat.userId] = [(userCat as any).__category__];
+      celebIdToCategories[celebCat.celebId] = [(celebCat as any).__category__];
     }
   });
-
-  return userIds.map((userId) => userIdToCategories[userId]);
+  console.log(celebCategories);
+  const bug = celebIds.map((celebId) => celebIdToCategories[celebId]);
+  return bug;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

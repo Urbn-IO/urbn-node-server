@@ -1,4 +1,4 @@
-import { Field, InputType } from "type-graphql";
+import { Field, InputType, ObjectType } from "type-graphql";
 
 @InputType()
 export class FilemetaData {
@@ -7,4 +7,13 @@ export class FilemetaData {
 
   @Field()
   fileType: string;
+}
+
+@ObjectType()
+export class PutSignedObject {
+  @Field()
+  signedUrl: string;
+
+  @Field()
+  fileName: string;
 }

@@ -18,6 +18,7 @@ import { v4 } from "uuid";
 import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuth } from "../middleware/isAuth";
+import { validateInput } from "../utils/validateInput";
 @Resolver()
 export class UserResolver {
   //create User resolver
@@ -26,28 +27,11 @@ export class UserResolver {
     @Arg("userInput") userInput: UserInputs,
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
+    const invalidInput = validateInput(userInput);
+    if (invalidInput) {
+      return invalidInput;
+    }
     const email = userInput.email.toLowerCase();
-    const regexp = new RegExp(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
-    const validEmail = regexp.test(email);
-
-    if (!validEmail) {
-      return {
-        errors: [{ field: "email", errorMessage: "Invalid email format" }],
-      };
-    }
-
-    if (userInput.password.length < 8) {
-      return {
-        errors: [
-          {
-            field: "password",
-            errorMessage: "Password must be at least 8 characters long!",
-          },
-        ],
-      };
-    }
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
     let user;
@@ -55,8 +39,7 @@ export class UserResolver {
       const createUser = User.create({
         firstName: userInput.firstName,
         lastName: userInput.lastName,
-        nickName: userInput.nickName,
-        celebrity: userInput.celebrity,
+        nationality: userInput.nationality,
         email,
         password: hashedPassword,
         userId: id,
@@ -118,7 +101,7 @@ export class UserResolver {
     const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
       //user doesn't exist
-      return true;
+      return false;
     }
     const token = v4();
     redis.set(FORGET_PASSWORD_PREFIX + token, email, "ex", 1000 * 60 * 60 * 24); //one day to use forget password token
@@ -216,8 +199,8 @@ export class UserResolver {
         ],
       };
     }
-    user.nickName = nickName;
-    await User.update({ id: user.id }, { nickName: user.nickName });
+    // user.nickName = nickName;
+    // await User.update({ id: user.id }, { nickName: user.nickName });
 
     return { user };
   }
@@ -271,5 +254,18 @@ export class UserResolver {
       };
     }
     return { user };
+  }
+
+  //fetch all users, with optional parameter to fetch a single user by userId
+  @Query(() => [User], { nullable: true })
+  @UseMiddleware(isAuth)
+  async users(@Arg("userId", { nullable: true }) userId: string) {
+    if (userId) {
+      const user = await User.findOne({
+        where: { userId: userId },
+      });
+      return [user];
+    }
+    return await User.find();
   }
 }
