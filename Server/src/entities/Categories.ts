@@ -15,6 +15,7 @@ import { CelebCategories } from "./CelebCategories";
 @ObjectType()
 @Entity()
 export class Categories extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 

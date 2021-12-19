@@ -27,9 +27,7 @@ const batchCategories = async (celebIds: readonly number[]) => {
       celebIdToCategories[celebCat.celebId] = [(celebCat as any).__category__];
     }
   });
-  console.log(celebCategories);
-  const bug = celebIds.map((celebId) => celebIdToCategories[celebId]);
-  return bug;
+  return celebIds.map((celebId) => celebIdToCategories[celebId]);
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

@@ -4,6 +4,8 @@ import {
   Column,
   BaseEntity,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import { Ctx, Field, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
@@ -13,8 +15,13 @@ import { Categories } from "./Categories";
 @ObjectType()
 @Entity()
 export class Celebrity extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
+
+  @Field()
+  @Column()
+  userId!: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -39,6 +46,12 @@ export class Celebrity extends BaseEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   fanRatings?: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
   categoriesConn: Promise<CelebCategories[]>;

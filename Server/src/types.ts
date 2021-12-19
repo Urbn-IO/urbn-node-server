@@ -16,3 +16,10 @@ declare module "express-session" {
     userId: string;
   }
 }
+
+export type RequestInput = {
+  requester: string | undefined;
+  recepient: string;
+  requestType: string;
+  requestAmountInNaira: string;
+};

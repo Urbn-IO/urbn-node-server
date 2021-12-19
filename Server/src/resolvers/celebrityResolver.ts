@@ -14,7 +14,7 @@ import { AppContext } from "src/types";
 import { getConnection, IsNull, Not } from "typeorm";
 
 @Resolver()
-export class celebrityResolver {
+export class CelebrityResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async registerUserasCeleb(
@@ -22,6 +22,7 @@ export class celebrityResolver {
     @Arg("celebrity") celebrity: CreateCelebrityInputs
   ) {
     const userId = req.session.userId;
+    celebrity.userId = userId;
     const user = await User.findOne({ where: { userId: userId } });
     if (!user) {
       return false;
@@ -41,13 +42,13 @@ export class celebrityResolver {
   @UseMiddleware(isAuth)
   async celebrities(@Arg("userId", { nullable: true }) userId: string) {
     if (userId) {
-      const celeb = User.findOne({
+      const celeb = await User.findOne({
         where: { userId: userId },
         relations: ["celebrity"],
       });
       return [celeb];
     }
-    return User.find({
+    return await User.find({
       where: { celebrity: Not(IsNull()) },
       relations: ["celebrity"],
     });
