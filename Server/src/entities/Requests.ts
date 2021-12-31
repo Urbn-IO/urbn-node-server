@@ -1,3 +1,4 @@
+import { requestStatus } from "../types";
 import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
@@ -29,6 +30,17 @@ export class Requests extends BaseEntity {
   @Column()
   requestAmountInNaira!: string;
 
-  @CreateDateColumn()
+  @Field()
+  @Column()
+  description!: string;
+
+  @Column({ type: "enum", enum: requestStatus, default: requestStatus.PENDING })
+  status: requestStatus;
+
+  @Field()
+  @Column({ type: "timestamptz" })
+  requestExpires!: Date;
+
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 }

@@ -47,10 +47,10 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   fanRatings?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
