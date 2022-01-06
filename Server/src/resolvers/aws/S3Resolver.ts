@@ -61,7 +61,7 @@ export class S3Resolver {
     console.log(keyPairId);
     const pathToPrivateKey = path.join(
       __dirname,
-      "/../../../awsKeys/private_key.pem"
+      "/../../../Keys/private_key.pem"
     );
     const signedUrl = exec(
       `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`

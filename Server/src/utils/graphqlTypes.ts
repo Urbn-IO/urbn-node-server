@@ -27,6 +27,7 @@ export class CreateCelebrityInputs {
   videoRequestRatesInNaira: string;
   @Field()
   callRequestRatesInNaira: string;
+  userId: string | undefined;
 }
 
 @InputType()

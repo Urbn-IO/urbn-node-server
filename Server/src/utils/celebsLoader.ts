@@ -30,9 +30,7 @@ const batchCelebs = async (catIds: readonly number[]) => {
     }
   });
 
-  const bug = catIds.map((categoryId) => CategoryIdToCeleb[categoryId]);
-  console.log(bug);
-  return bug;
+  return catIds.map((categoryId) => CategoryIdToCeleb[categoryId]);
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

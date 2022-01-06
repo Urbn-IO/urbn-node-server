@@ -19,7 +19,12 @@ import { CelebCategories } from "./entities/CelebCategories";
 import { S3Resolver } from "./resolvers/aws/S3Resolver";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { Celebrity } from "./entities/Celebrity";
-import { celebrityResolver } from "./resolvers/celebrityResolver";
+import { CelebrityResolver } from "./resolvers/celebrityResolver";
+import { RequestsResolver } from "./resolvers/requestsResolver";
+import { Requests } from "./entities/Requests";
+import { FcmTokens } from "./entities/fcmTokens";
+import { initializeApp } from "firebase-admin/app";
+import { firebaseConfig } from "./firebaseConfig";
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
@@ -29,12 +34,20 @@ const main = async () => {
     logging: true,
     synchronize: true,
     migrations: [path.join(__dirname, "./migrations/*")],
-    entities: [User, Categories, CelebCategories, Celebrity],
+    entities: [
+      User,
+      Categories,
+      CelebCategories,
+      Celebrity,
+      Requests,
+      FcmTokens,
+    ],
   });
 
   await connection.runMigrations();
 
   const app = express();
+  initializeApp(firebaseConfig);
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
 
@@ -67,7 +80,8 @@ const main = async () => {
         UserResolver,
         UserCategoriesResolver,
         S3Resolver,
-        celebrityResolver,
+        CelebrityResolver,
+        RequestsResolver,
       ],
       validate: false,
     }),

@@ -16,3 +16,20 @@ declare module "express-session" {
     userId: string;
   }
 }
+
+export type RequestInput = {
+  requester: string | undefined;
+  recepient: string;
+  requestType: string;
+  requestAmountInNaira: string;
+  description: string;
+  requestExpires: Date;
+};
+
+export enum requestStatus {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  FULFILLED = "fulfilled",
+  UNFULFILLED = "unfulfilled",
+}

@@ -15,6 +15,7 @@ import { CelebCategories } from "./CelebCategories";
 @ObjectType()
 @Entity()
 export class Categories extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -26,10 +27,10 @@ export class Categories extends BaseEntity {
   @Column()
   recommendable!: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
