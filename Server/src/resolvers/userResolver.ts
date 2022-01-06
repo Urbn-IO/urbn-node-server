@@ -19,6 +19,7 @@ import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuth } from "../middleware/isAuth";
 import { validateInput } from "../utils/validateInput";
+import { TokensManager } from "../utils/tokensManager";
 @Resolver()
 export class UserResolver {
   //create User resolver
@@ -221,6 +222,21 @@ export class UserResolver {
     );
   }
 
+  @Mutation(() => String)
+  @UseMiddleware(isAuth)
+  async storeDeviceToken(
+    @Arg("token") token: string,
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    if (!userId) {
+      return "user not logged In";
+    }
+    const tokensManager = new TokensManager();
+    const status = await tokensManager.addToken(userId, token);
+    return status;
+  }
+
   //delete user
   // @Mutation(() => Boolean)
   // async deleteUser(@Arg("id") id: number): Promise<boolean> {
@@ -233,6 +249,7 @@ export class UserResolver {
   //   return true;
   // }
 
+  //QUERIES
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
   @UseMiddleware(isAuth)

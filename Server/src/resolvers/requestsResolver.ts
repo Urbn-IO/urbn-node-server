@@ -4,6 +4,7 @@ import { AppContext, RequestInput } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/Payments";
+import { notificationsManager } from "../notifications/notificationsManager";
 
 @Resolver()
 export class RequestsResolver {
@@ -17,18 +18,10 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
-    return requestType === "video"
+    return requestType === ("video" || "call")
       ? this.initiateRequest(
           celebId,
-          "video",
-          userId,
-          description,
-          requestExpires
-        )
-      : requestType === "call"
-      ? this.initiateRequest(
-          celebId,
-          "call",
+          requestType,
           userId,
           description,
           requestExpires
@@ -43,6 +36,9 @@ export class RequestsResolver {
     description: string,
     requestExpires: Date
   ) {
+    if (!userId) {
+      return "user is not logged in";
+    }
     const celeb = await Celebrity.findOne(id);
     if (!celeb) {
       return "Invalid celebrity Id";
@@ -66,8 +62,15 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
+    const notifications = new notificationsManager();
+
+    const result = await notifications.sendNotifications(
+      celeb.userId,
+      userId,
+      type
+    );
     // await sendRequest
 
-    return `${type} request sent to celebrity`;
+    return result;
   }
 }
