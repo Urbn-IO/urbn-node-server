@@ -8,6 +8,9 @@ export const addFcmToken = async (
     const fcmTokens = FcmTokens.create({ userId, token: fcmToken });
     await fcmTokens.save();
   } catch (err) {
+    if (err.code === "23505") {
+      return "Error! Token already exists on the database";
+    }
     return "An Error occured while storing token";
   }
 

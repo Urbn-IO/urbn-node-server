@@ -29,6 +29,10 @@ export class Celebrity extends BaseEntity {
 
   @Field()
   @Column()
+  description: string;
+
+  @Field()
+  @Column()
   acceptsVideoRequests: boolean;
 
   @Field()

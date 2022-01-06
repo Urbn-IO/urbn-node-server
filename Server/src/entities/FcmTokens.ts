@@ -19,7 +19,7 @@ export class FcmTokens extends BaseEntity {
   userId!: string;
 
   @Field()
-  @Column()
+  @Column({ unique: true })
   token!: string;
 
   @CreateDateColumn({ type: "timestamptz" })
