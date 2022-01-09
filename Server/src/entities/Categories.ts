@@ -1,4 +1,4 @@
-import { AppContext } from "src/types";
+import { AppContext } from "../types";
 import { Ctx, Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,

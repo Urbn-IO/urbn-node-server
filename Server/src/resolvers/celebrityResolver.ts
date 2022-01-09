@@ -10,7 +10,7 @@ import {
 import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
-import { AppContext } from "src/types";
+import { AppContext } from "../types";
 import { getConnection, IsNull, Not } from "typeorm";
 
 @Resolver()

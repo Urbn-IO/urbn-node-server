@@ -9,7 +9,7 @@ import {
 } from "typeorm";
 import { Ctx, Field, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
-import { AppContext } from "src/types";
+import { AppContext } from "../types";
 import { Categories } from "./Categories";
 
 @ObjectType()
