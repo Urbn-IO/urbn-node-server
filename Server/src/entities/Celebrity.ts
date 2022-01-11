@@ -60,7 +60,7 @@ export class Celebrity extends BaseEntity {
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
   categoriesConn: Promise<CelebCategories[]>;
 
-  //dataloader takes in the userId and mapes the Id to the categories
+  //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
   async categories(
     @Ctx() { categoriesLoader }: AppContext

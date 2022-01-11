@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 
 @ObjectType()
@@ -54,4 +56,11 @@ export class User extends BaseEntity {
   })
   @JoinColumn()
   celebrity?: Celebrity;
+
+  @OneToMany(() => CardAuthorization, (card) => card.user, {
+    nullable: true,
+    onDelete: "CASCADE",
+    orphanedRowAction: "delete",
+  })
+  cards: Promise<CardAuthorization[]>;
 }

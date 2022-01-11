@@ -1,10 +1,11 @@
-import "dotenv-safe/config";
+import "dotenv-safe/config.js";
 import path from "path";
 import express from "express";
 import cors from "cors";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
+import router from "./api/webhook";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -14,6 +15,8 @@ import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
+
+const app = express();
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
@@ -29,11 +32,9 @@ const main = async () => {
 
   await connection.runMigrations();
 
-  const app = express();
   initializeApp(firebaseConfig);
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
-
   app.use(
     session({
       name: COOKIE_NAME,
@@ -55,6 +56,8 @@ const main = async () => {
       credentials: true,
     })
   );
+
+  app.use("/paystack-webhook", router);
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({

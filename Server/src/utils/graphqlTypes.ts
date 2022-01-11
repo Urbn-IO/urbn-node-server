@@ -65,3 +65,22 @@ export class CategoryResponse {
   @Field(() => [FieldWithError], { nullable: true })
   errors?: FieldWithError[];
 }
+@ObjectType()
+export class paymentInitSuccess {
+  @Field()
+  authorization_url: string;
+  @Field()
+  access_code: string;
+}
+@ObjectType()
+export class paymentInitError {
+  @Field()
+  errorMessage: string;
+}
+@ObjectType()
+export class paymentInitResponse {
+  @Field(() => paymentInitSuccess, { nullable: true })
+  response: paymentInitSuccess;
+  @Field(() => paymentInitError, { nullable: true })
+  error: paymentInitError;
+}

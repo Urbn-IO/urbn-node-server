@@ -35,7 +35,7 @@ export class Categories extends BaseEntity {
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
   celebConn: Promise<CelebCategories[]>;
-  //dataloader takes in the categoryId and mappes the Id to the celebs
+  //dataloader takes in the categoryId and maps the Id to the celebs
   @Field(() => [Celebrity], { nullable: true })
   async celebs(
     @Ctx() { celebsLoader }: AppContext

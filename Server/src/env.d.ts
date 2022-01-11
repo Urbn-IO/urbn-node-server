@@ -10,5 +10,7 @@ declare namespace NodeJS {
     REDIS_URL: string;
     PORT: string;
     SESSION_SECRET: string;
+    PAYSTACK_PUBLIC_KEY: string;
+    PAYSTACK_SECRET_KEY: string;
   }
 }
