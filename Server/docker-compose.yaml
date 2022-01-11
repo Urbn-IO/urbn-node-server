@@ -3,7 +3,7 @@ version: '3.8'
 services:
   server:
     build: .
-    image: '234408821758.dkr.ecr.af-south-1.amazonaws.com/shoutout:testV3'
+    image: '234408821758.dkr.ecr.af-south-1.amazonaws.com/shoutout:testV4'
     platform: 'linux/amd64'
     networks:
       - 'default'

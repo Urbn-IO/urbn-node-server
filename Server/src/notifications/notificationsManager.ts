@@ -1,4 +1,4 @@
-import { FcmTokens } from "../entities/fcmTokens";
+import { FcmTokens } from "../entities/FcmTokens";
 import { User } from "../entities/User";
 import { firebaseCM } from "./firebaseCM";
 

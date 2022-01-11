@@ -1,6 +1,6 @@
 {
   "name": "shoutout",
-  "version": "1.0.0",
+  "version": "0.3.7",
   "description": "A platform for connecting individuals to their heroes/role models",
   "main": "index.js",
   "scripts": {

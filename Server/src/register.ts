@@ -3,7 +3,7 @@ import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
 import { CelebCategories } from "./entities/CelebCategories";
 import { Celebrity } from "./entities/Celebrity";
-import { FcmTokens } from "./entities/fcmTokens";
+import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
 import { User } from "./entities/User";
 import { S3Resolver } from "./resolvers/aws/S3Resolver";

@@ -3,7 +3,7 @@ import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext, RequestInput } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
-import { Payments } from "../payments/Payments";
+import { Payments } from "../payments/payments";
 import { notificationsManager } from "../notifications/notificationsManager";
 
 @Resolver()
