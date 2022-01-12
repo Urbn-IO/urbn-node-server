@@ -8,16 +8,11 @@ export class PaymentsResolver {
   @UseMiddleware(isAuth)
   async initPayment(
     @Arg("email") email: string,
-    @Arg("amount") amount: string,
-    @Arg("currency") currency: string
+    @Arg("amount") amount: string
   ) {
     const convertedAmount = parseInt(amount) * 100;
     const convertedAmountString = convertedAmount.toString();
-    const data = await initializePayment(
-      email,
-      convertedAmountString,
-      currency
-    );
+    const data = await initializePayment(email, convertedAmountString);
     return data;
   }
 }

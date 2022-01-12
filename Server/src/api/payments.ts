@@ -2,15 +2,10 @@ import fetch from "node-fetch";
 
 const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-export const initializePayment = async (
-  email: string,
-  amount: string,
-  curreny: string
-) => {
+export const initializePayment = async (email: string, amount: string) => {
   const params = JSON.stringify({
     email,
     amount,
-    curreny,
     channels: ["card"],
   });
   try {
@@ -29,9 +24,9 @@ export const initializePayment = async (
     const payload = await response.json();
 
     const { status, message, data } = payload;
-    console.log("status obj: ", status);
-    console.log("message obj: ", message);
-    console.log("data obj: ", data);
+    if (!status) {
+      return message;
+    }
 
     // const accessCode = data.access_code;
     const authUrl = data.authorization_url;
