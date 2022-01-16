@@ -19,6 +19,9 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
+    if (!userId) {
+      return "user is not logged in";
+    }
     return requestType === ("video" || "call")
       ? this.initiateRequest(
           celebId,
@@ -33,13 +36,10 @@ export class RequestsResolver {
   async initiateRequest(
     id: string,
     type: string,
-    userId: string | undefined,
+    userId: string,
     description: string,
     requestExpires: Date
   ) {
-    if (!userId) {
-      return "user is not logged in";
-    }
     const celeb = await Celebrity.findOne(id);
     if (!celeb) {
       return "Invalid celebrity Id";
@@ -59,7 +59,7 @@ export class RequestsResolver {
         ? celeb.videoRequestRatesInNaira
         : celeb.callRequestRatesInNaira;
     const request: RequestInput = {
-      requester: userId,
+      requestor: userId,
       recepient: celeb.userId,
       requestType: type,
       requestAmountInNaira: amount,

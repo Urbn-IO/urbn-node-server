@@ -6,14 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FilemetaData, PutSignedObject } from "../../utils/s3Types";
-import {
-  Arg,
-  Ctx,
-  Mutation,
-  Query,
-  Resolver,
-  UseMiddleware,
-} from "type-graphql";
+import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { AppContext } from "../../types";
 import { exec } from "shelljs";
@@ -36,9 +29,9 @@ export class S3Resolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Mutation(() => PutSignedObject)
+  @Query(() => PutSignedObject)
   @UseMiddleware(isAuth)
-  async signFileToS3(
+  async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
     @Ctx() { req }: AppContext
   ): Promise<PutSignedObject> {
@@ -60,9 +53,9 @@ export class S3Resolver {
     return { signedUrl, fileName: Key };
   }
 
-  @Mutation(() => String)
+  @Query(() => String)
   @UseMiddleware(isAuth)
-  async deleteSignedFileFromS3(@Arg("key") key: string): Promise<string> {
+  async getFileDeleteUrl(@Arg("key") key: string): Promise<string> {
     const s3Command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: key,
@@ -75,7 +68,7 @@ export class S3Resolver {
 
   @Query(() => String)
   @UseMiddleware(isAuth)
-  async getSignedFileFromS3(@Arg("key") fileName: string): Promise<string> {
+  async getFileDownloadUrl(@Arg("key") fileName: string): Promise<string> {
     const time = dayjs().add(60, "second").unix();
     const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
     const pathToPrivateKey = path.join(

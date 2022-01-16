@@ -18,7 +18,7 @@ declare module "express-session" {
 }
 
 export type RequestInput = {
-  requester: string | undefined;
+  requestor: string;
   recepient: string;
   recepientAlias: string;
   requestType: string;
