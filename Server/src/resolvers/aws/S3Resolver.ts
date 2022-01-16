@@ -6,7 +6,14 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FilemetaData, PutSignedObject } from "../../utils/s3Types";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { AppContext } from "../../types";
 import { exec } from "shelljs";
@@ -55,23 +62,6 @@ export class S3Resolver {
 
   @Mutation(() => String)
   @UseMiddleware(isAuth)
-  async getSignedFileFromS3(@Arg("key") fileName: string): Promise<string> {
-    const time = dayjs().add(60, "second").unix();
-    const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
-    console.log(keyPairId);
-    const pathToPrivateKey = path.join(
-      __dirname,
-      "/../../../Keys/private_key.pem"
-    );
-    const signedUrl = exec(
-      `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
-    );
-
-    return signedUrl;
-  }
-
-  @Mutation(() => String)
-  @UseMiddleware(isAuth)
   async deleteSignedFileFromS3(@Arg("key") key: string): Promise<string> {
     const s3Command = new DeleteObjectCommand({
       Bucket: this.bucketName,
@@ -80,6 +70,22 @@ export class S3Resolver {
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
       expiresIn: 60,
     });
+    return signedUrl;
+  }
+
+  @Query(() => String)
+  @UseMiddleware(isAuth)
+  async getSignedFileFromS3(@Arg("key") fileName: string): Promise<string> {
+    const time = dayjs().add(60, "second").unix();
+    const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
+    const pathToPrivateKey = path.join(
+      __dirname,
+      "/../../../Keys/private_key.pem"
+    );
+    const signedUrl = exec(
+      `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
+    );
+
     return signedUrl;
   }
 }

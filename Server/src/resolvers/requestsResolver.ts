@@ -5,6 +5,7 @@ import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/payments";
 import { notificationsManager } from "../notifications/notificationsManager";
+import { getConnection } from "typeorm";
 
 @Resolver()
 export class RequestsResolver {
@@ -48,6 +49,11 @@ export class RequestsResolver {
       return "transaction failed";
     }
 
+    const celebAliasObj = await getConnection().query(
+      `select alias from Celebrity where id = ${id}`
+    );
+
+    const celebAlias = celebAliasObj[0].alias;
     const amount =
       type === "video"
         ? celeb.videoRequestRatesInNaira
@@ -59,6 +65,7 @@ export class RequestsResolver {
       requestAmountInNaira: amount,
       description: description,
       requestExpires,
+      recepientAlias: celebAlias,
     };
 
     await Requests.create(request).save();
@@ -67,7 +74,8 @@ export class RequestsResolver {
     const result = await notifications.sendNotifications(
       celeb.userId,
       userId,
-      type
+      type,
+      celebAlias
     );
     // await sendRequest
 

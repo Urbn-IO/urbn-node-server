@@ -24,6 +24,10 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
+  recepientAlias!: string;
+
+  @Field()
+  @Column()
   requestType!: string;
 
   @Field()

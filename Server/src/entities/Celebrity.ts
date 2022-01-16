@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Ctx, Field, ObjectType } from "type-graphql";
+import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
 import { AppContext } from "../types";
 import { Categories } from "./Categories";
@@ -15,7 +15,7 @@ import { Categories } from "./Categories";
 @ObjectType()
 @Entity()
 export class Celebrity extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -27,8 +27,8 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   alias?: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   description: string;
 
   @Field()

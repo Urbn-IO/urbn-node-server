@@ -51,6 +51,13 @@ const main = async () => {
     })
   );
   app.use(
+    express.urlencoded({
+      extended: true,
+    })
+  );
+
+  app.use(express.json());
+  app.use(
     cors({
       origin: "*", //to be revisited when making web version of  app
       credentials: true,

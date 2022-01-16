@@ -23,15 +23,11 @@ export class CelebrityResolver {
   ) {
     const userId = req.session.userId;
     celebrity.userId = userId;
-    const user = await User.findOne({ where: { userId: userId } });
-    if (!user) {
-      return false;
-    }
 
     const celeb = Celebrity.create(celebrity);
     await celeb.save();
 
-    await User.update({ userId: userId }, { celebrity: celeb });
+    await User.update({ userId }, { celebrity: celeb });
     await getConnection().query(
       'delete from "celebrity" "Celebrity" where id not in (select "celebrityId" from "user" "User" where "celebrityId" is not null)'
     );

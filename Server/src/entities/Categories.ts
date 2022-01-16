@@ -1,5 +1,5 @@
 import { AppContext } from "../types";
-import { Ctx, Field, ObjectType } from "type-graphql";
+import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -15,7 +15,7 @@ import { CelebCategories } from "./CelebCategories";
 @ObjectType()
 @Entity()
 export class Categories extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 

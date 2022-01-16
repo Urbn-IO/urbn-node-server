@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -11,15 +11,19 @@ import { User } from "./User";
 @ObjectType()
 @Entity()
 export class CardAuthorization extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field()
+  @Column()
+  userId!: string;
+
+  @Column()
+  accountName!: string;
+
   @Column()
   email!: string;
 
-  @Field()
   @Column()
   authorizationCode!: string;
 
@@ -31,15 +35,12 @@ export class CardAuthorization extends BaseEntity {
   @Column()
   last4!: string;
 
-  @Field()
   @Column()
   expMonth!: string;
 
-  @Field()
   @Column()
   expYear!: string;
 
-  @Field()
   @Column()
   bin!: string;
 
@@ -47,21 +48,17 @@ export class CardAuthorization extends BaseEntity {
   @Column()
   bank!: string;
 
-  @Field()
   @Column()
   channel!: string;
 
-  @Field()
   @Column()
   signature!: string;
 
-  @Field()
   @Column()
   reusable!: boolean;
 
-  @Field()
   @Column()
-  country_code!: string;
+  countryCode!: string;
 
   @ManyToOne(() => User, (user) => user.cards)
   user: User;
