@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FilemetaData, PutSignedObject } from "../../utils/s3Types";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { AppContext } from "../../types";
 import { exec } from "shelljs";
@@ -29,9 +29,9 @@ export class S3Resolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Mutation(() => PutSignedObject)
+  @Query(() => PutSignedObject)
   @UseMiddleware(isAuth)
-  async signFileToS3(
+  async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
     @Ctx() { req }: AppContext
   ): Promise<PutSignedObject> {
@@ -53,12 +53,24 @@ export class S3Resolver {
     return { signedUrl, fileName: Key };
   }
 
-  @Mutation(() => String)
+  @Query(() => String)
   @UseMiddleware(isAuth)
-  async getSignedFileFromS3(@Arg("key") fileName: string): Promise<string> {
+  async getFileDeleteUrl(@Arg("key") key: string): Promise<string> {
+    const s3Command = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    const signedUrl = await getSignedUrl(this.s3, s3Command, {
+      expiresIn: 60,
+    });
+    return signedUrl;
+  }
+
+  @Query(() => String)
+  @UseMiddleware(isAuth)
+  async getFileDownloadUrl(@Arg("key") fileName: string): Promise<string> {
     const time = dayjs().add(60, "second").unix();
     const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
-    console.log(keyPairId);
     const pathToPrivateKey = path.join(
       __dirname,
       "/../../../Keys/private_key.pem"
@@ -67,19 +79,6 @@ export class S3Resolver {
       `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
     );
 
-    return signedUrl;
-  }
-
-  @Mutation(() => String)
-  @UseMiddleware(isAuth)
-  async deleteSignedFileFromS3(@Arg("key") key: string): Promise<string> {
-    const s3Command = new DeleteObjectCommand({
-      Bucket: this.bucketName,
-      Key: key,
-    });
-    const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 60,
-    });
     return signedUrl;
   }
 }

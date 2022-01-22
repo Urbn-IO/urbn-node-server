@@ -1,4 +1,4 @@
-import { messaging } from "firebase-admin";
+import { getMessaging } from "firebase-admin/messaging";
 
 export const firebaseCM = (
   messageTitle: string,
@@ -17,7 +17,7 @@ export const firebaseCM = (
     tokens: registrationTokens,
   };
 
-  messaging()
+  getMessaging()
     .sendMulticast(message)
     .then((response) => {
       if (response.failureCount > 0) {

@@ -16,11 +16,15 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
-  requester!: string;
+  requestor!: string;
 
   @Field()
   @Column()
   recepient!: string;
+
+  @Field()
+  @Column()
+  recepientAlias!: string;
 
   @Field()
   @Column()

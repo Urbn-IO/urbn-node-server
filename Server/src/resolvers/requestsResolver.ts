@@ -3,8 +3,9 @@ import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext, RequestInput } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
-import { Payments } from "../payments/Payments";
+import { Payments } from "../payments/payments";
 import { notificationsManager } from "../notifications/notificationsManager";
+import { getConnection } from "typeorm";
 
 @Resolver()
 export class RequestsResolver {
@@ -18,6 +19,9 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
+    if (!userId) {
+      return "user is not logged in";
+    }
     return requestType === ("video" || "call")
       ? this.initiateRequest(
           celebId,
@@ -32,13 +36,10 @@ export class RequestsResolver {
   async initiateRequest(
     id: string,
     type: string,
-    userId: string | undefined,
+    userId: string,
     description: string,
     requestExpires: Date
   ) {
-    if (!userId) {
-      return "user is not logged in";
-    }
     const celeb = await Celebrity.findOne(id);
     if (!celeb) {
       return "Invalid celebrity Id";
@@ -48,17 +49,23 @@ export class RequestsResolver {
       return "transaction failed";
     }
 
+    const celebAliasObj = await getConnection().query(
+      `select alias from Celebrity where id = ${id}`
+    );
+
+    const celebAlias = celebAliasObj[0].alias;
     const amount =
       type === "video"
         ? celeb.videoRequestRatesInNaira
         : celeb.callRequestRatesInNaira;
     const request: RequestInput = {
-      requester: userId,
+      requestor: userId,
       recepient: celeb.userId,
       requestType: type,
       requestAmountInNaira: amount,
       description: description,
       requestExpires,
+      recepientAlias: celebAlias,
     };
 
     await Requests.create(request).save();
@@ -67,7 +74,8 @@ export class RequestsResolver {
     const result = await notifications.sendNotifications(
       celeb.userId,
       userId,
-      type
+      type,
+      celebAlias
     );
     // await sendRequest
 

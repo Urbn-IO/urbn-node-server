@@ -1,4 +1,4 @@
-import { FcmTokens } from "../entities/fcmTokens";
+import { FcmTokens } from "../entities/FcmTokens";
 
 export const addFcmToken = async (
   userId: string,

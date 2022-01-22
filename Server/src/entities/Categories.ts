@@ -1,5 +1,5 @@
-import { AppContext } from "src/types";
-import { Ctx, Field, ObjectType } from "type-graphql";
+import { AppContext } from "../types";
+import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -15,7 +15,7 @@ import { CelebCategories } from "./CelebCategories";
 @ObjectType()
 @Entity()
 export class Categories extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -35,7 +35,7 @@ export class Categories extends BaseEntity {
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
   celebConn: Promise<CelebCategories[]>;
-  //dataloader takes in the categoryId and mappes the Id to the celebs
+  //dataloader takes in the categoryId and maps the Id to the celebs
   @Field(() => [Celebrity], { nullable: true })
   async celebs(
     @Ctx() { celebsLoader }: AppContext

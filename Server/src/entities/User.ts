@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 
 @ObjectType()
@@ -49,9 +51,16 @@ export class User extends BaseEntity {
   @Field({ nullable: true })
   @OneToOne(() => Celebrity, {
     nullable: true,
+    cascade: true,
     onDelete: "CASCADE",
     orphanedRowAction: "delete",
   })
   @JoinColumn()
   celebrity?: Celebrity;
+
+  @Field(() => [CardAuthorization], { nullable: true })
+  @OneToMany(() => CardAuthorization, (card) => card.user, {
+    nullable: true,
+  })
+  cards: CardAuthorization[];
 }

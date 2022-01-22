@@ -1,4 +1,4 @@
-import { FcmTokens } from "../entities/fcmTokens";
+import { FcmTokens } from "../entities/FcmTokens";
 import { User } from "../entities/User";
 import { firebaseCM } from "./firebaseCM";
 
@@ -6,7 +6,8 @@ export class notificationsManager {
   async sendNotifications(
     receiverId: string,
     senderId: string,
-    requestType: string
+    requestType: string,
+    celebAlias: string
   ) {
     const user = await User.findOne({ where: { userId: senderId } });
     const firstName = user?.firstName;
@@ -22,6 +23,6 @@ export class notificationsManager {
     const messageBody = `Your fan ${firstName}, has sent you a ${requestType} request. Check it out!`;
     firebaseCM(messageTitle, messageBody, tokens);
 
-    return `${requestType} request sent to celebrity`;
+    return `${requestType} request sent to ${celebAlias}`;
   }
 }

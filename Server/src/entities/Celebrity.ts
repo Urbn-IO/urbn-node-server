@@ -7,15 +7,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Ctx, Field, ObjectType } from "type-graphql";
+import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
-import { AppContext } from "src/types";
+import { AppContext } from "../types";
 import { Categories } from "./Categories";
 
 @ObjectType()
 @Entity()
 export class Celebrity extends BaseEntity {
-  @Field()
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -27,8 +27,8 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   alias?: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   description: string;
 
   @Field()
@@ -60,7 +60,7 @@ export class Celebrity extends BaseEntity {
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
   categoriesConn: Promise<CelebCategories[]>;
 
-  //dataloader takes in the userId and mapes the Id to the categories
+  //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
   async categories(
     @Ctx() { categoriesLoader }: AppContext
