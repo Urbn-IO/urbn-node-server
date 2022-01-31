@@ -33,13 +33,24 @@ export class S3Resolver {
   @UseMiddleware(isAuth)
   async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
+    @Arg("videoRequest") isVideoRequest: boolean,
+    @Arg("ownedBy", { nullable: true }) ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<PutSignedObject> {
     const datetime = dayjs().format("DD-MM-YYYY");
+    let owner;
+    if (isVideoRequest) {
+      if (ownedBy.length < 8 || ownedBy == null) {
+        return { signedUrl: "", fileName: "" };
+      }
+      owner = ownedBy;
+    } else {
+      owner = req.session.userId;
+    }
     const sanitizedFileName = metaData.fileName
       .trim()
       .replace(/[^a-zA-Z0-9.]/g, "-");
-    const Key = `${req.session.userId}/${datetime}-${sanitizedFileName}`;
+    const Key = `${owner}/${datetime}-${sanitizedFileName}`;
 
     const s3Command = new PutObjectCommand({
       Bucket: this.bucketName,
