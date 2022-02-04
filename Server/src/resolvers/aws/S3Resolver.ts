@@ -33,7 +33,7 @@ export class S3Resolver {
   @UseMiddleware(isAuth)
   async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
-    @Arg("videoRequest") isVideoRequest: boolean,
+    @Arg("isVideoRequest") isVideoRequest: boolean,
     @Arg("ownedBy", { nullable: true }) ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<PutSignedObject> {
