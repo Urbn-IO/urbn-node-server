@@ -4,7 +4,7 @@ import { AppContext, RequestInput } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/payments";
-import { notificationsManager } from "../notifications/notificationsManager";
+import { NotificationsManager } from "../notifications/notificationsManager";
 import { getConnection } from "typeorm";
 
 @Resolver()
@@ -69,12 +69,13 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
-    const notifications = new notificationsManager();
+    const notifications = new NotificationsManager();
 
     const result = await notifications.sendNotifications(
       celeb.userId,
       userId,
       type,
+      false,
       celebAlias
     );
     // await sendRequest

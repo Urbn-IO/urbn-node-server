@@ -15,6 +15,7 @@ import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
+import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
 
 const app = express();
 
@@ -33,6 +34,7 @@ const main = async () => {
   await connection.runMigrations();
 
   initializeApp(firebaseConfig);
+  initializeScheduledJobs();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
   app.use(
