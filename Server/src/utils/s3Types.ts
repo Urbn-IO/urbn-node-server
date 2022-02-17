@@ -10,10 +10,10 @@ export class FilemetaData {
 }
 
 @ObjectType()
-export class PutSignedObject {
+export class s3SignedObject {
   @Field()
   signedUrl: string;
 
-  @Field()
-  fileName: string;
+  @Field({ nullable: true })
+  fileName?: string;
 }

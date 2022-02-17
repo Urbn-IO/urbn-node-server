@@ -15,16 +15,24 @@ import { getConnection, IsNull, Not } from "typeorm";
 
 @Resolver()
 export class CelebrityResolver {
+  cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async registerUserasCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("celebrity") celebrity: CelebrityInputs
+    @Arg("data") data: CelebrityInputs
   ) {
     const userId = req.session.userId;
-    celebrity.userId = userId;
+    data.userId = userId;
 
-    const celeb = Celebrity.create(celebrity);
+    if (data.profileObject) {
+      data.profileObject = this.cdnUrl + "/" + data.profileObject;
+    }
+    if (data.searchThumbnail) {
+      data.searchThumbnail = this.cdnUrl + "/" + data.searchThumbnail;
+    }
+
+    const celeb = Celebrity.create(data);
     await celeb.save();
 
     await User.update({ userId }, { celebrity: celeb });
@@ -64,6 +72,12 @@ export class CelebrityResolver {
           },
         ],
       };
+    }
+    if (data.profileObject) {
+      data.profileObject = this.cdnUrl + "/" + data.profileObject;
+    }
+    if (data.searchThumbnail) {
+      data.searchThumbnail = this.cdnUrl + "/" + data.searchThumbnail;
     }
 
     await Celebrity.update({ userId }, data);

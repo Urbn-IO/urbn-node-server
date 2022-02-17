@@ -5,7 +5,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FilemetaData, PutSignedObject } from "../../utils/s3Types";
+import { FilemetaData, s3SignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { AppContext } from "../../types";
@@ -14,7 +14,7 @@ import path from "path";
 import dayjs from "dayjs";
 
 @Resolver()
-export class S3Resolver {
+export class PrivateMediaResolver {
   bucketName = process.env.AWS_BUCKET_NAME;
   region = process.env.AWS_BUCKET_REGION;
   accessKey = process.env.AWS_ACCESS_KEY;
@@ -29,14 +29,14 @@ export class S3Resolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Query(() => PutSignedObject)
+  @Query(() => s3SignedObject)
   @UseMiddleware(isAuth)
   async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
     @Arg("isVideoRequest") isVideoRequest: boolean,
     @Arg("ownedBy", { nullable: true }) ownedBy: string,
     @Ctx() { req }: AppContext
-  ): Promise<PutSignedObject> {
+  ): Promise<s3SignedObject> {
     const datetime = dayjs().format("DD-MM-YYYY");
     let owner;
     if (isVideoRequest) {
@@ -59,14 +59,14 @@ export class S3Resolver {
     });
 
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 900,
+      expiresIn: 100,
     });
     return { signedUrl, fileName: Key };
   }
 
-  @Query(() => String)
+  @Query(() => s3SignedObject)
   @UseMiddleware(isAuth)
-  async getFileDeleteUrl(@Arg("key") key: string): Promise<string> {
+  async getFileDeleteUrl(@Arg("key") key: string): Promise<s3SignedObject> {
     const s3Command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: key,
@@ -74,12 +74,14 @@ export class S3Resolver {
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
       expiresIn: 60,
     });
-    return signedUrl;
+    return { signedUrl };
   }
 
-  @Query(() => String)
+  @Query(() => s3SignedObject)
   @UseMiddleware(isAuth)
-  async getFileDownloadUrl(@Arg("key") fileName: string): Promise<string> {
+  async getFileDownloadUrl(
+    @Arg("key") fileName: string
+  ): Promise<s3SignedObject> {
     const time = dayjs().add(60, "second").unix();
     const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
     const pathToPrivateKey = path.join(
@@ -90,6 +92,6 @@ export class S3Resolver {
       `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
     );
 
-    return signedUrl;
+    return { signedUrl };
   }
 }

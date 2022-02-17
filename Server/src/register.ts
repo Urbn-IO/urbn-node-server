@@ -6,7 +6,8 @@ import { Celebrity } from "./entities/Celebrity";
 import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
 import { User } from "./entities/User";
-import { S3Resolver } from "./resolvers/aws/S3Resolver";
+import { PrivateMediaResolver } from "./resolvers/aws/privateMediaResolver";
+import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
 import { CategoryResolver } from "./resolvers/categoryResolver";
 import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
 import { CelebrityResolver } from "./resolvers/celebrityResolver";
@@ -29,7 +30,8 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CategoryResolver,
   UserResolver,
   UserCategoriesResolver,
-  S3Resolver,
+  PrivateMediaResolver,
+  PublicMediaResolver,
   CelebrityResolver,
   RequestsResolver,
   PaymentsResolver,
