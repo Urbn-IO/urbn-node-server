@@ -1,4 +1,4 @@
-import { CreateCelebrityInputs } from "../utils/graphqlTypes";
+import { CelebrityInputs, UserResponse } from "../utils/graphqlTypes";
 import {
   Arg,
   Ctx,
@@ -19,7 +19,7 @@ export class CelebrityResolver {
   @UseMiddleware(isAuth)
   async registerUserasCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("celebrity") celebrity: CreateCelebrityInputs
+    @Arg("celebrity") celebrity: CelebrityInputs
   ) {
     const userId = req.session.userId;
     celebrity.userId = userId;
@@ -34,12 +34,59 @@ export class CelebrityResolver {
     return true;
   }
 
+  //update user details
+  @Mutation(() => UserResponse, { nullable: true })
+  @UseMiddleware(isAuth)
+  async updateCelebDetails(
+    @Arg("data") data: CelebrityInputs,
+    @Ctx() { req }: AppContext
+  ): Promise<UserResponse> {
+    const userId = req.session.userId;
+    if (
+      data.acceptsCallRequets === false &&
+      data.acceptsVideoRequests === false
+    ) {
+      return {
+        errors: [
+          {
+            field: "acceptsCallRequets | acceptsVideoRequests",
+            errorMessage: "Minimum of one request type must be selected",
+          },
+        ],
+      };
+    }
+    if (Object.keys(data).length === 0) {
+      return {
+        errors: [
+          {
+            field: "data",
+            errorMessage: "Nothing to update",
+          },
+        ],
+      };
+    }
+
+    await Celebrity.update({ userId }, data);
+    const user = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder("user")
+      .leftJoinAndSelect(
+        "user.celebrity",
+        "celebrity",
+        "celebrity.userId = :userId",
+        { userId }
+      )
+      .getOne();
+
+    return { user };
+  }
+
   @Query(() => [User], { nullable: true })
   @UseMiddleware(isAuth)
   async celebrities(@Arg("userId", { nullable: true }) userId: string) {
     if (userId) {
       const celeb = await User.findOne({
-        where: { userId: userId },
+        where: { userId },
         relations: ["celebrity"],
       });
       return [celeb];

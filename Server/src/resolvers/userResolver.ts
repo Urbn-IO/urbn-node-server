@@ -171,40 +171,6 @@ export class UserResolver {
 
     return { user };
   }
-
-  //update user details
-  @Mutation(() => UserResponse, { nullable: true })
-  @UseMiddleware(isAuth)
-  async updateUserDetails(
-    @Arg("email") email: string,
-    @Arg("nickName") nickName: string
-  ): Promise<UserResponse> {
-    const user = await User.findOne({ where: { email: email.toLowerCase() } });
-    if (!user) {
-      return {
-        errors: [
-          {
-            field: "email",
-            errorMessage: "User not found",
-          },
-        ],
-      };
-    }
-    if (nickName === null || nickName === undefined) {
-      return {
-        errors: [
-          {
-            field: "nickName",
-            errorMessage: "nick name not supplied",
-          },
-        ],
-      };
-    }
-    // user.nickName = nickName;
-    // await User.update({ id: user.id }, { nickName: user.nickName });
-
-    return { user };
-  }
   //logout user
   @Mutation(() => Boolean)
   logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
@@ -278,11 +244,12 @@ export class UserResolver {
   @UseMiddleware(isAuth)
   async users(@Arg("userId", { nullable: true }) userId: string) {
     if (userId) {
-      const user = await User.findOne({
-        where: { userId: userId },
+      const user = await User.find({
+        where: { userId },
+        relations: ["celebrity"],
       });
-      return [user];
+      return user;
     }
-    return await User.find();
+    return await User.find({ relations: ["celebrity"] });
   }
 }

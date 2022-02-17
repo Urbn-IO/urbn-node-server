@@ -52,8 +52,6 @@ export class User extends BaseEntity {
   @OneToOne(() => Celebrity, {
     nullable: true,
     cascade: true,
-    onDelete: "CASCADE",
-    orphanedRowAction: "delete",
   })
   @JoinColumn()
   celebrity?: Celebrity;

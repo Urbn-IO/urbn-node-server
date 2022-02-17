@@ -20,7 +20,7 @@ declare module "express-session" {
 export type RequestInput = {
   requestor: string;
   recepient: string;
-  recepientAlias: string;
+  recepientAlias: string | undefined;
   requestType: string;
   requestAmountInNaira: string;
   description: string;

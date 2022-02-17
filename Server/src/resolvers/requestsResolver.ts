@@ -6,23 +6,24 @@ import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
 import { getConnection } from "typeorm";
+import { genericResponse } from "../utils/graphqlTypes";
 
 @Resolver()
 export class RequestsResolver {
-  @Mutation(() => String)
+  @Mutation(() => genericResponse)
   @UseMiddleware(isAuth)
-  request(
+  async request(
     @Arg("requestType") requestType: string,
     @Arg("celebId") celebId: string,
     @Arg("description") description: string,
     @Arg("requestExpires") requestExpires: Date,
     @Ctx() { req }: AppContext
-  ) {
+  ): Promise<genericResponse> {
     const userId = req.session.userId;
     if (!userId) {
-      return "user is not logged in";
+      return { success: "user is not logged in" };
     }
-    return requestType === ("video" || "call")
+    return requestType === ("video" || "callTypeA" || "callTypeB")
       ? this.initiateRequest(
           celebId,
           requestType,
@@ -30,34 +31,78 @@ export class RequestsResolver {
           description,
           requestExpires
         )
-      : "Error: Invalid request type";
+      : {
+          errors: [
+            {
+              errorMessage: "Invalid request type",
+              field: "requestType",
+            },
+          ],
+        };
   }
 
   async initiateRequest(
-    id: string,
+    celebId: string,
     type: string,
     userId: string,
     description: string,
     requestExpires: Date
-  ) {
-    const celeb = await Celebrity.findOne(id);
+  ): Promise<genericResponse> {
+    const celeb = await getConnection()
+      .getRepository(Celebrity)
+      .createQueryBuilder("celeb")
+      .where("celeb.userId = :celebId", { celebId })
+      .getOne();
     if (!celeb) {
-      return "Invalid celebrity Id";
-    }
-    const paid = new Payments().pay();
-    if (!paid) {
-      return "transaction failed";
+      return {
+        errors: [
+          {
+            errorMessage: "Invalid celebrity Id",
+            field: "celebId",
+          },
+        ],
+      };
     }
 
-    const celebAliasObj = await getConnection().query(
-      `select alias from Celebrity where id = ${id}`
-    );
+    const celebAlias = celeb.alias;
+    const acceptsVideoRequests = celeb.acceptsVideoRequests;
+    const acceptsCallRequests = celeb.acceptsCallRequets;
 
-    const celebAlias = celebAliasObj[0].alias;
+    if (type === "video" && acceptsVideoRequests === false) {
+      return {
+        errors: [
+          {
+            errorMessage: "Celebrity doesn't accept this type of request",
+            field: "requestType",
+          },
+        ],
+      };
+    }
+    if (type !== "video" && acceptsCallRequests === false) {
+      return {
+        errors: [
+          {
+            errorMessage: "Celebrity doesn't accept this type of request",
+            field: "requestType",
+          },
+        ],
+      };
+    }
+
     const amount =
       type === "video"
         ? celeb.videoRequestRatesInNaira
-        : celeb.callRequestRatesInNaira;
+        : type === "callTypeA"
+        ? celeb._3minsCallRequestRatesInNaira
+        : celeb._5minsCallRequestRatesInNaira;
+
+    const paid = new Payments().pay();
+    if (!paid) {
+      return {
+        errors: [{ errorMessage: "Payment Error!", field: "" }],
+      };
+    }
+
     const request: RequestInput = {
       requestor: userId,
       recepient: celeb.userId,
@@ -79,7 +124,6 @@ export class RequestsResolver {
       celebAlias
     );
     // await sendRequest
-
     return result;
   }
 }

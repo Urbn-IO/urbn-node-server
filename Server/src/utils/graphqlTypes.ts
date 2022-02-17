@@ -17,17 +17,21 @@ export class UserInputs {
   password!: string;
 }
 @InputType()
-export class CreateCelebrityInputs {
-  @Field()
+export class CelebrityInputs {
+  @Field({ nullable: true })
   alias: string;
-  @Field()
+  @Field({ nullable: true })
   acceptsVideoRequests: boolean;
-  @Field()
+  @Field({ nullable: true })
   acceptsCallRequets: boolean;
-  @Field()
+  @Field({ nullable: true })
   videoRequestRatesInNaira: string;
-  @Field()
-  callRequestRatesInNaira: string;
+  @Field({ nullable: true })
+  _3minsCallRequestRatesInNaira: string;
+  @Field({ nullable: true })
+  _5minsCallRequestRatesInNaira: string;
+  @Field({ nullable: true })
+  description: string;
   userId: string | undefined;
 }
 
@@ -71,6 +75,14 @@ export class CategoryResponse {
 export class CardResponse {
   @Field(() => [CardAuthorization], { nullable: true })
   cards?: CardAuthorization[];
+
+  @Field(() => [FieldWithError], { nullable: true })
+  errors?: FieldWithError[];
+}
+@ObjectType()
+export class genericResponse {
+  @Field(() => String, { nullable: true })
+  success?: string;
 
   @Field(() => [FieldWithError], { nullable: true })
   errors?: FieldWithError[];

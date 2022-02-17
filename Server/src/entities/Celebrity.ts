@@ -39,13 +39,17 @@ export class Celebrity extends BaseEntity {
   @Column()
   acceptsCallRequets: boolean;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   videoRequestRatesInNaira: string;
 
-  @Field()
-  @Column()
-  callRequestRatesInNaira: string;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  _3minsCallRequestRatesInNaira: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  _5minsCallRequestRatesInNaira: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
