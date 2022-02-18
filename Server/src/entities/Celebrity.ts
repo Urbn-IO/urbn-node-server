@@ -29,7 +29,7 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  searchThumbnail: string;
+  profileThumbnail: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

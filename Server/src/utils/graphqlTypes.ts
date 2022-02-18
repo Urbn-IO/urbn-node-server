@@ -27,7 +27,7 @@ export class CelebrityInputs {
   @Field({ nullable: true })
   videoRequestRatesInNaira: string;
   @Field({ nullable: true })
-  searchThumbnail: string;
+  profileThumbnail: string;
   @Field({ nullable: true })
   profileObject: string;
   @Field({ nullable: true })

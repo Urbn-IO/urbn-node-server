@@ -246,10 +246,9 @@ export class UserResolver {
     if (userId) {
       const user = await User.find({
         where: { userId },
-        relations: ["celebrity"],
       });
       return user;
     }
-    return await User.find({ relations: ["celebrity"] });
+    return await User.find();
   }
 }

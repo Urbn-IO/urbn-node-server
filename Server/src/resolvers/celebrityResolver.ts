@@ -28,8 +28,8 @@ export class CelebrityResolver {
     if (data.profileObject) {
       data.profileObject = this.cdnUrl + "/" + data.profileObject;
     }
-    if (data.searchThumbnail) {
-      data.searchThumbnail = this.cdnUrl + "/" + data.searchThumbnail;
+    if (data.profileThumbnail) {
+      data.profileThumbnail = this.cdnUrl + "/" + data.profileThumbnail;
     }
 
     const celeb = Celebrity.create(data);
@@ -76,8 +76,8 @@ export class CelebrityResolver {
     if (data.profileObject) {
       data.profileObject = this.cdnUrl + "/" + data.profileObject;
     }
-    if (data.searchThumbnail) {
-      data.searchThumbnail = this.cdnUrl + "/" + data.searchThumbnail;
+    if (data.profileThumbnail) {
+      data.profileThumbnail = this.cdnUrl + "/" + data.profileThumbnail;
     }
 
     await Celebrity.update({ userId }, data);
@@ -103,11 +103,25 @@ export class CelebrityResolver {
         where: { userId },
         relations: ["celebrity"],
       });
+      // if (celeb?.celebrity?.profileObject) {
+      //   celeb.celebrity.profileObject =
+      //     this.cdnUrl + "/" + celeb.celebrity.profileObject;
+      // }
+      // if (celeb?.celebrity?.profileThumbnail) {
+      //   celeb.celebrity.profileThumbnail =
+      //     this.cdnUrl + "/" + celeb.celebrity.profileThumbnail;
+      // }
       return [celeb];
     }
-    return await User.find({
+    const celebs = await User.find({
       where: { celebrity: Not(IsNull()) },
       relations: ["celebrity"],
     });
+    // const data = celebs.map((obj) => ({
+    //   ...obj,
+    //   celebrity: obj.celebrity?.profileObject,
+    // }));
+    // console.log(data);
+    return celebs;
   }
 }
