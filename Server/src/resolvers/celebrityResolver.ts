@@ -107,7 +107,7 @@ export class CelebrityResolver {
     if (userId) {
       const celeb = await User.findOne({
         where: { userId },
-        relations: ["celebrity"],
+        relations: ["celebrity", "celebrity.categoriesConn"],
       });
       // if (celeb?.celebrity?.profileObject) {
       //   celeb.celebrity.profileObject =
@@ -121,7 +121,7 @@ export class CelebrityResolver {
     }
     const celebs = await User.find({
       where: { celebrity: Not(IsNull()) },
-      relations: ["celebrity"],
+      relations: ["celebrity", "celebrity.categoriesConn"],
     });
     // const data = celebs.map((obj) => ({
     //   ...obj,

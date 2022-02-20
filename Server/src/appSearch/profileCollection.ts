@@ -1,6 +1,6 @@
 import { client } from "./client";
 
-export const initializeSearch = () => {
+export const initializeSearch = async () => {
   const celebsSchema = {
     name: "celebrity",
     fields: [
@@ -12,21 +12,23 @@ export const initializeSearch = () => {
       { name: "profile_thumbnail", type: "string" },
       { name: "profile_object", type: "string" },
       { name: "description", type: "string" },
-      // { name: "categories", type: "string[]", facet: true },
+      { name: "categories", type: "string[]", facet: true },
     ],
   };
-
-  client
-    .collections()
-    .create(celebsSchema as any)
-    .then(
-      (data) => {
-        console.log("success creating collection");
-        console.log(data);
-      },
-      (err) => {
-        console.log("failure creating collection");
-        console.log(err);
-      }
-    );
+  const collectionExists = await client.collections("celebrity").exists();
+  if (!collectionExists) {
+    client
+      .collections()
+      .create(celebsSchema as any)
+      .then(
+        (data) => {
+          console.log("success creating collection");
+          console.log(data);
+        },
+        (err) => {
+          console.log("failure creating collection");
+          console.log(err);
+        }
+      );
+  }
 };
