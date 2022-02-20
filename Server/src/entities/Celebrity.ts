@@ -20,7 +20,7 @@ export class Celebrity extends BaseEntity {
   id!: number;
 
   @Field()
-  @Column()
+  @Column({ unique: true })
   userId!: string;
 
   @Field({ nullable: true })

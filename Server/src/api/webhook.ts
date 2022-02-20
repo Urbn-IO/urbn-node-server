@@ -1,10 +1,10 @@
 import crypto from "crypto";
 import express from "express";
-const router = express.Router();
 import { Console } from "console";
 import fs from "fs";
 import { User } from "../entities/User";
 import { CardAuthorization } from "../entities/CardAuthorization";
+const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 const WhitelistedIPs = [
   "52.31.139.75",

@@ -6,6 +6,7 @@ import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import router from "./api/webhook";
+import searchRouter from "./api/typeSense";
 import { createConnection } from "typeorm";
 import { ApolloError, ApolloServer } from "apollo-server-express";
 import { GraphQLError } from "graphql";
@@ -18,6 +19,7 @@ import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
 import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
 import { v4 } from "uuid";
+import { initializeSearch } from "./appSearch/profileCollection";
 
 const app = express();
 
@@ -37,6 +39,7 @@ const main = async () => {
 
   initializeApp(firebaseConfig);
   initializeScheduledJobs();
+  initializeSearch();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
   app.use(
@@ -69,6 +72,7 @@ const main = async () => {
   );
 
   app.use("/paystack-webhook", router);
+  app.use("/text-search", searchRouter);
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({

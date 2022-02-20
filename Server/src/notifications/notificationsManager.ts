@@ -1,4 +1,5 @@
 import { genericResponse } from "src/utils/graphqlTypes";
+import { getConnection } from "typeorm";
 import { FcmTokens } from "../entities/FcmTokens";
 import { User } from "../entities/User";
 import { firebaseCM } from "./firebaseCM";
@@ -11,11 +12,17 @@ export class NotificationsManager {
     scheduledNotification: boolean,
     celebAlias = ""
   ): Promise<genericResponse> {
-    const tokenObj = await FcmTokens.find({ where: { userId: receiverId } });
+    const tokenObj = await getConnection()
+      .getRepository(FcmTokens)
+      .createQueryBuilder("Fcmtokens")
+      .select("Fcmtokens.token")
+      .where("Fcmtokens.userId = :receiverId", { receiverId })
+      .getMany();
     const tokens: string[] = [];
     tokenObj.forEach((x) => {
       tokens.push(x.token);
     });
+    console.log(tokens);
     if (tokens.length === 0) {
       return {
         errors: [
