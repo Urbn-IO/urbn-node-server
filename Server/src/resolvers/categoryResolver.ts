@@ -1,4 +1,5 @@
-import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Int, Mutation, Query, Resolver } from "type-graphql";
+import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
 
@@ -7,7 +8,9 @@ export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
   async categories(
     @Arg("categoryId", { nullable: true }) id: number,
-    @Arg("name", { nullable: true }) name: string
+    @Arg("name", { nullable: true }) name: string,
+    @Arg("limit", () => Int, { nullable: true }) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
     if (id) {
       const category = await Categories.findOne({ id });
@@ -19,7 +22,19 @@ export class CategoryResolver {
       });
       return [category];
     }
-    return await Categories.find();
+    const maxLimit = Math.min(18, limit);
+    const queryBuilder = getConnection()
+      .getRepository(Categories)
+      .createQueryBuilder("categories")
+      .leftJoinAndSelect("categories.celebConn", "celebrity")
+      .orderBy("categories.createdAt", "DESC")
+      .take(maxLimit);
+    if (cursor) {
+      queryBuilder.andWhere('categories."createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+    return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
   async createCategory(

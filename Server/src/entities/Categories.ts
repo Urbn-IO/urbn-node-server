@@ -27,9 +27,11 @@ export class Categories extends BaseEntity {
   @Column()
   recommendable!: boolean;
 
+  @Field(() => String)
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
+  @Field(() => String)
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 

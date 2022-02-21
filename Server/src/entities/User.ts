@@ -42,10 +42,12 @@ export class User extends BaseEntity {
   @Column()
   password!: string;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @Field(() => String)
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ type: "timestamptz" })
+  @Field(() => String)
+  @UpdateDateColumn()
   updatedAt: Date;
 
   @Field({ nullable: true })

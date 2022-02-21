@@ -2,6 +2,7 @@ import { CelebrityInputs, UserResponse } from "../utils/graphqlTypes";
 import {
   Arg,
   Ctx,
+  Int,
   Mutation,
   Query,
   Resolver,
@@ -11,7 +12,7 @@ import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
-import { getConnection, IsNull, Not } from "typeorm";
+import { getConnection } from "typeorm";
 import { upsertSearchItem } from "../appSearch/addSearchItem";
 
 @Resolver()
@@ -103,7 +104,11 @@ export class CelebrityResolver {
 
   @Query(() => [User], { nullable: true })
   @UseMiddleware(isAuth)
-  async celebrities(@Arg("userId", { nullable: true }) userId: string) {
+  async celebrities(
+    @Arg("userId", { nullable: true }) userId: string,
+    @Arg("limit", () => Int, { nullable: true }) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ) {
     if (userId) {
       const celeb = await User.findOne({
         where: { userId },
@@ -119,15 +124,28 @@ export class CelebrityResolver {
       // }
       return [celeb];
     }
-    const celebs = await User.find({
-      where: { celebrity: Not(IsNull()) },
-      relations: ["celebrity", "celebrity.categoriesConn"],
-    });
+    const maxLimit = Math.min(18, limit);
+
+    const queryBuilder = getConnection()
+      .getRepository(User)
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.celebrity", "celebrity")
+      .where("user.celebrity is not null")
+      .orderBy("celebrity.createdAt", "DESC")
+      .take(maxLimit);
+
+    if (cursor) {
+      queryBuilder.andWhere('celebrity."createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+    //
+    const celebs = await queryBuilder.getMany();
+
     // const data = celebs.map((obj) => ({
     //   ...obj,
     //   celebrity: obj.celebrity?.profileObject,
     // }));
-    // console.log(data);
     return celebs;
   }
 }
