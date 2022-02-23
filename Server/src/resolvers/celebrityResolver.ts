@@ -56,7 +56,7 @@ export class CelebrityResolver {
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const userId = req.session.userId;
-    if (data.acceptsCallRequets === false && data.acceptShoutOut === false) {
+    if (data.acceptsCalls === false && data.acceptShoutOut === false) {
       return {
         errors: [
           {

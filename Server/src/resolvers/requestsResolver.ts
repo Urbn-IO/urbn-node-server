@@ -67,7 +67,7 @@ export class RequestsResolver {
 
     const celebAlias = celeb.alias;
     const acceptShoutOut = celeb.acceptShoutOut;
-    const acceptsCallRequests = celeb.acceptsCallRequets;
+    const acceptsCallRequests = celeb.acceptsCalls;
 
     if (type === "video" && acceptShoutOut === false) {
       return {

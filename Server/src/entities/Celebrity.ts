@@ -40,12 +40,12 @@ export class Celebrity extends BaseEntity {
   description: string;
 
   @Field()
-  @Column()
+  @Column({ default: false })
   acceptShoutOut: boolean;
 
   @Field()
-  @Column()
-  acceptsCallRequets: boolean;
+  @Column({ default: false })
+  acceptsCalls: boolean;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

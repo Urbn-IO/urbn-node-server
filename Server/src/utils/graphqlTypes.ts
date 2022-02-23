@@ -23,7 +23,7 @@ export class CelebrityInputs {
   @Field({ nullable: true })
   acceptShoutOut: boolean;
   @Field({ nullable: true })
-  acceptsCallRequets: boolean;
+  acceptsCalls: boolean;
   @Field({ nullable: true })
   shoutOutRatesInNaira: string;
   @Field({ nullable: true })
