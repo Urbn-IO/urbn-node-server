@@ -5,6 +5,7 @@ import { CelebCategories } from "./entities/CelebCategories";
 import { Celebrity } from "./entities/Celebrity";
 import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
+import { ShoutOuts } from "./entities/ShoutOuts";
 import { User } from "./entities/User";
 import { PrivateMediaResolver } from "./resolvers/aws/privateMediaResolver";
 import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
@@ -23,6 +24,7 @@ export const entities = [
   Requests,
   FcmTokens,
   CardAuthorization,
+  ShoutOuts,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types

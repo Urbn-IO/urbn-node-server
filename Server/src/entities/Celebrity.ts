@@ -41,7 +41,7 @@ export class Celebrity extends BaseEntity {
 
   @Field()
   @Column()
-  acceptsVideoRequests: boolean;
+  acceptShoutOut: boolean;
 
   @Field()
   @Column()
@@ -49,7 +49,7 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  videoRequestRatesInNaira: string;
+  shoutOutRatesInNaira: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

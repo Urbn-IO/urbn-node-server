@@ -33,13 +33,13 @@ export class PrivateMediaResolver {
   @UseMiddleware(isAuth)
   async getFileUploadUrl(
     @Arg("metaData") metaData: FilemetaData,
-    @Arg("isVideoRequest") isVideoRequest: boolean,
+    @Arg("isShoutOutRequest") isShoutOutRequest: boolean,
     @Arg("ownedBy", { nullable: true }) ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<s3SignedObject> {
     const datetime = dayjs().format("DD-MM-YYYY");
     let owner;
-    if (isVideoRequest) {
+    if (isShoutOutRequest) {
       if (ownedBy.length < 8 || ownedBy == null) {
         return { signedUrl: "", fileName: "" };
       }

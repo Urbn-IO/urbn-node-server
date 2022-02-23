@@ -56,14 +56,11 @@ export class CelebrityResolver {
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const userId = req.session.userId;
-    if (
-      data.acceptsCallRequets === false &&
-      data.acceptsVideoRequests === false
-    ) {
+    if (data.acceptsCallRequets === false && data.acceptShoutOut === false) {
       return {
         errors: [
           {
-            field: "acceptsCallRequets | acceptsVideoRequests",
+            field: "acceptsCallRequets | acceptShoutOut",
             errorMessage: "Minimum of one request type must be selected",
           },
         ],

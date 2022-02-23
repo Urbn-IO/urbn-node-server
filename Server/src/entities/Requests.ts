@@ -11,6 +11,7 @@ import {
 @ObjectType()
 @Entity()
 export class Requests extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 

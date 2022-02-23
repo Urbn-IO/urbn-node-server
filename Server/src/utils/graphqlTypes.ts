@@ -21,11 +21,11 @@ export class CelebrityInputs {
   @Field({ nullable: true })
   alias: string;
   @Field({ nullable: true })
-  acceptsVideoRequests: boolean;
+  acceptShoutOut: boolean;
   @Field({ nullable: true })
   acceptsCallRequets: boolean;
   @Field({ nullable: true })
-  videoRequestRatesInNaira: string;
+  shoutOutRatesInNaira: string;
   @Field({ nullable: true })
   profileThumbnail: string;
   @Field({ nullable: true })

@@ -28,31 +28,31 @@ export class PublicMediaResolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Query(() => s3SignedObject)
+  @Query(() => [s3SignedObject])
   @UseMiddleware(isAuth)
   async getPublicFileUploadUrl(
-    @Arg("isProfilePicture") isProfileObject: boolean,
     @Ctx() { req }: AppContext
-  ): Promise<s3SignedObject> {
-    let type;
+  ): Promise<s3SignedObject[]> {
     const fileId = v4();
     const datetime = dayjs().format("DD-MM-YYYY");
     const userId = req.session.userId;
-    if (isProfileObject) {
-      type = "profileObject";
-    } else {
-      type = "searchThumbnail";
+    const response: s3SignedObject[] = [];
+
+    const types = ["profileThumbnail", "profileObject"];
+
+    for (const type of types) {
+      const Key = `${userId}/${type}/${datetime}-${fileId}`;
+      const s3Command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key,
+      });
+      const signedUrl = await getSignedUrl(this.s3, s3Command, {
+        expiresIn: 900,
+      });
+      response.push({ signedUrl, fileName: Key });
     }
 
-    const Key = `${userId}/${type}/${datetime}-${fileId}`;
-    const s3Command = new PutObjectCommand({
-      Bucket: this.bucketName,
-      Key,
-    });
-    const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 900,
-    });
-    return { signedUrl, fileName: Key };
+    return response;
   }
 
   @Query(() => s3SignedObject)

@@ -1,12 +1,13 @@
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext, RequestInput } from "../types";
+import { AppContext, RequestInput, requestStatus } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
 import { getConnection } from "typeorm";
 import { genericResponse } from "../utils/graphqlTypes";
+import { saveShoutOut } from "../shoutOut/saveShoutOut";
 
 @Resolver()
 export class RequestsResolver {
@@ -65,10 +66,10 @@ export class RequestsResolver {
     }
 
     const celebAlias = celeb.alias;
-    const acceptsVideoRequests = celeb.acceptsVideoRequests;
+    const acceptShoutOut = celeb.acceptShoutOut;
     const acceptsCallRequests = celeb.acceptsCallRequets;
 
-    if (type === "video" && acceptsVideoRequests === false) {
+    if (type === "video" && acceptShoutOut === false) {
       return {
         errors: [
           {
@@ -91,7 +92,7 @@ export class RequestsResolver {
 
     const amount =
       type === "video"
-        ? celeb.videoRequestRatesInNaira
+        ? celeb.shoutOutRatesInNaira
         : type === "callTypeA"
         ? celeb._3minsCallRequestRatesInNaira
         : celeb._5minsCallRequestRatesInNaira;
@@ -125,5 +126,34 @@ export class RequestsResolver {
     );
     // await sendRequest
     return result;
+  }
+
+  @Mutation(() => genericResponse)
+  @UseMiddleware(isAuth)
+  async fulfilRequest(
+    @Arg("requestId") requestId: number,
+    @Arg("videoUrl") videoUrl: string,
+    @Arg("thumbNailUrl") thumbNailUrl: string,
+    @Arg("ownerId") ownedBy: string,
+    @Ctx() { req }: AppContext
+  ): Promise<genericResponse> {
+    const userId = req.session.userId;
+    try {
+      await saveShoutOut(videoUrl, thumbNailUrl, ownedBy, userId);
+      await Requests.update(
+        { id: requestId },
+        { status: requestStatus.FULFILLED }
+      );
+    } catch (err) {
+      return {
+        errors: [
+          {
+            errorMessage: "Error fulfilling request, Try again later",
+            field: "",
+          },
+        ],
+      };
+    }
+    return { success: "Hurray! You've made someone's day!" };
   }
 }
