@@ -87,12 +87,8 @@ export class CelebrityResolver {
     const user = await getConnection()
       .getRepository(User)
       .createQueryBuilder("user")
-      .leftJoinAndSelect(
-        "user.celebrity",
-        "celebrity",
-        "celebrity.userId = :userId",
-        { userId }
-      )
+      .where("user.userId = :userId", { userId })
+      .leftJoinAndSelect("user.celebrity", "celebrity")
       .getOne();
     upsertSearchItem(user);
 
