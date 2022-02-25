@@ -42,10 +42,11 @@ export class Requests extends BaseEntity {
   @Column({ type: "enum", enum: requestStatus, default: requestStatus.PENDING })
   status: requestStatus;
 
-  @Field()
-  @Column({ type: "timestamptz" })
+  @Field(() => String)
+  @Column()
   requestExpires!: Date;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @Field(() => String)
+  @CreateDateColumn()
   createdAt: Date;
 }

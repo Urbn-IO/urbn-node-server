@@ -1,5 +1,13 @@
 import { Celebrity } from "../entities/Celebrity";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import { AppContext, RequestInput, requestStatus } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
@@ -155,5 +163,83 @@ export class RequestsResolver {
       };
     }
     return { success: "Hurray! You've made someone's day!" };
+  }
+
+  @Query(() => [Requests])
+  @UseMiddleware(isAuth)
+  async getSentRequests(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    const maxLimit = Math.min(9, limit);
+    const queryBuilder = getConnection()
+      .getRepository(Requests)
+      .createQueryBuilder("requests")
+      .where("requests.requestor = :userId", { userId })
+      .take(maxLimit);
+
+    if (cursor) {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+    const requests = await queryBuilder.getMany();
+    return requests;
+  }
+
+  @Query(() => [Requests])
+  @UseMiddleware(isAuth)
+  async getReceivedRequests(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    const maxLimit = Math.min(9, limit);
+    const status = requestStatus.PENDING;
+    const queryBuilder = getConnection()
+      .getRepository(Requests)
+      .createQueryBuilder("requests")
+      .where("requests.recepient = :userId", { userId })
+      .andWhere("requests.status = :status", { status })
+      .take(maxLimit);
+
+    if (cursor) {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+
+    const requests = await queryBuilder.getMany();
+    return requests;
+  }
+
+  @Query(() => [Requests])
+  @UseMiddleware(isAuth)
+  async getAcceptedRequests(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    const maxLimit = Math.min(9, limit);
+    const status = requestStatus.ACCEPTED;
+    const queryBuilder = getConnection()
+      .getRepository(Requests)
+      .createQueryBuilder("requests")
+      .where("requests.recepient = :userId", { userId })
+      .andWhere("requests.status = :status", { status })
+      .take(maxLimit);
+
+    if (cursor) {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+        cursor: new Date(parseInt(cursor)),
+      });
+    }
+
+    const requests = await queryBuilder.getMany();
+    return requests;
   }
 }
