@@ -8,8 +8,7 @@ import connectRedis from "connect-redis";
 import router from "./api/webhook";
 import searchRouter from "./api/typeSense";
 import { createConnection } from "typeorm";
-import { ApolloError, ApolloServer } from "apollo-server-express";
-import { GraphQLError } from "graphql";
+import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
@@ -18,7 +17,6 @@ import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
 import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
-import { v4 } from "uuid";
 import { initializeSearch } from "./appSearch/profileCollection";
 
 const app = express();
@@ -86,15 +84,15 @@ const main = async () => {
       categoriesLoader: createCategoriesLoader(),
       celebsLoader: createCelebsLoader(),
     }),
-    formatError: (err: GraphQLError) => {
-      if (err.originalError instanceof ApolloError) {
-        return err;
-      }
-      const errId = v4();
-      console.log(`error Id: ${errId}`);
-      console.log(err);
-      return new GraphQLError(`INTERNAL_SERVER_ERROR: ${errId}`);
-    },
+    // formatError: (err: GraphQLError) => {
+    //   if (err.originalError instanceof ApolloError) {
+    //     return err;
+    //   }
+    //   const errId = v4();
+    //   console.log(`error Id: ${errId}`);
+    //   console.log(err);
+    //   return new GraphQLError(`INTERNAL_SERVER_ERROR: ${errId}`);
+    // },
   });
   apolloServer.applyMiddleware({ app, cors: false });
   app.listen(Port, () => {

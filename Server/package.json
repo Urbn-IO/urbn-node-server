@@ -48,6 +48,7 @@
     "@aws-sdk/s3-request-presigner": "^3.41.0",
     "@babel/runtime": "^7.17.2",
     "@types/node-cron": "^3.0.1",
+    "agora-access-token": "^2.0.4",
     "apollo-server-express": "^2.25.2",
     "argon2": "^0.28.2",
     "class-validator": "^0.13.1",

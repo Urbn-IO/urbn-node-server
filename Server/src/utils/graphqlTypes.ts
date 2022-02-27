@@ -91,3 +91,15 @@ export class genericResponse {
   @Field(() => [FieldWithError], { nullable: true })
   errors?: FieldWithError[];
 }
+
+@ObjectType()
+export class callTokenResponse {
+  @Field(() => String, { nullable: true })
+  token?: string;
+
+  @Field(() => String, { nullable: true })
+  channelName?: string;
+
+  @Field(() => [FieldWithError], { nullable: true })
+  errors?: FieldWithError[];
+}

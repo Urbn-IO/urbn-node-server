@@ -1,4 +1,5 @@
 import { NonEmptyArray } from "type-graphql";
+import { CallTokens } from "./entities/CallTokens";
 import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
 import { CelebCategories } from "./entities/CelebCategories";
@@ -15,6 +16,7 @@ import { CelebrityResolver } from "./resolvers/celebrityResolver";
 import { PaymentsResolver } from "./resolvers/paymentsResolver";
 import { RequestsResolver } from "./resolvers/requestsResolver";
 import { UserResolver } from "./resolvers/userResolver";
+import { VideoCallResolver } from "./resolvers/videoCallResolver";
 
 export const entities = [
   User,
@@ -25,6 +27,7 @@ export const entities = [
   FcmTokens,
   CardAuthorization,
   ShoutOuts,
+  CallTokens,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -37,4 +40,5 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CelebrityResolver,
   RequestsResolver,
   PaymentsResolver,
+  VideoCallResolver,
 ];

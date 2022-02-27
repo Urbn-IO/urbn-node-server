@@ -16,6 +16,7 @@ import { NotificationsManager } from "../notifications/notificationsManager";
 import { getConnection } from "typeorm";
 import { genericResponse } from "../utils/graphqlTypes";
 import { saveShoutOut } from "../shoutOut/saveShoutOut";
+import { deleteCallToken } from "../calls/callTokenManager";
 
 @Resolver()
 export class RequestsResolver {
@@ -138,7 +139,7 @@ export class RequestsResolver {
 
   @Mutation(() => genericResponse)
   @UseMiddleware(isAuth)
-  async fulfilRequest(
+  async fulfilVideoRequest(
     @Arg("requestId") requestId: number,
     @Arg("videoUrl") videoUrl: string,
     @Arg("thumbNailUrl") thumbNailUrl: string,
@@ -165,9 +166,65 @@ export class RequestsResolver {
     return { success: "Hurray! You've made someone's day!" };
   }
 
+  @Mutation(() => genericResponse)
+  @UseMiddleware(isAuth)
+  async fulfilCallRequest(
+    @Arg("requestId") requestId: number,
+    @Arg("callToken") callToken: string
+  ): Promise<genericResponse> {
+    try {
+      deleteCallToken(callToken);
+      await Requests.update(
+        { id: requestId },
+        { status: requestStatus.FULFILLED }
+      );
+    } catch (err) {
+      return {
+        errors: [
+          {
+            errorMessage: "Error fulfilling request, Try again later",
+            field: "",
+          },
+        ],
+      };
+    }
+    return { success: "Request successfully fulfilled" };
+  }
+
+  @Mutation(() => genericResponse)
+  @UseMiddleware(isAuth)
+  async respondToRequest(
+    @Arg("requestId") requestId: number,
+    @Arg("status") status: string
+  ): Promise<genericResponse> {
+    let response;
+    if (status === requestStatus.ACCEPTED) {
+      response = requestStatus.ACCEPTED;
+    } else if (status === requestStatus.REJECTED) {
+      response = requestStatus.REJECTED;
+    } else {
+      return {
+        errors: [{ errorMessage: "Invalid request response", field: "status" }],
+      };
+    }
+    try {
+      await Requests.update({ id: requestId }, { status: response });
+    } catch (err) {
+      return {
+        errors: [
+          {
+            errorMessage: "Error changing request state, Try again later",
+            field: "",
+          },
+        ],
+      };
+    }
+    return { success: "Request Accepted" };
+  }
+
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async getSentRequests(
+  async SentRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
@@ -191,7 +248,7 @@ export class RequestsResolver {
 
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async getReceivedRequests(
+  async ReceivedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
@@ -218,7 +275,7 @@ export class RequestsResolver {
 
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async getAcceptedRequests(
+  async AcceptedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
