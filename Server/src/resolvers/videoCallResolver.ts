@@ -14,7 +14,6 @@ export class VideoCallResolver {
   callInitiatorToken(
     @Arg("role") clientRole: string,
     @Arg("uid") uid: string,
-    @Arg("callType") callType: string,
     @Arg("tokenType") tokenType: string,
     @Ctx() { req }: AppContext
   ): callTokenResponse {

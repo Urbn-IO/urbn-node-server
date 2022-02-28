@@ -30,25 +30,29 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ): Promise<genericResponse> {
     const userId = req.session.userId;
+    const types = ["video", "callTypeA", "callTypeB"];
     if (!userId) {
       return { success: "user is not logged in" };
     }
-    return requestType === ("video" || "callTypeA" || "callTypeB")
-      ? this.initiateRequest(
-          celebId,
-          requestType,
-          userId,
-          description,
-          requestExpires
-        )
-      : {
-          errors: [
-            {
-              errorMessage: "Invalid request type",
-              field: "requestType",
-            },
-          ],
-        };
+
+    if (!types.includes(requestType)) {
+      return {
+        errors: [
+          {
+            errorMessage: "Invalid request type",
+            field: "requestType",
+          },
+        ],
+      };
+    }
+
+    return this.initiateRequest(
+      celebId,
+      requestType,
+      userId,
+      description,
+      requestExpires
+    );
   }
 
   async initiateRequest(
@@ -287,6 +291,7 @@ export class RequestsResolver {
       .getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.recepient = :userId", { userId })
+      .orWhere("requests.requestor = :userId", { userId })
       .andWhere("requests.status = :status", { status })
       .take(maxLimit);
 

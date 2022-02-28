@@ -39,6 +39,7 @@ export class Requests extends BaseEntity {
   @Column()
   description!: string;
 
+  @Field()
   @Column({ type: "enum", enum: requestStatus, default: requestStatus.PENDING })
   status: requestStatus;
 
