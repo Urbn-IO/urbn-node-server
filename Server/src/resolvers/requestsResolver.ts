@@ -13,10 +13,11 @@ import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
-import { getConnection } from "typeorm";
+import { Brackets, getConnection } from "typeorm";
 import { genericResponse } from "../utils/graphqlTypes";
 import { saveShoutOut } from "../shoutOut/saveShoutOut";
 import { deleteCallToken } from "../calls/callTokenManager";
+import { User } from "../entities/User";
 
 @Resolver()
 export class RequestsResolver {
@@ -117,8 +118,15 @@ export class RequestsResolver {
       };
     }
 
+    const user = await User.findOne({
+      where: { userId },
+      select: ["firstName"],
+    });
+    const userName = user?.firstName;
+
     const request: RequestInput = {
       requestor: userId,
+      requestorName: userName,
       recepient: celeb.userId,
       requestType: type,
       requestAmountInNaira: amount,
@@ -290,8 +298,14 @@ export class RequestsResolver {
     const queryBuilder = getConnection()
       .getRepository(Requests)
       .createQueryBuilder("requests")
-      .where("requests.recepient = :userId", { userId })
-      .orWhere("requests.requestor = :userId", { userId })
+      .where(
+        new Brackets((qb) => {
+          qb.where("requests.recepient = :userId", { userId }).orWhere(
+            "requests.requestor = :userId",
+            { userId }
+          );
+        })
+      )
       .andWhere("requests.status = :status", { status })
       .take(maxLimit);
 

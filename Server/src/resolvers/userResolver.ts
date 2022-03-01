@@ -73,6 +73,7 @@ export class UserResolver {
       where: {
         email: userInput.email.toLowerCase(),
       },
+      relations: ["shoutOuts", "celebrity"],
     });
     if (!user) {
       return {
@@ -225,7 +226,10 @@ export class UserResolver {
         errors: [{ field: "", errorMessage: "No session Id" }],
       };
     }
-    const user = await User.findOne({ where: { userId: req.session.userId } });
+    const user = await User.findOne({
+      where: { userId: req.session.userId },
+      relations: ["shoutOuts", "celebrity"],
+    });
     if (!user) {
       return {
         errors: [
@@ -240,15 +244,16 @@ export class UserResolver {
   }
 
   //fetch all users, with optional parameter to fetch a single user by userId
-  @Query(() => [User], { nullable: true })
-  @UseMiddleware(isAuth)
-  async users(@Arg("userId", { nullable: true }) userId: string) {
-    if (userId) {
-      const user = await User.find({
-        where: { userId },
-      });
-      return user;
-    }
-    return await User.find();
-  }
+
+  // @Query(() => [User], { nullable: true })
+  // @UseMiddleware(isAuth)
+  // async users(@Arg("userId", { nullable: true }) userId: string) {
+  //   if (userId) {
+  //     const user = await User.find({
+  //       where: { userId },
+  //     });
+  //     return user;
+  //   }
+  //   return await User.find();
+  // }
 }
