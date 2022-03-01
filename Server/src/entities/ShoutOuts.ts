@@ -25,6 +25,6 @@ export class ShoutOuts extends BaseEntity {
   @Column({ unique: true })
   thumbNailUrl!: string;
 
-  @ManyToOne(() => User, (user) => user.shoutOut)
+  @ManyToOne(() => User, (user) => user.shoutOuts)
   user: User;
 }
