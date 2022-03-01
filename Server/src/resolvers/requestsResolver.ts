@@ -251,7 +251,7 @@ export class RequestsResolver {
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -278,7 +278,7 @@ export class RequestsResolver {
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -313,7 +313,7 @@ export class RequestsResolver {
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."createdAt" < :cursor', {
+      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
