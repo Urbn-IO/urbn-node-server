@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 @ObjectType()
@@ -54,4 +55,8 @@ export class Requests extends BaseEntity {
   @Field(() => String)
   @CreateDateColumn()
   createdAt: Date;
+
+  @Field(() => String)
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

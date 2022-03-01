@@ -247,6 +247,7 @@ export class RequestsResolver {
       .getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.requestor = :userId", { userId })
+      .orderBy("requests.updatedAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
@@ -273,6 +274,7 @@ export class RequestsResolver {
       .createQueryBuilder("requests")
       .where("requests.recepient = :userId", { userId })
       .andWhere("requests.status = :status", { status })
+      .orderBy("requests.updatedAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
@@ -307,6 +309,7 @@ export class RequestsResolver {
         })
       )
       .andWhere("requests.status = :status", { status })
+      .orderBy("requests.updatedAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
