@@ -19,11 +19,11 @@ export class Shoutout extends BaseEntity {
 
   @Field()
   @Column({ unique: true })
-  videoUrl!: string;
+  video!: string;
 
   @Field()
   @Column({ unique: true })
-  thumbNailUrl!: string;
+  thumbnail!: string;
 
   @ManyToOne(() => User, (user) => user.shoutouts)
   user: User;

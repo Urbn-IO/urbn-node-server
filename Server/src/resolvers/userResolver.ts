@@ -73,7 +73,7 @@ export class UserResolver {
       where: {
         email: userInput.email.toLowerCase(),
       },
-      relations: ["shoutOuts", "celebrity"],
+      relations: ["shoutouts", "celebrity"],
     });
     if (!user) {
       return {
@@ -228,7 +228,7 @@ export class UserResolver {
     }
     const user = await User.findOne({
       where: { userId: req.session.userId },
-      relations: ["shoutOuts", "celebrity"],
+      relations: ["shoutouts", "celebrity"],
     });
     if (!user) {
       return {

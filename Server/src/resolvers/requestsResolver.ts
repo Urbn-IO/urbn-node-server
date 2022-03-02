@@ -153,14 +153,14 @@ export class RequestsResolver {
   @UseMiddleware(isAuth)
   async fulfilVideoRequest(
     @Arg("requestId") requestId: number,
-    @Arg("video") videoUrl: string,
-    @Arg("thumbNail") thumbNailUrl: string,
-    @Arg("ownerId") ownedBy: string,
+    @Arg("video") video: string,
+    @Arg("thumbnail") thumbnail: string,
+    @Arg("ownedBy") ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<genericResponse> {
     const userId = req.session.userId;
     try {
-      await saveShoutout(videoUrl, thumbNailUrl, ownedBy, userId);
+      await saveShoutout(video, thumbnail, ownedBy, userId);
       await Requests.update(
         { id: requestId },
         { status: requestStatus.FULFILLED }

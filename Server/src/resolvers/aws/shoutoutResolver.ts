@@ -46,7 +46,7 @@ export class ShoutoutResolver {
       });
 
       const signedUrl = await getSignedUrl(this.s3, s3Command, {
-        expiresIn: 100,
+        expiresIn: 3600,
       });
       response.push({ signedUrl, fileName: Key });
     }
@@ -61,7 +61,7 @@ export class ShoutoutResolver {
       Key: key,
     });
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 60,
+      expiresIn: 3600,
     });
     return { signedUrl };
   }
@@ -71,7 +71,7 @@ export class ShoutoutResolver {
   async shoutoutDownloadUrl(
     @Arg("key") fileName: string
   ): Promise<s3SignedObject> {
-    const time = dayjs().add(60, "second").unix();
+    const time = dayjs().add(3600, "second").unix();
     const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
     const pathToPrivateKey = path.join(
       __dirname,
