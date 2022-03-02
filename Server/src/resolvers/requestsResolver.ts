@@ -15,7 +15,7 @@ import { Payments } from "../payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
 import { Brackets, getConnection } from "typeorm";
 import { genericResponse } from "../utils/graphqlTypes";
-import { saveShoutOut } from "../shoutOut/saveShoutOut";
+import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteCallToken } from "../calls/callTokenManager";
 import { User } from "../entities/User";
 
@@ -153,14 +153,14 @@ export class RequestsResolver {
   @UseMiddleware(isAuth)
   async fulfilVideoRequest(
     @Arg("requestId") requestId: number,
-    @Arg("videoUrl") videoUrl: string,
-    @Arg("thumbNailUrl") thumbNailUrl: string,
+    @Arg("video") videoUrl: string,
+    @Arg("thumbNail") thumbNailUrl: string,
     @Arg("ownerId") ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<genericResponse> {
     const userId = req.session.userId;
     try {
-      await saveShoutOut(videoUrl, thumbNailUrl, ownedBy, userId);
+      await saveShoutout(videoUrl, thumbNailUrl, ownedBy, userId);
       await Requests.update(
         { id: requestId },
         { status: requestStatus.FULFILLED }

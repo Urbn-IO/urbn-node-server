@@ -5,16 +5,16 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { FilemetaData, s3SignedObject } from "../../utils/s3Types";
-import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
+import { s3SignedObject } from "../../utils/s3Types";
+import { Arg, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
-import { AppContext } from "../../types";
 import { exec } from "shelljs";
 import path from "path";
 import dayjs from "dayjs";
+import { v4 } from "uuid";
 
 @Resolver()
-export class PrivateMediaResolver {
+export class ShoutoutResolver {
   bucketName = process.env.AWS_BUCKET_NAME;
   region = process.env.AWS_BUCKET_REGION;
   accessKey = process.env.AWS_ACCESS_KEY;
@@ -29,44 +29,33 @@ export class PrivateMediaResolver {
   };
   s3 = new S3Client(this.s3Config);
 
-  @Query(() => s3SignedObject)
+  @Query(() => [s3SignedObject])
   @UseMiddleware(isAuth)
-  async getFileUploadUrl(
-    @Arg("metaData") metaData: FilemetaData,
-    @Arg("isShoutOutRequest") isShoutOutRequest: boolean,
-    @Arg("ownedBy", { nullable: true }) ownedBy: string,
-    @Ctx() { req }: AppContext
-  ): Promise<s3SignedObject> {
+  async shoutoutUploadUrl(
+    @Arg("ownedBy") ownedBy: string
+  ): Promise<s3SignedObject[]> {
+    const fileId = v4();
     const datetime = dayjs().format("DD-MM-YYYY");
-    let owner;
-    if (isShoutOutRequest) {
-      if (ownedBy.length < 8 || ownedBy == null) {
-        return { signedUrl: "", fileName: "" };
-      }
-      owner = ownedBy;
-    } else {
-      owner = req.session.userId;
+    const response: s3SignedObject[] = [];
+    const types = ["shoutOutThumbnail", "shoutOutProfileOject"];
+    for (const type of types) {
+      const Key = `${ownedBy}/${type}/${datetime}-${fileId}`;
+      const s3Command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key,
+      });
+
+      const signedUrl = await getSignedUrl(this.s3, s3Command, {
+        expiresIn: 100,
+      });
+      response.push({ signedUrl, fileName: Key });
     }
-    const sanitizedFileName = metaData.fileName
-      .trim()
-      .replace(/[^a-zA-Z0-9.]/g, "-");
-    const Key = `${owner}/${datetime}-${sanitizedFileName}`;
-
-    const s3Command = new PutObjectCommand({
-      Bucket: this.bucketName,
-      Key,
-      ContentType: metaData.fileType,
-    });
-
-    const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 100,
-    });
-    return { signedUrl, fileName: Key };
+    return response;
   }
 
   @Query(() => s3SignedObject)
   @UseMiddleware(isAuth)
-  async getFileDeleteUrl(@Arg("key") key: string): Promise<s3SignedObject> {
+  async shoutoutDeleteUrl(@Arg("key") key: string): Promise<s3SignedObject> {
     const s3Command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: key,
@@ -79,7 +68,7 @@ export class PrivateMediaResolver {
 
   @Query(() => s3SignedObject)
   @UseMiddleware(isAuth)
-  async getFileDownloadUrl(
+  async shoutoutDownloadUrl(
     @Arg("key") fileName: string
   ): Promise<s3SignedObject> {
     const time = dayjs().add(60, "second").unix();

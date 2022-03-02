@@ -6,9 +6,9 @@ import { CelebCategories } from "./entities/CelebCategories";
 import { Celebrity } from "./entities/Celebrity";
 import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
-import { ShoutOuts } from "./entities/ShoutOuts";
+import { Shoutout } from "./entities/Shoutout";
 import { User } from "./entities/User";
-import { PrivateMediaResolver } from "./resolvers/aws/privateMediaResolver";
+import { ShoutoutResolver } from "./resolvers/aws/shoutoutResolver";
 import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
 import { CategoryResolver } from "./resolvers/categoryResolver";
 import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
@@ -26,7 +26,7 @@ export const entities = [
   Requests,
   FcmTokens,
   CardAuthorization,
-  ShoutOuts,
+  Shoutout,
   CallTokens,
 ];
 
@@ -35,7 +35,7 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CategoryResolver,
   UserResolver,
   UserCategoriesResolver,
-  PrivateMediaResolver,
+  ShoutoutResolver,
   PublicMediaResolver,
   CelebrityResolver,
   RequestsResolver,

@@ -12,7 +12,7 @@ import {
 } from "typeorm";
 import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
-import { ShoutOuts } from "./ShoutOuts";
+import { Shoutout } from "./Shoutout";
 
 @ObjectType()
 @Entity()
@@ -59,9 +59,9 @@ export class User extends BaseEntity {
   @JoinColumn()
   celebrity?: Celebrity;
 
-  @Field(() => [ShoutOuts])
-  @OneToMany(() => ShoutOuts, (shoutOut) => shoutOut.user)
-  shoutOuts: ShoutOuts[];
+  @Field(() => [Shoutout])
+  @OneToMany(() => Shoutout, (shoutout) => shoutout.user)
+  shoutouts: Shoutout[];
 
   @Field(() => [CardAuthorization], { nullable: true })
   @OneToMany(() => CardAuthorization, (card) => card.user, {

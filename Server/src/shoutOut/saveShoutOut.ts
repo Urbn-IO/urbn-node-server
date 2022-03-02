@@ -1,14 +1,14 @@
-import { ShoutOuts } from "../entities/ShoutOuts";
+import { Shoutout } from "../entities/Shoutout";
 import { User } from "../entities/User";
 
-export const saveShoutOut = async (
+export const saveShoutout = async (
   videoUrl: string,
   thumbNailUrl: string,
   ownedBy: string,
   userId: string | undefined
 ) => {
   const owner = await User.findOne({ where: { userId: ownedBy } });
-  const shoutOut = ShoutOuts.create({
+  const shoutOut = Shoutout.create({
     videoUrl,
     celebId: userId,
     thumbNailUrl,
