@@ -1,3 +1,6 @@
+import path from "path";
+import dayjs from "dayjs";
+import fs from "fs";
 import {
   S3Client,
   S3ClientConfig,
@@ -8,10 +11,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
-import { exec } from "shelljs";
-import path from "path";
-import dayjs from "dayjs";
 import { v4 } from "uuid";
+import { Signer } from "./cloudFront";
 
 @Resolver()
 export class ShoutoutResolver {
@@ -75,11 +76,19 @@ export class ShoutoutResolver {
     const keyPairId = process.env.AWS_CLOUD_FRONT_KEY_PAIR_ID;
     const pathToPrivateKey = path.join(
       __dirname,
-      "/../../../Keys/private_key.pem"
+      "/../../../keys/private_key.pem"
     );
-    const signedUrl = exec(
-      `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
-    );
+
+    const privateKey = fs.readFileSync(pathToPrivateKey, "utf8");
+
+    // const signedUrl = exec(
+    //   `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
+    // );
+    const cfSigner = new Signer(keyPairId, privateKey);
+    const signedUrl = cfSigner.getSignedUrl({
+      url: `${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName}`,
+      expires: time,
+    });
 
     return { signedUrl };
   }
