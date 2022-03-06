@@ -44,7 +44,7 @@ export class VideoCallResolver {
 
     saveCallToken(callToken, userId as string, roomName);
 
-    return { token: callToken, roomName: roomName };
+    return { token: callToken, roomName };
   }
 
   @Query(() => callTokenResponse, { nullable: true })
