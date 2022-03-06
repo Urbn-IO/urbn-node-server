@@ -17,8 +17,9 @@ declare global {
       PAYSTACK_SECRET_KEY: string;
       TYPESENSE_API_KEY: string;
       TYPESENSE_NODE_CLUSTER: string;
-      AGORA_APP_ID: string;
-      AGORA_APP_CERTIFICATE: string;
+      TWILIO_ACCOUNT_SID: string;
+      TWILIO_API_KEY: string;
+      TWILIO_API_SECRET: string;
     }
   }
 }

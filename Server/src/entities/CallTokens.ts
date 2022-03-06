@@ -24,7 +24,7 @@ export class CallTokens extends BaseEntity {
 
   @Field()
   @Column({ unique: true })
-  channelName!: string;
+  roomName!: string;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;

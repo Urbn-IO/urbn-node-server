@@ -98,7 +98,7 @@ export class callTokenResponse {
   token?: string;
 
   @Field(() => String, { nullable: true })
-  channelName?: string;
+  roomName?: string;
 
   @Field(() => [FieldWithError], { nullable: true })
   errors?: FieldWithError[];

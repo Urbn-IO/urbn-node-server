@@ -3,9 +3,9 @@ import { CallTokens } from "../entities/CallTokens";
 export const saveCallToken = async (
   token: string,
   userId: string,
-  channelName: string
+  roomName: string
 ) => {
-  const tokenObj = CallTokens.create({ token, userId, channelName });
+  const tokenObj = CallTokens.create({ token, userId, roomName });
   await tokenObj.save();
 };
 
