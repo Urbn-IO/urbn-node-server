@@ -133,6 +133,7 @@ export class RequestsResolver {
       description: description,
       requestExpires,
       recepientAlias: celebAlias,
+      recepientThumbnail: celeb.profileThumbnail,
     };
 
     await Requests.create(request).save();

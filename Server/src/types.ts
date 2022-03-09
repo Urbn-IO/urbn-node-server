@@ -22,6 +22,7 @@ export type RequestInput = {
   requestorName: string | undefined;
   recepient: string;
   recepientAlias: string | undefined;
+  recepientThumbnail: string;
   requestType: string;
   requestAmountInNaira: string;
   description: string;

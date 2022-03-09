@@ -27,6 +27,14 @@ export class Categories extends BaseEntity {
   @Column()
   recommendable!: boolean;
 
+  @Field(() => Boolean)
+  @Column({ default: false })
+  primary!: boolean;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  thumbnail: string;
+
   @Field(() => String)
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;

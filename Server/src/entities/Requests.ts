@@ -33,6 +33,10 @@ export class Requests extends BaseEntity {
   recepientAlias!: string;
 
   @Field()
+  @Column({ nullable: true })
+  recepientThumbnail!: string;
+
+  @Field()
   @Column()
   requestType!: string;
 
