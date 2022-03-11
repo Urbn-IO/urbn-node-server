@@ -1,4 +1,8 @@
-import { CelebrityInputs, UserResponse } from "../utils/graphqlTypes";
+import {
+  RegisterCelebrityInputs,
+  UpdateCelebrityInputs,
+  UserResponse,
+} from "../utils/graphqlTypes";
 import {
   Arg,
   Ctx,
@@ -22,7 +26,7 @@ export class CelebrityResolver {
   @UseMiddleware(isAuth)
   async registerUserasCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("data") data: CelebrityInputs
+    @Arg("data") data: RegisterCelebrityInputs
   ) {
     const userId = req.session.userId;
     data.userId = userId;
@@ -52,7 +56,7 @@ export class CelebrityResolver {
   @Mutation(() => UserResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async updateCelebDetails(
-    @Arg("data") data: CelebrityInputs,
+    @Arg("data") data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const userId = req.session.userId;

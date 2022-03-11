@@ -16,8 +16,31 @@ export class UserInputs {
   @Field()
   password!: string;
 }
+
 @InputType()
-export class CelebrityInputs {
+export class RegisterCelebrityInputs {
+  @Field()
+  alias: string;
+  @Field()
+  acceptShoutOut: boolean;
+  @Field()
+  acceptsCalls: boolean;
+  @Field()
+  shoutOutRatesInNaira: string;
+  @Field()
+  profileThumbnail: string;
+  @Field()
+  profileObject: string;
+  @Field()
+  _3minsCallRequestRatesInNaira: string;
+  @Field()
+  _5minsCallRequestRatesInNaira: string;
+  @Field()
+  description: string;
+  userId: string | undefined;
+}
+@InputType()
+export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   alias: string;
   @Field({ nullable: true })
