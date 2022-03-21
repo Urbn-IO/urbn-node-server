@@ -18,7 +18,7 @@ export class CategoryResolver {
     }
     if (name) {
       const category = await Categories.findOne({
-        where: { name: name.toLowerCase() },
+        where: { name },
       });
       return [category];
     }
@@ -42,7 +42,7 @@ export class CategoryResolver {
     @Arg("recommendable") recommendable: boolean
   ): Promise<CategoryResponse> {
     const category = Categories.create({
-      name: name.toLowerCase(),
+      name: name.charAt(0).toUpperCase() + name.slice(1),
       recommendable,
     });
     try {
