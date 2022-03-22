@@ -30,12 +30,18 @@ export class CelebrityResolver {
   ) {
     const userId = req.session.userId;
     data.userId = userId;
+    const thumbnail = data.thumbnail;
+    const image = `${data.image}_image.webp`;
+    const imageThumbnail = `${data.image}_thumbnail.webp`;
+    const imagePlaceholder = `${data.image}_placeholder.webp`;
 
-    if (data.profileObject) {
-      data.profileObject = this.cdnUrl + "/" + data.profileObject;
+    if (data.image) {
+      data.image = this.cdnUrl + "/" + image;
+      data.imageThumbnail = this.cdnUrl + "/" + imageThumbnail;
+      data.imagePlaceholder = this.cdnUrl + "/" + imagePlaceholder;
     }
-    if (data.profileThumbnail) {
-      data.profileThumbnail = this.cdnUrl + "/" + data.profileThumbnail;
+    if (data.thumbnail) {
+      data.thumbnail = this.cdnUrl + "/" + thumbnail;
     }
 
     const celeb = Celebrity.create(data);
@@ -60,6 +66,10 @@ export class CelebrityResolver {
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const userId = req.session.userId;
+    const thumbnail = data.thumbnail;
+    const image = `${data.image}_image.webp`;
+    const imageThumbnail = `${data.image}_thumbnail.webp`;
+    const imagePlaceholder = `${data.image}_placeholder.webp`;
     if (data.acceptsCalls === false && data.acceptShoutOut === false) {
       return {
         errors: [
@@ -80,11 +90,13 @@ export class CelebrityResolver {
         ],
       };
     }
-    if (data.profileObject) {
-      data.profileObject = this.cdnUrl + "/" + data.profileObject;
+    if (data.image) {
+      data.image = this.cdnUrl + "/" + image;
+      data.imageThumbnail = this.cdnUrl + "/" + imageThumbnail;
+      data.imagePlaceholder = this.cdnUrl + "/" + imagePlaceholder;
     }
-    if (data.profileThumbnail) {
-      data.profileThumbnail = this.cdnUrl + "/" + data.profileThumbnail;
+    if (data.thumbnail) {
+      data.thumbnail = this.cdnUrl + "/" + thumbnail;
     }
 
     await Celebrity.update({ userId }, data);

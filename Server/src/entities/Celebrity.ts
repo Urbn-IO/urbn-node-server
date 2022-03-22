@@ -29,11 +29,19 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  profileThumbnail: string;
+  thumbnail: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  profileObject: string;
+  image: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  imageThumbnail: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  imagePlaceholder: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

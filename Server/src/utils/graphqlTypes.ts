@@ -28,9 +28,11 @@ export class RegisterCelebrityInputs {
   @Field()
   shoutOutRatesInNaira: string;
   @Field()
-  profileThumbnail: string;
+  thumbnail: string;
   @Field()
-  profileObject: string;
+  image: string;
+  imageThumbnail: string;
+  imagePlaceholder: string;
   @Field()
   _3minsCallRequestRatesInNaira: string;
   @Field()
@@ -50,9 +52,11 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   shoutOutRatesInNaira: string;
   @Field({ nullable: true })
-  profileThumbnail: string;
+  thumbnail: string;
   @Field({ nullable: true })
-  profileObject: string;
+  image: string;
+  imageThumbnail: string;
+  imagePlaceholder: string;
   @Field({ nullable: true })
   _3minsCallRequestRatesInNaira: string;
   @Field({ nullable: true })

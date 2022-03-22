@@ -12,7 +12,7 @@ import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { v4 } from "uuid";
-import { Signer } from "./cloudFront";
+import { Signer } from "../../utils/cloudFront";
 
 @Resolver()
 export class ShoutoutResolver {
