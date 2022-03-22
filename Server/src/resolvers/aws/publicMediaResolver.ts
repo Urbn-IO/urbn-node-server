@@ -47,7 +47,7 @@ export class PublicMediaResolver {
       Key,
     });
     const signedUrl = await getSignedUrl(this.s3, s3Command, {
-      expiresIn: 900,
+      expiresIn: 60,
     });
 
     return { signedUrl, fileName: Key };
