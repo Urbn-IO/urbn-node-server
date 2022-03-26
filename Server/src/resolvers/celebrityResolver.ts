@@ -36,12 +36,12 @@ export class CelebrityResolver {
     const imagePlaceholder = `${data.image}_placeholder.webp`;
 
     if (data.image) {
-      data.image = this.cdnUrl + "/" + image;
-      data.imageThumbnail = this.cdnUrl + "/" + imageThumbnail;
-      data.imagePlaceholder = this.cdnUrl + "/" + imagePlaceholder;
+      data.image = `${this.cdnUrl}/${image}`;
+      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
+      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
     }
     if (data.thumbnail) {
-      data.thumbnail = this.cdnUrl + "/" + thumbnail;
+      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
 
     const celeb = Celebrity.create(data);
@@ -91,12 +91,12 @@ export class CelebrityResolver {
       };
     }
     if (data.image) {
-      data.image = this.cdnUrl + "/" + image;
-      data.imageThumbnail = this.cdnUrl + "/" + imageThumbnail;
-      data.imagePlaceholder = this.cdnUrl + "/" + imagePlaceholder;
+      data.image = `${this.cdnUrl}/${image}`;
+      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
+      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
     }
     if (data.thumbnail) {
-      data.thumbnail = this.cdnUrl + "/" + thumbnail;
+      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
 
     await Celebrity.update({ userId }, data);
