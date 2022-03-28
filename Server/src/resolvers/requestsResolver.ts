@@ -16,7 +16,7 @@ import { NotificationsManager } from "../notifications/notificationsManager";
 import { Brackets, getConnection } from "typeorm";
 import { genericResponse } from "../utils/graphqlTypes";
 import { saveShoutout } from "../shoutOut/saveShoutOut";
-import { deleteCallToken } from "../calls/callTokenManager";
+import { deleteCallToken } from "../utils/saveCallToken";
 import { User } from "../entities/User";
 
 @Resolver()

@@ -17,12 +17,10 @@ export const addFcmToken = async (
   return "sucessfully added token";
 };
 
-export const getFcmTokens = async (
-  userId: string
-): Promise<string | FcmTokens[]> => {
-  const tokens = FcmTokens.find({ where: userId });
+export const getFcmTokens = async (userId: string): Promise<FcmTokens[]> => {
+  const tokens = await FcmTokens.find({ where: userId });
   if (tokens) {
     return tokens;
   }
-  return `no tokens found for user: ${userId} `;
+  return [];
 };

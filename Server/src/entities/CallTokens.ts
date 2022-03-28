@@ -4,8 +4,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from "typeorm";
 
 @ObjectType()
@@ -15,8 +15,9 @@ export class CallTokens extends BaseEntity {
   id!: number;
 
   @Field()
+  @Index()
   @Column()
-  userId!: string;
+  requestId!: number;
 
   @Field()
   @Column({ unique: true })
@@ -28,7 +29,4 @@ export class CallTokens extends BaseEntity {
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
-
-  @UpdateDateColumn({ type: "timestamptz" })
-  updatedAt: Date;
 }
