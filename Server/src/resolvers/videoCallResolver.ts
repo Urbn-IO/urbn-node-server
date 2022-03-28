@@ -2,7 +2,7 @@ import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../middleware/isAuth";
 import { v4 } from "uuid";
 import { callTokenResponse } from "../utils/graphqlTypes";
-import { saveCallToken } from "../calls/callTokenManager";
+import { saveCallToken } from "../utils/saveCallToken";
 import { CallTokens } from "../entities/CallTokens";
 import { jwt } from "twilio";
 import { AppContext } from "../types";
@@ -11,7 +11,10 @@ import { AppContext } from "../types";
 export class VideoCallResolver {
   @Query(() => callTokenResponse, { nullable: true })
   @UseMiddleware(isAuth)
-  callInitiatorToken(@Ctx() { req }: AppContext): callTokenResponse {
+  callInitiatorToken(
+    @Arg("requestId") requestId: number,
+    @Ctx() { req }: AppContext
+  ): callTokenResponse {
     const userId = req.session.userId;
     const AccessToken = jwt.AccessToken;
     const VideoGrant = AccessToken.VideoGrant;
@@ -35,14 +38,14 @@ export class VideoCallResolver {
       twilioAccountSid,
       twilioApiKey,
       twilioApiSecret,
-      { identity: identity }
+      { identity }
     );
     token.addGrant(videoGrant);
 
     // Serialize the token to a JWT string
     const callToken = token.toJwt();
 
-    saveCallToken(callToken, userId as string, roomName);
+    saveCallToken(callToken, requestId, roomName);
 
     return { token: callToken, roomName };
   }
@@ -50,11 +53,11 @@ export class VideoCallResolver {
   @Query(() => callTokenResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async callRecepientToken(
-    @Arg("requestorId") requestorId: string
+    @Arg("requestId") requestId: number
   ): Promise<callTokenResponse> {
     let token, roomName;
     const tokenObj = await CallTokens.findOne({
-      where: { userId: requestorId },
+      where: { requestId },
       select: ["token", "roomName"],
     });
     if (tokenObj) {
