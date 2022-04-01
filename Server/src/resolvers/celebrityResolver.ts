@@ -22,12 +22,12 @@ import { upsertSearchItem } from "../appSearch/addSearchItem";
 @Resolver()
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
-  @Mutation(() => Boolean)
+  @Mutation(() => UserResponse)
   @UseMiddleware(isAuth)
   async registerUserasCeleb(
     @Ctx() { req }: AppContext,
     @Arg("data") data: RegisterCelebrityInputs
-  ) {
+  ): Promise<UserResponse> {
     const userId = req.session.userId;
     data.userId = userId;
     const thumbnail = data.thumbnail;
@@ -44,18 +44,24 @@ export class CelebrityResolver {
       data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
 
-    const celeb = Celebrity.create(data);
-    await celeb.save();
+    try {
+      const celeb = Celebrity.create(data);
+      await celeb.save();
 
-    await User.update({ userId }, { celebrity: celeb });
-    const user = await User.findOne({
-      where: { userId },
-      relations: ["celebrity"],
-    });
+      await User.update({ userId }, { celebrity: celeb });
+      const user = await User.findOne({
+        where: { userId },
+        relations: ["celebrity"],
+      });
 
-    upsertSearchItem(user);
+      upsertSearchItem(user);
 
-    return true;
+      return { user };
+    } catch (err) {
+      return {
+        errors: [{ errorMessage: "An Error Occured", field: "" }],
+      };
+    }
   }
 
   //update user details

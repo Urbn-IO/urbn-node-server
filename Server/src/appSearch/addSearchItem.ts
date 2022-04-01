@@ -19,19 +19,15 @@ export const upsertSearchItem = async (user: User | undefined) => {
 
     const categories: CelebCategories[] = [];
     categoriesObj.forEach((x) => {
-      const test = (x as any).__category__.name;
-      categories.push(test);
+      const category = (x as any).__category__.name;
+      categories.push(category);
     });
 
     const celebObj = {
       id: user.celebrity.id.toString(),
       user_id: user.userId,
-      first_name: user.firstName,
-      last_name: user.lastName,
       alias: user.celebrity.alias,
       thumbnail: user.celebrity.thumbnail,
-      image: user.celebrity.image,
-      image_thumbnail: user.celebrity.imageThumbnail,
       image_placeholder: user.celebrity.imagePlaceholder,
       description: user.celebrity.description,
       categories,

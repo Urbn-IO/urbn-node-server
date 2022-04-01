@@ -6,12 +6,8 @@ export const initializeSearch = async () => {
     fields: [
       { name: "id", type: "string" },
       { name: "user_id", type: "string" },
-      { name: "first_name", type: "string" },
-      { name: "last_name", type: "string" },
       { name: "alias", type: "string" },
       { name: "thumbnail", type: "string" },
-      { name: "image", type: "string" },
-      { name: "image_thumbnail", type: "string" },
       { name: "image_placeholder", type: "string" },
       { name: "description", type: "string" },
       { name: "categories", type: "string[]", facet: true },

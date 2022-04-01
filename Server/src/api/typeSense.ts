@@ -57,7 +57,7 @@ searchRouter.post("/add", async (req, res) => {
     const result = await client
       .collections("celebrity")
       .documents()
-      .import(celebs);
+      .import(celebs, { action: "upsert" });
     res.send(result);
   } catch (err) {
     res.send(err);
