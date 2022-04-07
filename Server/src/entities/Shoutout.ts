@@ -11,6 +11,7 @@ import { User } from "./User";
 @ObjectType()
 @Entity()
 export class Shoutout extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
