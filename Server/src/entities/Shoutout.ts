@@ -19,6 +19,10 @@ export class Shoutout extends BaseEntity {
   celebId!: string;
 
   @Field()
+  @Column({ nullable: true })
+  celebAlias!: string;
+
+  @Field()
   @Column({ unique: true })
   video!: string;
 

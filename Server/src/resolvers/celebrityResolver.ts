@@ -34,6 +34,22 @@ export class CelebrityResolver {
     const image = `${data.image}_image.webp`;
     const imageThumbnail = `${data.image}_thumbnail.webp`;
     const imagePlaceholder = `${data.image}_placeholder.webp`;
+    const maxRate = 50000000;
+
+    if (
+      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data.shoutOutRatesInNaira) > maxRate
+    ) {
+      return {
+        errors: [
+          {
+            errorMessage: "Maximum price rate for any request exceeded",
+            field: "",
+          },
+        ],
+      };
+    }
 
     if (data.image) {
       data.image = `${this.cdnUrl}/${image}`;
@@ -76,6 +92,23 @@ export class CelebrityResolver {
     const image = `${data.image}_image.webp`;
     const imageThumbnail = `${data.image}_thumbnail.webp`;
     const imagePlaceholder = `${data.image}_placeholder.webp`;
+    const maxRate = 50000000;
+
+    if (
+      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data.shoutOutRatesInNaira) > maxRate
+    ) {
+      return {
+        errors: [
+          {
+            errorMessage: "Maximum price rate for any request exceeded",
+            field: "",
+          },
+        ],
+      };
+    }
+
     if (data.acceptsCalls === false && data.acceptShoutOut === false) {
       return {
         errors: [
