@@ -20,6 +20,8 @@ import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuth } from "../middleware/isAuth";
 import { validateInput } from "../utils/validateInput";
 import { TokensManager } from "../utils/tokensManager";
+import { Celebrity } from "../entities/Celebrity";
+import { In } from "typeorm";
 @Resolver()
 export class UserResolver {
   //create User resolver
@@ -240,6 +242,24 @@ export class UserResolver {
         ],
       };
     }
+    if (user.shoutouts.length > 0) {
+      const ids = [];
+      for (const shoutout of user.shoutouts) {
+        ids.push(shoutout.celebId);
+      }
+      const alias = await Celebrity.find({
+        select: ["alias", "userId"],
+        where: { userId: In(ids) },
+      });
+      alias.forEach((x) => {
+        for (const shoutout of user.shoutouts) {
+          if (x.userId === shoutout.celebId) {
+            shoutout.celebAlias = x.alias as string;
+          }
+        }
+      });
+    }
+
     return { user };
   }
 

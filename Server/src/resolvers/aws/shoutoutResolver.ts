@@ -38,9 +38,10 @@ export class ShoutoutResolver {
     const fileId = v4();
     const datetime = dayjs().format("DD-MM-YYYY");
     const response: s3SignedObject[] = [];
-    const types = ["shoutOutThumbnail", "shoutOutProfileOject"];
-    for (const type of types) {
-      const Key = `${ownedBy}/${type}/${datetime}-${fileId}`;
+    const thumbnail = `${ownedBy}/shoutOutThumbnail/${datetime}-${fileId}`;
+    const profileObject = `${ownedBy}/shoutOutProfileOject/${datetime}-${fileId}.mp4`;
+    const keys = [thumbnail, profileObject];
+    for (const Key of keys) {
       const s3Command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key,

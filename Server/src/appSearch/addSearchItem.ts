@@ -26,6 +26,8 @@ export const upsertSearchItem = async (user: User | undefined) => {
     const celebObj = {
       id: user.celebrity.id.toString(),
       user_id: user.userId,
+      first_name: user.firstName,
+      last_name: user.lastName,
       alias: user.celebrity.alias,
       thumbnail: user.celebrity.thumbnail,
       image_placeholder: user.celebrity.imagePlaceholder,

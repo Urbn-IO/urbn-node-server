@@ -11,11 +11,16 @@ import { User } from "./User";
 @ObjectType()
 @Entity()
 export class Shoutout extends BaseEntity {
+  @Field()
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Column()
   celebId!: string;
+
+  @Field()
+  @Column({ nullable: true })
+  celebAlias!: string;
 
   @Field()
   @Column({ unique: true })
