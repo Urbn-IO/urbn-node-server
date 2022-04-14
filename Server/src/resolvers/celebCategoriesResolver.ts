@@ -6,12 +6,10 @@ export class UserCategoriesResolver {
   @Mutation(() => Boolean)
   async mapCelebToCategories(
     @Arg("celebId") celebId: number,
-    @Arg("categoryIds", () => [Number]) categoryIds: number[]
+    @Arg("categoryId") categoryId: number
   ): Promise<boolean> {
     try {
-      for (const categoryId of categoryIds) {
-        await CelebCategories.create({ celebId, categoryId }).save();
-      }
+      await CelebCategories.create({ celebId, categoryId }).save();
     } catch (err) {
       return false;
     }
