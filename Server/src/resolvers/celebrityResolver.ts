@@ -18,6 +18,7 @@ import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
 import { getConnection } from "typeorm";
 import { upsertSearchItem } from "../appSearch/addSearchItem";
+import { hashRow } from "../utils/hashRow";
 
 @Resolver()
 export class CelebrityResolver {
@@ -59,6 +60,8 @@ export class CelebrityResolver {
     if (data.thumbnail) {
       data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
+    const hashString = hashRow(data);
+    data.profileHash = hashString;
 
     try {
       const celeb = Celebrity.create(data);
@@ -137,6 +140,9 @@ export class CelebrityResolver {
     if (data.thumbnail) {
       data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
+
+    const hashString = hashRow(data);
+    data.profileHash = hashString;
 
     await Celebrity.update({ userId }, data);
     const user = await getConnection()

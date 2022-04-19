@@ -1,5 +1,5 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType } from "type-graphql";
+import { InputType, Field, ObjectType, Int } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
 
@@ -30,15 +30,16 @@ export class RegisterCelebrityInputs {
   @Field()
   thumbnail: string;
   @Field()
-  image: string;
-  imageThumbnail: string;
-  imagePlaceholder: string;
-  @Field()
   _3minsCallRequestRatesInNaira: string;
   @Field()
   _5minsCallRequestRatesInNaira: string;
   @Field()
   description: string;
+  @Field()
+  image: string;
+  imageThumbnail: string;
+  imagePlaceholder: string;
+  profileHash: string;
   userId: string | undefined;
 }
 @InputType()
@@ -54,15 +55,16 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   thumbnail: string;
   @Field({ nullable: true })
-  image: string;
-  imageThumbnail: string;
-  imagePlaceholder: string;
-  @Field({ nullable: true })
   _3minsCallRequestRatesInNaira: string;
   @Field({ nullable: true })
   _5minsCallRequestRatesInNaira: string;
   @Field({ nullable: true })
   description: string;
+  @Field({ nullable: true })
+  image: string;
+  imageThumbnail: string;
+  imagePlaceholder: string;
+  profileHash: string;
   userId: string | undefined;
 }
 
@@ -72,6 +74,12 @@ export class UserInputsLogin {
   password: string;
   @Field()
   email: string;
+}
+
+@InputType()
+export class CategoryIds {
+  @Field(() => [Int])
+  categoryId: number[];
 }
 
 //remove the field propery in future
