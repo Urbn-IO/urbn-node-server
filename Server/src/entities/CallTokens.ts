@@ -4,7 +4,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
   PrimaryGeneratedColumn,
 } from "typeorm";
 
@@ -15,8 +14,7 @@ export class CallTokens extends BaseEntity {
   id!: number;
 
   @Field()
-  @Index()
-  @Column()
+  @Column({ unique: true })
   requestId!: number;
 
   @Field()

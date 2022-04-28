@@ -19,6 +19,7 @@ import { AppContext } from "../types";
 import { getConnection } from "typeorm";
 import { upsertSearchItem } from "../appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
+import { CelebCategories } from "../entities/CelebCategories";
 
 @Resolver()
 export class CelebrityResolver {
@@ -201,5 +202,50 @@ export class CelebrityResolver {
     //   celebrity: obj.celebrity?.profileObject,
     // }));
     return celebs;
+  }
+
+  @Query(() => [Celebrity])
+  @UseMiddleware(isAuth)
+  async similarToCelebrity(
+    @Arg("celebId") celebId: number,
+    @Arg("limit", () => Int) limit: number
+  ) {
+    const maxLimit = Math.min(8, limit);
+    try {
+      const catIds = [];
+      const celebs = [];
+      const categoryObj = await getConnection()
+        .getRepository(CelebCategories)
+        .createQueryBuilder("celebCat")
+        .select("celebCat.categoryId")
+        .where("celebCat.celebId = :celebId", { celebId })
+        .getMany();
+
+      for (const item of categoryObj) {
+        catIds.push(item.categoryId);
+      }
+      const celebsObj = await getConnection()
+        .getRepository(CelebCategories)
+        .createQueryBuilder("celebCat")
+        .leftJoinAndSelect("celebCat.celebrity", "celebrity")
+        .where("celebCat.celebId != :celebId", { celebId })
+        .andWhere("celebCat.categoryId in (:...catIds)", { catIds })
+        .take(maxLimit)
+        .orderBy("RANDOM()")
+        .getMany();
+      // const celebsObj = await CelebCategories.find({
+      //   relations: ["celebrity"],
+      //   where: { celebId: Not(celebId), categoryId: In(catIds) },
+      //   // take: maxLimit,
+      // });
+
+      for (const item of celebsObj) {
+        celebs.push(item.celebrity);
+      }
+
+      return celebs;
+    } catch (err) {
+      return [];
+    }
   }
 }

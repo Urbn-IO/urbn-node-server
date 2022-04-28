@@ -1,5 +1,5 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType, Int } from "type-graphql";
+import { InputType, Field, ObjectType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
 
@@ -76,11 +76,11 @@ export class UserInputsLogin {
   email: string;
 }
 
-@InputType()
-export class CategoryIds {
-  @Field(() => [Int])
-  categoryId: number[];
-}
+// @InputType()
+// export class CategoryIds {
+//   @Field(() => [Int])
+//   categoryId: number[];
+// }
 
 //remove the field propery in future
 @ObjectType()
