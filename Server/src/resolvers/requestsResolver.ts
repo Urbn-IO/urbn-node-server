@@ -11,58 +11,25 @@ import {
 import { AppContext, RequestInput, requestStatus } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
-import { Payments } from "../payments/payments";
+import { Payments } from "../services/payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
 import { Brackets, getConnection } from "typeorm";
-import { genericResponse } from "../utils/graphqlTypes";
+import { genericResponse, RequestInputs } from "../utils/graphqlTypes";
 import { saveShoutout } from "../shoutOut/saveShoutOut";
-import { deleteCallToken } from "../utils/saveCallToken";
+import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
+import { ValidateRecipient } from "../utils/requestValidations";
 
 @Resolver()
 export class RequestsResolver {
   @Mutation(() => genericResponse)
   @UseMiddleware(isAuth)
-  async request(
-    @Arg("requestType") requestType: string,
-    @Arg("celebId") celebId: string,
-    @Arg("description") description: string,
-    @Arg("requestExpires") requestExpires: Date,
+  async createRequest(
+    @Arg("Input") Input: RequestInputs,
     @Ctx() { req }: AppContext
   ): Promise<genericResponse> {
-    const userId = req.session.userId;
-    const types = ["video", "callTypeA", "callTypeB"];
-    if (!userId) {
-      return { success: "user is not logged in" };
-    }
-
-    if (!types.includes(requestType)) {
-      return {
-        errors: [
-          {
-            errorMessage: "Invalid request type",
-            field: "requestType",
-          },
-        ],
-      };
-    }
-
-    return this.initiateRequest(
-      celebId,
-      requestType,
-      userId,
-      description,
-      requestExpires
-    );
-  }
-
-  async initiateRequest(
-    celebId: string,
-    type: string,
-    userId: string,
-    description: string,
-    requestExpires: Date
-  ): Promise<genericResponse> {
+    const userId = req.session.userId as string;
+    const celebId = Input.celebId;
     const celeb = await getConnection()
       .getRepository(Celebrity)
       .createQueryBuilder("celeb")
@@ -72,7 +39,7 @@ export class RequestsResolver {
       return {
         errors: [
           {
-            errorMessage: "Invalid celebrity Id",
+            errorMessage: "Celebrity not found",
             field: "celebId",
           },
         ],
@@ -83,7 +50,7 @@ export class RequestsResolver {
     const acceptShoutOut = celeb.acceptShoutOut;
     const acceptsCallRequests = celeb.acceptsCalls;
 
-    if (type === "video" && acceptShoutOut === false) {
+    if (Input.requestType === "shoutout" && acceptShoutOut === false) {
       return {
         errors: [
           {
@@ -93,7 +60,7 @@ export class RequestsResolver {
         ],
       };
     }
-    if (type !== "video" && acceptsCallRequests === false) {
+    if (Input.requestType !== "shoutout" && acceptsCallRequests === false) {
       return {
         errors: [
           {
@@ -105,9 +72,9 @@ export class RequestsResolver {
     }
 
     const amount =
-      type === "video"
+      Input.requestType === "shoutout"
         ? celeb.shoutOutRatesInNaira
-        : type === "callTypeA"
+        : Input.requestType === "call_type_A"
         ? celeb._3minsCallRequestRatesInNaira
         : celeb._5minsCallRequestRatesInNaira;
 
@@ -128,10 +95,10 @@ export class RequestsResolver {
       requestor: userId,
       requestorName: userName,
       recepient: celeb.userId,
-      requestType: type,
+      requestType: Input.requestType,
       requestAmountInNaira: amount,
-      description: description,
-      requestExpires,
+      description: Input.description,
+      requestExpires: Input.requestExpiration,
       recepientAlias: celebAlias,
       recepientThumbnail: celeb.thumbnail,
     };
@@ -142,7 +109,7 @@ export class RequestsResolver {
     const result = await notifications.sendNotifications(
       celeb.userId,
       userId,
-      type,
+      Input.requestType,
       false,
       celebAlias
     );
@@ -152,20 +119,40 @@ export class RequestsResolver {
 
   @Mutation(() => genericResponse)
   @UseMiddleware(isAuth)
-  async fulfilVideoRequest(
+  async fulfilShoutoutRequest(
     @Arg("requestId") requestId: number,
     @Arg("video") video: string,
     @Arg("thumbnail") thumbnail: string,
-    @Arg("ownedBy") ownedBy: string,
     @Ctx() { req }: AppContext
   ): Promise<genericResponse> {
-    const userId = req.session.userId;
+    const userId = req.session.userId as string; //
     try {
-      await saveShoutout(video, thumbnail, ownedBy, userId);
-      await Requests.update(
-        { id: requestId },
-        { status: requestStatus.FULFILLED }
-      );
+      const isValidCeleb = await ValidateRecipient(userId, requestId);
+      if (isValidCeleb) {
+        const request = await Requests.findOne({
+          where: { id: requestId },
+          select: ["requestor"],
+        });
+        await saveShoutout(
+          video,
+          thumbnail,
+          request?.requestor as string,
+          userId
+        );
+        await Requests.update(
+          { id: requestId },
+          { status: requestStatus.FULFILLED }
+        );
+      } else {
+        return {
+          errors: [
+            {
+              errorMessage: "Unauthorized action",
+              field: "",
+            },
+          ],
+        };
+      }
     } catch (err) {
       return {
         errors: [
@@ -176,17 +163,16 @@ export class RequestsResolver {
         ],
       };
     }
-    return { success: "Hurray! You've made someone's day!" };
+    return { success: "Shoutout video sent!" };
   }
 
   @Mutation(() => genericResponse)
   @UseMiddleware(isAuth)
   async fulfilCallRequest(
-    @Arg("requestId") requestId: number,
-    @Arg("callToken") callToken: string
+    @Arg("requestId") requestId: number
   ): Promise<genericResponse> {
     try {
-      deleteCallToken(callToken);
+      deleteRoom(requestId);
       await Requests.update(
         { id: requestId },
         { status: requestStatus.FULFILLED }

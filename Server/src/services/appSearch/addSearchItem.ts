@@ -1,5 +1,5 @@
-import { CelebCategories } from "../entities/CelebCategories";
-import { User } from "../entities/User";
+import { CelebCategories } from "../../entities/CelebCategories";
+import { User } from "../../entities/User";
 import { client } from "./client";
 
 export const upsertSearchItem = async (user: User | undefined) => {

@@ -17,7 +17,7 @@ import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
 import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
-import { initializeSearch } from "./appSearch/profileCollection";
+// import { initializeSearch } from "./appSearch/profileCollection";
 
 const app = express();
 
@@ -37,7 +37,7 @@ const main = async () => {
 
   initializeApp(firebaseConfig);
   initializeScheduledJobs();
-  initializeSearch();
+  // initializeSearch();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
   app.use(

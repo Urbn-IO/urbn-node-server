@@ -18,6 +18,7 @@ declare global {
       TYPESENSE_API_KEY: string;
       TYPESENSE_NODE_CLUSTER: string;
       TWILIO_ACCOUNT_SID: string;
+      TWILIO_AUTH_TOKEN: string;
       TWILIO_API_KEY: string;
       TWILIO_API_SECRET: string;
     }

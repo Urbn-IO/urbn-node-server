@@ -1,7 +1,13 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType } from "type-graphql";
+import { InputType, Field, ObjectType, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
+import { requestType } from "../types";
+
+registerEnumType(requestType, {
+  name: "requestType",
+  description: "Type of request to be made",
+});
 
 @InputType()
 export class UserInputs {
@@ -74,6 +80,18 @@ export class UserInputsLogin {
   password: string;
   @Field()
   email: string;
+}
+
+@InputType()
+export class RequestInputs {
+  @Field()
+  celebId: string;
+  @Field(() => requestType)
+  requestType: requestType;
+  @Field()
+  description: string;
+  @Field()
+  requestExpiration: Date;
 }
 
 // @InputType()

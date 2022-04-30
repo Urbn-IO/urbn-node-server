@@ -36,3 +36,9 @@ export enum requestStatus {
   FULFILLED = "fulfilled",
   UNFULFILLED = "unfulfilled",
 }
+
+export enum requestType {
+  SHOUTOUT = "shoutout",
+  CALL_TYPE_A = "call_type_A",
+  CALL_TYPE_B = "call_type_B",
+}

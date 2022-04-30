@@ -17,7 +17,7 @@ import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
 import { getConnection } from "typeorm";
-import { upsertSearchItem } from "../appSearch/addSearchItem";
+import { upsertSearchItem } from "../services/appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 

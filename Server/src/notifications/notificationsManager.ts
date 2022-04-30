@@ -38,6 +38,9 @@ export class NotificationsManager {
           ],
         };
       }
+      if (requestType !== "shoutout") {
+        requestType = "video call";
+      }
       const messageTitle = `You've received a new ${requestType} request!`;
       const messageBody = `Your fan ${firstName}, has sent you a ${requestType} request. Check it out!`;
       await firebaseCM(messageTitle, messageBody, tokens);

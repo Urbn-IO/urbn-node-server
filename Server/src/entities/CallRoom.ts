@@ -9,17 +9,13 @@ import {
 
 @ObjectType()
 @Entity()
-export class CallTokens extends BaseEntity {
+export class CallRoom extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Field()
   @Column({ unique: true })
   requestId!: number;
-
-  @Field()
-  @Column({ unique: true })
-  token!: string;
 
   @Field()
   @Column({ unique: true })
