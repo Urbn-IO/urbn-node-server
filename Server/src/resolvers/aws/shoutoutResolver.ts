@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import path from "path";
 import dayjs from "dayjs";
 import fs from "fs";
@@ -9,10 +10,12 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3SignedObject } from "../../utils/s3Types";
-import { Arg, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
-import { v4 } from "uuid";
 import { Signer } from "../../utils/cloudFront";
+import { ValidateRecipient } from "../../utils/requestValidations";
+import { AppContext } from "../../types";
+import { Requests } from "../../entities/Requests";
 
 @Resolver()
 export class ShoutoutResolver {
@@ -33,26 +36,48 @@ export class ShoutoutResolver {
   @Query(() => [s3SignedObject])
   @UseMiddleware(isAuth)
   async shoutoutUploadUrl(
-    @Arg("ownedBy") ownedBy: string
+    @Arg("requestId") requestId: number,
+    @Ctx() { req }: AppContext
   ): Promise<s3SignedObject[]> {
-    const fileId = v4();
+    const identity = req.session.userId as string;
     const datetime = dayjs().format("DD-MM-YYYY");
-    const response: s3SignedObject[] = [];
-    const thumbnail = `${ownedBy}/shoutOutThumbnail/${datetime}-${fileId}`;
-    const profileObject = `${ownedBy}/shoutOutProfileOject/${datetime}-${fileId}.mp4`;
-    const keys = [thumbnail, profileObject];
-    for (const Key of keys) {
-      const s3Command = new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key,
-      });
+    const randomNumber = Math.random().toString();
+    const fileId = crypto
+      .createHash("md5")
+      .update(datetime + randomNumber)
+      .digest("hex");
 
-      const signedUrl = await getSignedUrl(this.s3, s3Command, {
-        expiresIn: 3600,
+    const isValidRequestRecepient = await ValidateRecipient(
+      identity,
+      requestId
+    );
+    if (isValidRequestRecepient) {
+      const response: s3SignedObject[] = [];
+      const request = await Requests.findOne({
+        where: { id: requestId },
+        select: ["requestor"],
       });
-      response.push({ signedUrl, fileName: Key });
+      if (request) {
+        const ownedBy = request.requestor;
+        const thumbnail = `${ownedBy}/shoutOutThumbnail/${datetime}-${fileId}`;
+        const profileObject = `${ownedBy}/shoutOutProfileOject/${datetime}-${fileId}.mp4`;
+        const keys = [thumbnail, profileObject];
+        for (const Key of keys) {
+          const s3Command = new PutObjectCommand({
+            Bucket: this.bucketName,
+            Key,
+          });
+
+          const signedUrl = await getSignedUrl(this.s3, s3Command, {
+            expiresIn: 3600,
+          });
+          response.push({ signedUrl, fileName: Key });
+        }
+        return response;
+      }
     }
-    return response;
+
+    return [];
   }
 
   @Query(() => s3SignedObject)

@@ -74,8 +74,11 @@ export class VideoCallResolver {
     const AccessToken = jwt.AccessToken;
     const VideoGrant = AccessToken.VideoGrant;
     let token, roomName;
-    const isValidRecepient = await ValidateRecipient(identity, requestId);
-    if (isValidRecepient) {
+    const isValidRequestRecepient = await ValidateRecipient(
+      identity,
+      requestId
+    );
+    if (isValidRequestRecepient) {
       const room = await CallRoom.findOne({
         where: { requestId },
         select: ["roomName"],
