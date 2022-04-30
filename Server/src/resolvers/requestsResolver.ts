@@ -49,6 +49,18 @@ export class RequestsResolver {
     if (Input.requestType !== "shoutout" && acceptsCallRequests === false) {
       return { errorMessage: "Celebrity doesn't accept this type of request" };
     }
+    if (Input.requestType === "shoutout" && Input.description === null) {
+      return { errorMessage: "Shoutout description cannot be null" };
+    }
+
+    const user = await User.findOne({
+      where: { userId },
+      select: ["firstName"],
+    });
+    const UserfirstName = user?.firstName;
+    if (Input.requestType !== "shoutout" && Input.description === null) {
+      Input.description = `Video call request from ${UserfirstName} to ${celebAlias}`;
+    }
 
     const amount =
       Input.requestType === "shoutout"
@@ -62,15 +74,9 @@ export class RequestsResolver {
       return { errorMessage: "Payment Error!" };
     }
 
-    const user = await User.findOne({
-      where: { userId },
-      select: ["firstName"],
-    });
-    const userName = user?.firstName;
-
     const request: RequestInput = {
       requestor: userId,
-      requestorName: userName,
+      requestorName: UserfirstName,
       recepient: celeb.userId,
       requestType: Input.requestType,
       requestAmountInNaira: amount,

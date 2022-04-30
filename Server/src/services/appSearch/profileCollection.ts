@@ -11,6 +11,8 @@ export const initializeSearch = async () => {
       { name: "alias", type: "string" },
       { name: "thumbnail", type: "string" },
       { name: "image_placeholder", type: "string" },
+      { name: "image_thumbnail", type: "string" },
+      { name: "image", type: "string" },
       { name: "description", type: "string" },
       { name: "profile_hash", type: "string" },
       { name: "categories", type: "string[]", facet: true },

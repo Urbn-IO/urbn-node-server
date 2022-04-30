@@ -31,6 +31,8 @@ export const upsertSearchItem = async (user: User | undefined) => {
       alias: user.celebrity.alias,
       thumbnail: user.celebrity.thumbnail,
       image_placeholder: user.celebrity.imagePlaceholder,
+      image_thumbnail: user.celebrity.imageThumbnail,
+      image: user.celebrity.image,
       description: user.celebrity.description,
       profile_hash: user.celebrity.profileHash,
       categories,

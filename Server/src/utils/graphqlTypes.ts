@@ -88,7 +88,7 @@ export class RequestInputs {
   celebId: string;
   @Field(() => requestType)
   requestType: requestType;
-  @Field()
+  @Field({ nullable: true })
   description: string;
   @Field()
   requestExpiration: Date;
