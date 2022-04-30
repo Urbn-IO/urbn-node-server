@@ -14,7 +14,7 @@ import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../services/payments/payments";
 import { NotificationsManager } from "../notifications/notificationsManager";
 import { Brackets, getConnection } from "typeorm";
-import { genericResponse, RequestInputs } from "../utils/graphqlTypes";
+import { GenericResponse, RequestInputs } from "../utils/graphqlTypes";
 import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
@@ -22,12 +22,12 @@ import { ValidateRecipient } from "../utils/requestValidations";
 
 @Resolver()
 export class RequestsResolver {
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async createRequest(
     @Arg("Input") Input: RequestInputs,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
     const celeb = await getConnection()
@@ -94,14 +94,14 @@ export class RequestsResolver {
     return result;
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async fulfilShoutoutRequest(
     @Arg("requestId") requestId: number,
     @Arg("video") video: string,
     @Arg("thumbnail") thumbnail: string,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     const userId = req.session.userId as string; //
     try {
       const isValidCeleb = await ValidateRecipient(userId, requestId);
@@ -129,11 +129,11 @@ export class RequestsResolver {
     return { success: "Shoutout video sent!" };
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async fulfilCallRequest(
     @Arg("requestId") requestId: number
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     try {
       deleteRoom(requestId);
       await Requests.update(
@@ -146,12 +146,12 @@ export class RequestsResolver {
     return { success: "Request successfully fulfilled" };
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async respondToRequest(
     @Arg("requestId") requestId: number,
     @Arg("status") status: string
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     let response;
     if (status === requestStatus.ACCEPTED) {
       response = requestStatus.ACCEPTED;

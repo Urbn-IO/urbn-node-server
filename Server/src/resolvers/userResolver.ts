@@ -10,7 +10,7 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import {
-  genericResponse,
+  GenericResponse,
   UserInputs,
   UserInputsLogin,
   UserResponse,
@@ -26,11 +26,11 @@ import { In } from "typeorm";
 @Resolver()
 export class UserResolver {
   //create User resolver
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   async createUser(
     @Arg("userInput") userInput: UserInputs,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     const invalidInput = validateInput(userInput);
     if (invalidInput) {
       return invalidInput;
@@ -59,11 +59,11 @@ export class UserResolver {
   }
 
   //Login resolver
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     const user = await User.findOne({
       where: {
         email: userInput.email.toLowerCase(),

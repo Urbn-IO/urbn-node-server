@@ -1,5 +1,5 @@
 import { getFcmTokens } from "../utils/fcmTokenManager";
-import { genericResponse } from "../utils/graphqlTypes";
+import { GenericResponse } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
 import { firebaseCM } from "./firebaseCM";
 
@@ -10,7 +10,7 @@ export class NotificationsManager {
     requestType: string,
     scheduledNotification: boolean,
     celebAlias = ""
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
     const tokenObj = await getFcmTokens(receiverId);
     const tokens: string[] = [];
     tokenObj.forEach((x) => {

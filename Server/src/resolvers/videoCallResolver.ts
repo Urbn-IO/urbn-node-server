@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../middleware/isAuth";
-import { callTokenResponse } from "../utils/graphqlTypes";
+import { CallTokenResponse } from "../utils/graphqlTypes";
 import { storeRoomName } from "../utils/videoRoomManager";
 import { CallRoom } from "../entities/CallRoom";
 import { jwt } from "twilio";
@@ -17,12 +17,12 @@ export class VideoCallResolver {
   private twilioApiKey = process.env.TWILIO_API_KEY;
   private twilioApiSecret = process.env.TWILIO_API_SECRET;
 
-  @Query(() => callTokenResponse, { nullable: true })
+  @Query(() => CallTokenResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async callInitiatorToken(
     @Arg("requestId") requestId: number,
     @Ctx() { req }: AppContext
-  ): Promise<callTokenResponse> {
+  ): Promise<CallTokenResponse> {
     const userId = req.session.userId;
     const AccessToken = jwt.AccessToken;
     const VideoGrant = AccessToken.VideoGrant;
@@ -63,12 +63,12 @@ export class VideoCallResolver {
     return { errorMessage: "Unauthorized call request" };
   }
 
-  @Query(() => callTokenResponse, { nullable: true })
+  @Query(() => CallTokenResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async callRecepientToken(
     @Arg("requestId") requestId: number,
     @Ctx() { req }: AppContext
-  ): Promise<callTokenResponse> {
+  ): Promise<CallTokenResponse> {
     const userId = req.session.userId;
     const identity = userId as string;
     const AccessToken = jwt.AccessToken;

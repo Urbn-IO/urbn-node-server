@@ -129,7 +129,7 @@ export class CardResponse {
   errorMessage?: string;
 }
 @ObjectType()
-export class genericResponse {
+export class GenericResponse {
   @Field(() => String, { nullable: true })
   success?: string;
 
@@ -138,7 +138,7 @@ export class genericResponse {
 }
 
 @ObjectType()
-export class callTokenResponse {
+export class CallTokenResponse {
   @Field(() => String, { nullable: true })
   token?: string;
 
