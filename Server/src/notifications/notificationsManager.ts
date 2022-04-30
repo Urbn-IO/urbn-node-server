@@ -18,24 +18,15 @@ export class NotificationsManager {
     });
     console.log(tokens);
     if (tokens.length === 0) {
-      return {
-        errors: [
-          { errorMessage: "notification tokens not found for user", field: "" },
-        ],
-      };
+      return { errorMessage: "notification tokens not found for user" };
     }
     if (!scheduledNotification) {
       const user = await User.findOne({ where: { userId: senderId } });
       const firstName = user?.firstName;
       if (!firstName) {
         return {
-          errors: [
-            {
-              errorMessage:
-                "An error occured while attempting to send notifications",
-              field: "",
-            },
-          ],
+          errorMessage:
+            "An error occured while attempting to send notifications",
         };
       }
       if (requestType !== "shoutout") {

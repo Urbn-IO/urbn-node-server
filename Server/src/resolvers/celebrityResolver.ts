@@ -16,7 +16,7 @@ import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
-import { getConnection, In, Not } from "typeorm";
+import { getConnection } from "typeorm";
 import { upsertSearchItem } from "../services/appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
@@ -193,36 +193,6 @@ export class CelebrityResolver {
       for (const item of categoryObj) {
         catIds.push(item.categoryId);
       }
-      console.log(catIds);
-      // const celebsObj = await getConnection()
-      //   .getRepository(CelebCategories)
-      //   .createQueryBuilder("celebCat")
-      //   .leftJoinAndSelect("celebCat.celebrity", "celebrity")
-      //   // .orderBy("RANDOM()")
-      //   .where("celebCat.celebId != :celebId", { celebId })
-      //   .andWhere("celebCat.categoryId in (:...catIds)", { catIds })
-      //   .take(maxLimit)
-      //   .getMany();
-
-      // const celebsObj = await CelebCategories.find({
-      //   relations: ["celebrity"],
-      //   where: { celebId: Not(celebId), categoryId: In(catIds) },
-      //   take: maxLimit,
-      //   order: { celebId: "ASC" },
-      // });
-
-      // const query = await getConnection().query(
-      //   `
-      // SELECT DISTINCT "celebrity"."alias", MIN(RANDOM()) as rand
-      // FROM "celeb_categories"
-      // LEFT JOIN "celebrity"
-      // ON "celebrity"."id" = "celeb_categories"."celebId"
-      // WHERE ("celeb_categories"."celebId" != $1 AND "celeb_categories"."categoryId" = ANY ($2) )
-      // ORDER BY rand
-      // LIMIT $3
-      // `,
-      //   [celebId, catIds, maxLimit]
-      // );
       const celebs = await getConnection().query(
         `
       SELECT "c".*, RANDOM() AS random
@@ -236,10 +206,6 @@ export class CelebrityResolver {
       `,
         [celebId, catIds, maxLimit]
       );
-
-      // for (const item of celebsObj) {
-      //   celebs.push(item.celebrity);
-      // }
 
       return celebs;
     } catch (err) {
