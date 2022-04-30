@@ -36,14 +36,7 @@ export class RequestsResolver {
       .where("celeb.userId = :celebId", { celebId })
       .getOne();
     if (!celeb) {
-      return {
-        errors: [
-          {
-            errorMessage: "Celebrity not found",
-            field: "celebId",
-          },
-        ],
-      };
+      return { errorMessage: "Celebrity not found" };
     }
 
     const celebAlias = celeb.alias;
@@ -51,24 +44,10 @@ export class RequestsResolver {
     const acceptsCallRequests = celeb.acceptsCalls;
 
     if (Input.requestType === "shoutout" && acceptShoutOut === false) {
-      return {
-        errors: [
-          {
-            errorMessage: "Celebrity doesn't accept this type of request",
-            field: "requestType",
-          },
-        ],
-      };
+      return { errorMessage: "Celebrity doesn't accept this type of request" };
     }
     if (Input.requestType !== "shoutout" && acceptsCallRequests === false) {
-      return {
-        errors: [
-          {
-            errorMessage: "Celebrity doesn't accept this type of request",
-            field: "requestType",
-          },
-        ],
-      };
+      return { errorMessage: "Celebrity doesn't accept this type of request" };
     }
 
     const amount =
@@ -80,9 +59,7 @@ export class RequestsResolver {
 
     const paid = new Payments().pay();
     if (!paid) {
-      return {
-        errors: [{ errorMessage: "Payment Error!", field: "" }],
-      };
+      return { errorMessage: "Payment Error!" };
     }
 
     const user = await User.findOne({
@@ -144,24 +121,10 @@ export class RequestsResolver {
           { status: requestStatus.FULFILLED }
         );
       } else {
-        return {
-          errors: [
-            {
-              errorMessage: "Unauthorized action",
-              field: "",
-            },
-          ],
-        };
+        return { errorMessage: "Unauthorized action" };
       }
     } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error fulfilling request, Try again later",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Error fulfilling request, Try again later" };
     }
     return { success: "Shoutout video sent!" };
   }
@@ -178,14 +141,7 @@ export class RequestsResolver {
         { status: requestStatus.FULFILLED }
       );
     } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error fulfilling request, Try again later",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Error fulfilling request, Try again later" };
     }
     return { success: "Request successfully fulfilled" };
   }
@@ -202,21 +158,12 @@ export class RequestsResolver {
     } else if (status === requestStatus.REJECTED) {
       response = requestStatus.REJECTED;
     } else {
-      return {
-        errors: [{ errorMessage: "Invalid request response", field: "status" }],
-      };
+      return { errorMessage: "Invalid request response" };
     }
     try {
       await Requests.update({ id: requestId }, { status: response });
     } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error changing request state, Try again later",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Error changing request state, Try again later" };
     }
     return { success: "Request Accepted" };
   }

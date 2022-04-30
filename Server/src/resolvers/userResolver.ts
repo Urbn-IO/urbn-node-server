@@ -10,6 +10,7 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import {
+  genericResponse,
   UserInputs,
   UserInputsLogin,
   UserResponse,
@@ -25,11 +26,11 @@ import { In } from "typeorm";
 @Resolver()
 export class UserResolver {
   //create User resolver
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => genericResponse)
   async createUser(
     @Arg("userInput") userInput: UserInputs,
     @Ctx() { req }: AppContext
-  ): Promise<UserResponse> {
+  ): Promise<genericResponse> {
     const invalidInput = validateInput(userInput);
     if (invalidInput) {
       return invalidInput;
@@ -37,64 +38,50 @@ export class UserResolver {
     const email = userInput.email.toLowerCase();
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
-    let user;
     try {
-      const createUser = User.create({
+      await User.create({
         firstName: userInput.firstName,
         lastName: userInput.lastName,
         nationality: userInput.nationality,
         email,
         password: hashedPassword,
         userId: id,
-      });
-      user = createUser;
-      await user.save();
+      }).save();
     } catch (err) {
       if (err.code === "23505") {
-        return {
-          errors: [
-            {
-              field: "email",
-              errorMessage: "Email already exists, go to login page!",
-            },
-          ],
-        };
+        return { errorMessage: "Email already exists, go to login page!" };
+      } else {
+        return { errorMessage: "An error occured" };
       }
     }
-    req.session.userId = user?.userId; //keep a new user logged in
-    return { user };
+    req.session.userId = id; //keep a new user logged in
+    return { success: "Account created successfully" };
   }
 
   //Login resolver
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => genericResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
     @Ctx() { req }: AppContext
-  ): Promise<UserResponse> {
+  ): Promise<genericResponse> {
     const user = await User.findOne({
       where: {
         email: userInput.email.toLowerCase(),
       },
-      relations: ["shoutouts", "celebrity"],
+      select: ["email", "password", "userId"],
     });
     if (!user) {
-      return {
-        errors: [{ field: "email", errorMessage: "Wrong Email or Password" }],
-      };
+      return { errorMessage: "Wrong Email or Password" };
     }
     const verifiedPassword = await argon2.verify(
       user.password,
       userInput.password
     );
     if (!verifiedPassword) {
-      return {
-        errors: [
-          { field: "password", errorMessage: "Wrong Email or Password" },
-        ],
-      };
+      return { errorMessage: "Wrong Email or Password" };
     }
     req.session.userId = user.userId;
-    return { user };
+    return { success: "Log in successful" };
   }
 
   @Mutation(() => Boolean)
@@ -122,27 +109,13 @@ export class UserResolver {
     @Ctx() { redis, req }: AppContext
   ): Promise<UserResponse> {
     if (newPassword.length < 8) {
-      return {
-        errors: [
-          {
-            field: "newPassword",
-            errorMessage: "Password must contain at least 8 characters ",
-          },
-        ],
-      };
+      return { errorMessage: "Password must contain at least 8 characters" };
     }
 
     const key = FORGET_PASSWORD_PREFIX + token;
     const userEmail = await redis.get(key);
     if (!userEmail) {
-      return {
-        errors: [
-          {
-            field: "token",
-            errorMessage: "token expired",
-          },
-        ],
-      };
+      return { errorMessage: "token expired" };
     }
 
     const user = await User.findOne({
@@ -150,14 +123,7 @@ export class UserResolver {
     });
 
     if (!user) {
-      return {
-        errors: [
-          {
-            field: "token",
-            errorMessage: "user no longer exists",
-          },
-        ],
-      };
+      return { errorMessage: "user no longer exists" };
     }
 
     await User.update(
@@ -224,23 +190,14 @@ export class UserResolver {
   @UseMiddleware(isAuth)
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     if (!req.session.userId) {
-      return {
-        errors: [{ field: "", errorMessage: "No session Id" }],
-      };
+      return { errorMessage: "No session Id" };
     }
     const user = await User.findOne({
       where: { userId: req.session.userId },
       relations: ["shoutouts", "celebrity"],
     });
     if (!user) {
-      return {
-        errors: [
-          {
-            field: "",
-            errorMessage: "User not found",
-          },
-        ],
-      };
+      return { errorMessage: "User not found" };
     }
     if (user.shoutouts.length > 0) {
       const ids = [];

@@ -101,22 +101,14 @@ export class RequestInputs {
 // }
 
 //remove the field propery in future
-@ObjectType()
-export class FieldWithError {
-  @Field()
-  field: string;
-
-  @Field()
-  errorMessage: string;
-}
 
 @ObjectType()
 export class UserResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
@@ -124,8 +116,8 @@ export class CategoryResponse {
   @Field(() => Categories, { nullable: true })
   category?: Categories;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
@@ -133,16 +125,16 @@ export class CardResponse {
   @Field(() => [CardAuthorization], { nullable: true })
   cards?: CardAuthorization[];
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 @ObjectType()
 export class genericResponse {
   @Field(() => String, { nullable: true })
   success?: string;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
@@ -153,6 +145,6 @@ export class callTokenResponse {
   @Field(() => String, { nullable: true })
   roomName?: string;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }

@@ -60,9 +60,7 @@ export class VideoCallResolver {
 
       return { token: callToken, roomName };
     }
-    return {
-      errors: [{ errorMessage: "Unauthorized call request", field: "" }],
-    };
+    return { errorMessage: "Unauthorized call request" };
   }
 
   @Query(() => callTokenResponse, { nullable: true })
@@ -99,16 +97,10 @@ export class VideoCallResolver {
         token.addGrant(videoGrant);
         token = token.toJwt();
       } else {
-        return {
-          errors: [{ errorMessage: "An error occured", field: "" }],
-        };
+        return { errorMessage: "An error occured" };
       }
       return { token, roomName };
     }
-    return {
-      errors: [
-        { errorMessage: "You aren't authorized to join this call", field: "" },
-      ],
-    };
+    return { errorMessage: "You aren't authorized to join this call" };
   }
 }

@@ -48,14 +48,7 @@ export class CategoryResolver {
     try {
       await category.save();
     } catch (err) {
-      return {
-        errors: [
-          {
-            field: "create category",
-            errorMessage: "An Error occured while creating a category",
-          },
-        ],
-      };
+      return { errorMessage: "An Error occured while creating a category" };
     }
 
     return { category };

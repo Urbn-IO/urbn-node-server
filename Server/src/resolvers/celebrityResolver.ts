@@ -16,7 +16,7 @@ import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
-import { getConnection } from "typeorm";
+import { getConnection, In, Not } from "typeorm";
 import { upsertSearchItem } from "../services/appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
@@ -43,14 +43,7 @@ export class CelebrityResolver {
       parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
       parseInt(data.shoutOutRatesInNaira) > maxRate
     ) {
-      return {
-        errors: [
-          {
-            errorMessage: "Maximum price rate for any request exceeded",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
     if (data.image) {
@@ -78,9 +71,7 @@ export class CelebrityResolver {
 
       return { user };
     } catch (err) {
-      return {
-        errors: [{ errorMessage: "An Error Occured", field: "" }],
-      };
+      return { errorMessage: "An Error Occured" };
     }
   }
 
@@ -103,35 +94,14 @@ export class CelebrityResolver {
       parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
       parseInt(data.shoutOutRatesInNaira) > maxRate
     ) {
-      return {
-        errors: [
-          {
-            errorMessage: "Maximum price rate for any request exceeded",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
     if (data.acceptsCalls === false && data.acceptShoutOut === false) {
-      return {
-        errors: [
-          {
-            field: "acceptsCallRequets | acceptShoutOut",
-            errorMessage: "Minimum of one request type must be selected",
-          },
-        ],
-      };
+      return { errorMessage: "Minimum of one request type must be selected" };
     }
     if (Object.keys(data).length === 0) {
-      return {
-        errors: [
-          {
-            field: "data",
-            errorMessage: "Nothing to update",
-          },
-        ],
-      };
+      return { errorMessage: "Nothing to update" };
     }
     if (data.image) {
       data.image = `${this.cdnUrl}/${image}`;
@@ -213,7 +183,6 @@ export class CelebrityResolver {
     const maxLimit = Math.min(8, limit);
     try {
       const catIds = [];
-      const celebs = [];
       const categoryObj = await getConnection()
         .getRepository(CelebCategories)
         .createQueryBuilder("celebCat")
@@ -224,24 +193,53 @@ export class CelebrityResolver {
       for (const item of categoryObj) {
         catIds.push(item.categoryId);
       }
-      const celebsObj = await getConnection()
-        .getRepository(CelebCategories)
-        .createQueryBuilder("celebCat")
-        .leftJoinAndSelect("celebCat.celebrity", "celebrity")
-        .where("celebCat.celebId != :celebId", { celebId })
-        .andWhere("celebCat.categoryId in (:...catIds)", { catIds })
-        .take(maxLimit)
-        .orderBy("RANDOM()")
-        .getMany();
+      console.log(catIds);
+      // const celebsObj = await getConnection()
+      //   .getRepository(CelebCategories)
+      //   .createQueryBuilder("celebCat")
+      //   .leftJoinAndSelect("celebCat.celebrity", "celebrity")
+      //   // .orderBy("RANDOM()")
+      //   .where("celebCat.celebId != :celebId", { celebId })
+      //   .andWhere("celebCat.categoryId in (:...catIds)", { catIds })
+      //   .take(maxLimit)
+      //   .getMany();
+
       // const celebsObj = await CelebCategories.find({
       //   relations: ["celebrity"],
       //   where: { celebId: Not(celebId), categoryId: In(catIds) },
-      //   // take: maxLimit,
+      //   take: maxLimit,
+      //   order: { celebId: "ASC" },
       // });
 
-      for (const item of celebsObj) {
-        celebs.push(item.celebrity);
-      }
+      // const query = await getConnection().query(
+      //   `
+      // SELECT DISTINCT "celebrity"."alias", MIN(RANDOM()) as rand
+      // FROM "celeb_categories"
+      // LEFT JOIN "celebrity"
+      // ON "celebrity"."id" = "celeb_categories"."celebId"
+      // WHERE ("celeb_categories"."celebId" != $1 AND "celeb_categories"."categoryId" = ANY ($2) )
+      // ORDER BY rand
+      // LIMIT $3
+      // `,
+      //   [celebId, catIds, maxLimit]
+      // );
+      const celebs = await getConnection().query(
+        `
+      SELECT "c".*, RANDOM() AS random
+      FROM "celeb_categories"
+      LEFT JOIN "celebrity" c
+      ON "c"."id" = "celeb_categories"."celebId"
+      WHERE ("celeb_categories"."celebId" != $1 AND "celeb_categories"."categoryId" = ANY ($2) )
+      GROUP BY "c"."id", "c"."userId"
+      ORDER BY random
+      LIMIT $3
+      `,
+        [celebId, catIds, maxLimit]
+      );
+
+      // for (const item of celebsObj) {
+      //   celebs.push(item.celebrity);
+      // }
 
       return celebs;
     } catch (err) {
