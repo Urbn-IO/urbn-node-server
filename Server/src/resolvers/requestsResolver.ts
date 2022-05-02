@@ -58,7 +58,7 @@ export class RequestsResolver {
       select: ["firstName"],
     });
     const UserfirstName = user?.firstName;
-    if (Input.requestType !== "shoutout" && Input.description === null) {
+    if (Input.requestType !== "shoutout" && !Input.description) {
       Input.description = `Video call request from ${UserfirstName} to ${celebAlias}`;
     }
 
