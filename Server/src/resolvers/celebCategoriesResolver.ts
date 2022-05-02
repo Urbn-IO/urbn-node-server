@@ -1,17 +1,52 @@
 import { CelebCategories } from "../entities/CelebCategories";
-import { Arg, Mutation, Resolver } from "type-graphql";
+import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { AppContext } from "../types";
+import { Celebrity } from "../entities/Celebrity";
+import { getConnection } from "typeorm";
 
 @Resolver()
 export class UserCategoriesResolver {
   @Mutation(() => Boolean)
   async mapCelebToCategories(
-    @Arg("celebId") celebId: number,
-    @Arg("categoryIds", () => [Number]) categoryIds: number[]
+    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Ctx() { req }: AppContext
   ): Promise<boolean> {
+    const userId = req.session.userId;
+    const celeb = await Celebrity.findOne({
+      where: { userId },
+      select: ["id"],
+    });
+    const celebId = celeb?.id;
     try {
       for (const categoryId of categoryIds) {
         await CelebCategories.create({ celebId, categoryId }).save();
       }
+    } catch (err) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  async detachCelebFromCategories(
+    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Ctx() { req }: AppContext
+  ): Promise<boolean> {
+    const userId = req.session.userId;
+    const celeb = await Celebrity.findOne({
+      where: { userId },
+      select: ["id"],
+    });
+    const celebId = celeb?.id;
+    try {
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(CelebCategories)
+        .where("celebId = :celebId", { celebId })
+        .andWhere("categoryId = ANY(:categoryIds)", { categoryIds })
+        .execute();
     } catch (err) {
       return false;
     }

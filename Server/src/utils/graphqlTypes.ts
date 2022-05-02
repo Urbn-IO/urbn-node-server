@@ -30,7 +30,9 @@ export class RegisterCelebrityInputs {
   @Field()
   acceptShoutOut: boolean;
   @Field()
-  acceptsCalls: boolean;
+  acceptsCallTypeA: boolean;
+  @Field()
+  acceptsCallTypeB: boolean;
   @Field()
   shoutOutRatesInNaira: string;
   @Field()

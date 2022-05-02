@@ -41,14 +41,19 @@ export class RequestsResolver {
 
     const celebAlias = celeb.alias;
     const acceptShoutOut = celeb.acceptShoutOut;
-    const acceptsCallRequests = celeb.acceptsCalls;
+    const acceptsCallTypeA = celeb.acceptsCallTypeA;
+    const acceptsCallTypeB = celeb.acceptsCallTypeB;
 
     if (Input.requestType === "shoutout" && acceptShoutOut === false) {
       return { errorMessage: "Celebrity doesn't accept this type of request" };
     }
-    if (Input.requestType !== "shoutout" && acceptsCallRequests === false) {
+    if (Input.requestType !== "shoutout" && acceptsCallTypeA === false) {
       return { errorMessage: "Celebrity doesn't accept this type of request" };
     }
+    if (Input.requestType !== "shoutout" && acceptsCallTypeB === false) {
+      return { errorMessage: "Celebrity doesn't accept this type of request" };
+    }
+
     if (Input.requestType === "shoutout" && Input.description === null) {
       return { errorMessage: "Shoutout description cannot be null" };
     }

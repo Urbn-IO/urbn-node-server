@@ -53,7 +53,10 @@ export class Celebrity extends BaseEntity {
 
   @Field()
   @Column({ default: false })
-  acceptsCalls: boolean;
+  acceptsCallTypeA: boolean;
+  @Field()
+  @Column({ default: false })
+  acceptsCallTypeB: boolean;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
