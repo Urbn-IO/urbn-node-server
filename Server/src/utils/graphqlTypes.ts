@@ -56,9 +56,9 @@ export class UpdateCelebrityInputs {
   alias: string;
   @Field({ nullable: true })
   acceptShoutOut: boolean;
-  @Field()
+  @Field({ nullable: true })
   acceptsCallTypeA: boolean;
-  @Field()
+  @Field({ nullable: true })
   acceptsCallTypeB: boolean;
   @Field({ nullable: true })
   shoutOutRatesInNaira: string;
