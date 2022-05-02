@@ -16,8 +16,8 @@ import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
-import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
 import { initializeSearch } from "./services/appSearch/profileCollection";
+import { initializeScheduledJobs } from "./services/notifications/initScheduledNotifications";
 
 const app = express();
 

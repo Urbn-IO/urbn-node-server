@@ -12,13 +12,13 @@ import { AppContext, RequestInput, requestStatus } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../services/payments/payments";
-import { NotificationsManager } from "../notifications/notificationsManager";
 import { Brackets, getConnection } from "typeorm";
 import { GenericResponse, RequestInputs } from "../utils/graphqlTypes";
 import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateRecipient } from "../utils/requestValidations";
+import { NotificationsManager } from "../services/notifications/notificationsManager";
 
 @Resolver()
 export class RequestsResolver {
@@ -45,17 +45,23 @@ export class RequestsResolver {
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
 
     if (Input.requestType === "shoutout" && acceptShoutOut === false) {
-      return { errorMessage: "Celebrity doesn't accept this type of request" };
+      return {
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
+      };
     }
     if (Input.requestType !== "shoutout" && acceptsCallTypeA === false) {
-      return { errorMessage: "Celebrity doesn't accept this type of request" };
+      return {
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
+      };
     }
     if (Input.requestType !== "shoutout" && acceptsCallTypeB === false) {
-      return { errorMessage: "Celebrity doesn't accept this type of request" };
+      return {
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
+      };
     }
 
     if (Input.requestType === "shoutout" && Input.description === null) {
-      return { errorMessage: "Shoutout description cannot be null" };
+      return { errorMessage: "Shoutout description cannot be empty" };
     }
 
     const user = await User.findOne({

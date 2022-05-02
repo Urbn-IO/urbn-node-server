@@ -97,7 +97,11 @@ export class CelebrityResolver {
       return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
-    if (data.acceptsCalls === false && data.acceptShoutOut === false) {
+    if (
+      data.acceptsCallTypeA === false &&
+      data.acceptsCallTypeB === false &&
+      data.acceptShoutOut === false
+    ) {
       return { errorMessage: "Minimum of one request type must be selected" };
     }
     if (Object.keys(data).length === 0) {

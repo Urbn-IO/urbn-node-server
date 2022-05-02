@@ -1,7 +1,7 @@
 import { getFcmTokens } from "../utils/fcmTokenManager";
 import { GenericResponse } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
-import { firebaseCM } from "./firebaseCM";
+import { firebaseCM } from "../services/notifications/firebaseCM";
 
 export class NotificationsManager {
   async sendNotifications(
