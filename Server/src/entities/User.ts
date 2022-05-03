@@ -33,10 +33,6 @@ export class User extends BaseEntity {
   lastName!: string;
 
   @Field()
-  @Column()
-  nationality!: string;
-
-  @Field()
   @Column({ unique: true })
   email!: string;
 

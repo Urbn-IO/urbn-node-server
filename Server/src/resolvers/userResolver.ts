@@ -42,7 +42,6 @@ export class UserResolver {
       await User.create({
         firstName: userInput.firstName,
         lastName: userInput.lastName,
-        nationality: userInput.nationality,
         email,
         password: hashedPassword,
         userId: id,
