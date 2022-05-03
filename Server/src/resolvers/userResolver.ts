@@ -103,6 +103,7 @@ export class UserResolver {
 
   //change password
   @Mutation(() => UserResponse)
+  @UseMiddleware(isAuth)
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,

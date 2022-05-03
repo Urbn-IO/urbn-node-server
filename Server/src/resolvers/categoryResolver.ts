@@ -1,4 +1,12 @@
-import { Arg, Int, Mutation, Query, Resolver } from "type-graphql";
+import { isAuth } from "../middleware/isAuth";
+import {
+  Arg,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
@@ -37,6 +45,7 @@ export class CategoryResolver {
     return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
+  @UseMiddleware(isAuth)
   async createCategory(
     @Arg("name") name: string,
     @Arg("recommendable") recommendable: boolean
@@ -55,6 +64,7 @@ export class CategoryResolver {
   }
 
   @Mutation(() => Categories, { nullable: true })
+  @UseMiddleware(isAuth)
   async updateCategory(
     @Arg("id") id: number,
     @Arg("name") name: string

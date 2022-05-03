@@ -1,7 +1,7 @@
 import {
+  GenericResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
-  UserResponse,
 } from "../utils/graphqlTypes";
 import {
   Arg,
@@ -24,12 +24,12 @@ import { CelebCategories } from "../entities/CelebCategories";
 @Resolver()
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
-  @Mutation(() => UserResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
-  async registerUserasCeleb(
+  async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
     @Arg("data") data: RegisterCelebrityInputs
-  ): Promise<UserResponse> {
+  ): Promise<GenericResponse> {
     const userId = req.session.userId;
     data.userId = userId;
     const thumbnail = data.thumbnail;
@@ -69,19 +69,19 @@ export class CelebrityResolver {
 
       upsertSearchItem(user);
 
-      return { user };
+      return { success: `${user?.celebrity?.alias} registered successfully` };
     } catch (err) {
       return { errorMessage: "An Error Occured" };
     }
   }
 
   //update user details
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => GenericResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async updateCelebDetails(
     @Arg("data") data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
-  ): Promise<UserResponse> {
+  ): Promise<GenericResponse> {
     const userId = req.session.userId;
     const thumbnail = data.thumbnail;
     const image = `${data.image}_image.webp`;
@@ -128,43 +128,33 @@ export class CelebrityResolver {
       .getOne();
     upsertSearchItem(user);
 
-    return { user };
+    return { success: "updated succesfully!" };
   }
 
-  @Query(() => [User], { nullable: true })
-  @UseMiddleware(isAuth)
+  @Query(() => [Celebrity], { nullable: true })
   async celebrities(
-    @Arg("userId", { nullable: true }) userId: string,
+    @Arg("celebId", () => Int, { nullable: true }) celebId: number,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
-    if (userId) {
-      const celeb = await User.findOne({
-        where: { userId },
-        relations: ["celebrity", "celebrity.categoriesConn"],
-      });
-      // if (celeb?.celebrity?.profileObject) {
-      //   celeb.celebrity.profileObject =
-      //     this.cdnUrl + "/" + celeb.celebrity.profileObject;
-      // }
-      // if (celeb?.celebrity?.profileThumbnail) {
-      //   celeb.celebrity.profileThumbnail =
-      //     this.cdnUrl + "/" + celeb.celebrity.profileThumbnail;
-      // }
+    if (celebId) {
+      const celeb = await Celebrity.findOne(celebId);
+      if (!celeb) {
+        return [];
+      }
       return [celeb];
     }
     const maxLimit = Math.min(18, limit);
 
     const queryBuilder = getConnection()
-      .getRepository(User)
-      .createQueryBuilder("user")
-      .leftJoinAndSelect("user.celebrity", "celebrity")
-      .where("user.celebrity is not null")
-      .orderBy("celebrity.createdAt", "DESC")
+      .getRepository(Celebrity)
+      .createQueryBuilder("celeb")
+      .where("celeb.Id is not null")
+      .orderBy("celeb.updatedAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('celebrity."createdAt" < :cursor', {
+      queryBuilder.andWhere('celeb."updatedAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -179,7 +169,6 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity])
-  @UseMiddleware(isAuth)
   async similarToCelebrity(
     @Arg("celebId") celebId: number,
     @Arg("limit", () => Int) limit: number
