@@ -1,7 +1,7 @@
+import crypto from "crypto";
 import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../../types";
-import { v4 } from "uuid";
 import dayjs from "dayjs";
 import {
   DeleteObjectCommand,
@@ -34,9 +34,13 @@ export class PublicMediaResolver {
     @Arg("isHomeThumbnail") isHomeThumbnail: boolean,
     @Ctx() { req }: AppContext
   ): Promise<s3SignedObject> {
-    const fileId = v4();
-    const datetime = dayjs().format("DD-MM-YYYY");
     const userId = req.session.userId;
+    const randomNumber = Math.random().toString();
+    const datetime = dayjs().format("DD-MM-YYYY");
+    const fileId = crypto
+      .createHash("md5")
+      .update(datetime + randomNumber)
+      .digest("hex");
     let type = "profile_main_image";
     if (isHomeThumbnail) {
       type = "thumbnail";

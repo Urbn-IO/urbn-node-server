@@ -1,3 +1,4 @@
+import TokensManager from "../utils/tokensManager";
 import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";
@@ -20,7 +21,6 @@ import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuth } from "../middleware/isAuth";
 import { validateInput } from "../utils/validateInput";
-import { TokensManager } from "../utils/tokensManager";
 import { Celebrity } from "../entities/Celebrity";
 import { In } from "typeorm";
 @Resolver()

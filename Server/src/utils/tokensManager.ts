@@ -1,6 +1,6 @@
 import { addFcmToken, getFcmTokens } from "./fcmTokenManager";
 
-export class TokensManager {
+export default class TokensManager {
   addToken(userId: string, token: string) {
     const status = addFcmToken(userId, token);
     return status;
