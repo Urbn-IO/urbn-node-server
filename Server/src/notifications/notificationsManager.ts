@@ -1,7 +1,7 @@
 import { getFcmTokens } from "../utils/fcmTokenManager";
 import { GenericResponse } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
-import { firebaseCM } from "../services/notifications/firebaseCM";
+import { sendMessage } from "../services/notifications/firebaseCloudMessaging";
 
 export class NotificationsManager {
   async sendNotifications(
@@ -34,12 +34,12 @@ export class NotificationsManager {
       }
       const messageTitle = `You've received a new ${requestType} request!`;
       const messageBody = `Your fan ${firstName}, has sent you a ${requestType} request. Check it out!`;
-      await firebaseCM(messageTitle, messageBody, tokens);
+      await sendMessage(messageTitle, messageBody, tokens);
       return { success: `${requestType} request sent to ${celebAlias}` };
     } else {
       const messageTitle = `Reminder! You have requests expiring in 3 days, check them out!`;
       const messageBody = `Your have requests that will expire in 3 days time, Click to check them out`;
-      await firebaseCM(messageTitle, messageBody, tokens);
+      await sendMessage(messageTitle, messageBody, tokens);
       return { success: `sent` };
     }
   }

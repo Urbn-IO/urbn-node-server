@@ -55,7 +55,7 @@ export class User extends BaseEntity {
   @JoinColumn()
   celebrity?: Celebrity;
 
-  @Field(() => [Shoutout])
+  @Field(() => [Shoutout], { nullable: true })
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user)
   shoutouts: Shoutout[];
 

@@ -18,11 +18,14 @@ export class UserCategoriesResolver {
       where: { userId },
       select: ["id"],
     });
+    const celebCategoryMap = [];
     const celebId = celeb?.id;
     try {
       for (const categoryId of categoryIds) {
-        await CelebCategories.create({ celebId, categoryId }).save();
+        const celebCategory = CelebCategories.create({ celebId, categoryId });
+        celebCategoryMap.push(celebCategory);
       }
+      await CelebCategories.save(celebCategoryMap);
     } catch (err) {
       return false;
     }

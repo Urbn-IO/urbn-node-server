@@ -16,8 +16,6 @@ export class UserInputs {
   @Field()
   lastName: string;
   @Field()
-  nationality: string;
-  @Field()
   email!: string;
   @Field()
   password!: string;

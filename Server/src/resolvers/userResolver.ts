@@ -58,16 +58,16 @@ export class UserResolver {
   }
 
   //Login resolver
-  @Mutation(() => GenericResponse)
+  @Mutation(() => UserResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
     @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
+  ): Promise<UserResponse> {
     const user = await User.findOne({
       where: {
         email: userInput.email.toLowerCase(),
       },
-      select: ["email", "password", "userId"],
+      relations: ["celebrity"],
     });
     if (!user) {
       return { errorMessage: "Wrong Email or Password" };
@@ -80,7 +80,7 @@ export class UserResolver {
       return { errorMessage: "Wrong Email or Password" };
     }
     req.session.userId = user.userId;
-    return { success: "Log in successful" };
+    return { user };
   }
 
   @Mutation(() => Boolean)

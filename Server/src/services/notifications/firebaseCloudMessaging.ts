@@ -1,6 +1,6 @@
 import { getMessaging } from "firebase-admin/messaging";
 
-export const firebaseCM = async (
+export const sendMessage = async (
   messageTitle: string,
   messageBody: string,
   tokens: string[]
