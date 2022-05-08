@@ -1,19 +1,17 @@
 import { getMessaging } from "firebase-admin/messaging";
+import { NotificationsPayload } from "../../types";
 
-export const sendMessage = async (
-  messageTitle: string,
-  messageBody: string,
-  tokens: string[]
-) => {
-  //   const registrationTokens = [
-  //     "YOUR_REGISTRATION_TOKEN_1",
-  //     // …
-  //     "YOUR_REGISTRATION_TOKEN_N",
-  //   ];
-  const registrationTokens = tokens as unknown as string[];
-
+export const propagateMessage = async ({
+  messageTitle,
+  messageBody,
+  tokens,
+}: NotificationsPayload) => {
+  const registrationTokens = tokens;
   const message = {
-    notification: { title: messageTitle, body: messageBody },
+    notification: {
+      title: messageTitle,
+      body: messageBody,
+    },
     tokens: registrationTokens,
   };
 

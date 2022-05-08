@@ -17,6 +17,12 @@ declare module "express-session" {
   }
 }
 
+export interface NotificationsPayload {
+  messageTitle: string;
+  messageBody: string;
+  tokens: string[];
+}
+
 export type RequestInput = {
   requestor: string;
   requestorName: string | undefined;
