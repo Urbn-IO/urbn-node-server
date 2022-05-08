@@ -1,7 +1,7 @@
 import { NotificationsPayload } from "../../types";
 import { propagateMessage } from "./firebaseCloudMessaging";
 
-function sendMessage(message: NotificationsPayload) {
+export function sendMessage(message: NotificationsPayload) {
   return {
     sendInstantMessage: () => {
       propagateMessage(message);
@@ -9,6 +9,6 @@ function sendMessage(message: NotificationsPayload) {
   };
 }
 
-function sendScheduledMessage(message: NotificationsPayload) {
-  return {};
+export function sendScheduledMessage(message: NotificationsPayload) {
+  return { message };
 }

@@ -1,8 +1,9 @@
+import { Categories } from "src/entities/Categories";
 import { CelebCategories } from "../../entities/CelebCategories";
 import { User } from "../../entities/User";
 import { client } from "./client";
 
-export const upsertSearchItem = async (user: User | undefined) => {
+export const upsertCelebritySearchItem = async (user: User | undefined) => {
   if (user?.celebrity) {
     const celebId = user.celebrity.id;
     const categoriesObj = await CelebCategories.find({
@@ -39,6 +40,24 @@ export const upsertSearchItem = async (user: User | undefined) => {
     };
     try {
       await client.collections("celebrity").documents().upsert(celebObj);
+    } catch (err) {
+      console.log("typesense error: ", err);
+    }
+  }
+};
+
+export const upsertCategorySearchItem = async (
+  category: Categories | undefined
+) => {
+  if (category) {
+    const category_id = category.id;
+    const category_name = category.name;
+    const catObj = {
+      category_id,
+      category_name,
+    };
+    try {
+      await client.collections("category").documents().upsert(catObj);
     } catch (err) {
       console.log("typesense error: ", err);
     }
