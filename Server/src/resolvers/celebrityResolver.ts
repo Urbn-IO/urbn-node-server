@@ -17,9 +17,10 @@ import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
 import { getConnection } from "typeorm";
-import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
+import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
+import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 
 @Resolver()
 export class CelebrityResolver {
@@ -28,9 +29,10 @@ export class CelebrityResolver {
   @UseMiddleware(isAuth)
   async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("data") data: RegisterCelebrityInputs
+    @Arg("data") data: RegisterCelebrityInputs,
+    @Arg("categoryIds", () => [Number]) categoryIds: number[]
   ): Promise<GenericResponse> {
-    const userId = req.session.userId;
+    const userId = req.session.userId as string;
     data.userId = userId;
     const thumbnail = data.thumbnail;
     const image = `${data.image}_image.webp`;
@@ -67,7 +69,11 @@ export class CelebrityResolver {
         relations: ["celebrity"],
       });
 
-      upsertCelebritySearchItem(user);
+      const mappedCategories = await celebCategoriesMapper(userId, categoryIds);
+
+      if (mappedCategories) {
+        upsertCelebritySearchItem(user);
+      }
 
       return { success: `${user?.celebrity?.alias} registered successfully` };
     } catch (err) {
@@ -82,7 +88,7 @@ export class CelebrityResolver {
     @Arg("data") data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
-    const userId = req.session.userId;
+    const userId = req.session.userId as string;
     const thumbnail = data.thumbnail;
     const image = `${data.image}_image.webp`;
     const imageThumbnail = `${data.image}_thumbnail.webp`;
@@ -126,6 +132,7 @@ export class CelebrityResolver {
       .where("user.userId = :userId", { userId })
       .leftJoinAndSelect("user.celebrity", "celebrity")
       .getOne();
+
     upsertCelebritySearchItem(user);
 
     return { success: "updated succesfully!" };

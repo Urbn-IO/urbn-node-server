@@ -4,6 +4,7 @@ import { AppContext } from "../types";
 import { Celebrity } from "../entities/Celebrity";
 import { getConnection } from "typeorm";
 import { isAuth } from "../middleware/isAuth";
+import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 
 @Resolver()
 export class UserCategoriesResolver {
@@ -13,24 +14,9 @@ export class UserCategoriesResolver {
     @Arg("categoryIds", () => [Number]) categoryIds: number[],
     @Ctx() { req }: AppContext
   ): Promise<boolean> {
-    const userId = req.session.userId;
-    const celeb = await Celebrity.findOne({
-      where: { userId },
-      select: ["id"],
-    });
-    const celebCategoryMap = [];
-    const celebId = celeb?.id;
-    try {
-      for (const categoryId of categoryIds) {
-        const celebCategory = CelebCategories.create({ celebId, categoryId });
-        celebCategoryMap.push(celebCategory);
-      }
-      await CelebCategories.save(celebCategoryMap);
-    } catch (err) {
-      return false;
-    }
-
-    return true;
+    const userId = req.session.userId as string;
+    const result = celebCategoriesMapper(userId, categoryIds);
+    return result;
   }
 
   @Mutation(() => Boolean)
