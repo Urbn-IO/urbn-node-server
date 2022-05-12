@@ -1,4 +1,4 @@
-import { getMessaging } from "firebase-admin/messaging";
+import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
 import { NotificationsPayload } from "../../types";
 
 export const propagateMessage = async ({
@@ -6,13 +6,20 @@ export const propagateMessage = async ({
   messageBody,
   tokens,
 }: NotificationsPayload) => {
-  const registrationTokens = tokens;
-  const message = {
+  const message: MulticastMessage = {
     notification: {
       title: messageTitle,
       body: messageBody,
     },
-    tokens: registrationTokens,
+    tokens,
+    android: {
+      priority: "high",
+    },
+    apns: {
+      headers: {
+        "apns-priority": "10",
+      },
+    },
   };
 
   await getMessaging()
@@ -22,7 +29,7 @@ export const propagateMessage = async ({
         const failedTokens: string[] = [];
         response.responses.forEach((resp, idx) => {
           if (!resp.success) {
-            failedTokens.push(registrationTokens[idx]);
+            failedTokens.push(tokens[idx]);
           }
         });
         console.log("List of tokens that caused failures: " + failedTokens);

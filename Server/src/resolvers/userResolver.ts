@@ -29,6 +29,8 @@ export class UserResolver {
   @Mutation(() => GenericResponse)
   async createUser(
     @Arg("userInput") userInput: UserInputs,
+    @Arg("notificationToken") token: string,
+    @Arg("deviceId") deviceId: string,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const invalidInput = validateInput(userInput);
@@ -53,6 +55,8 @@ export class UserResolver {
         return { errorMessage: "An error occured" };
       }
     }
+    const tokensManager = new TokensManager();
+    tokensManager.addToken(id, deviceId, token);
     req.session.userId = id; //keep a new user logged in
     return { success: "Account created successfully" };
   }
@@ -61,6 +65,8 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
+    @Arg("notificationToken") token: string,
+    @Arg("deviceId") deviceId: string,
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const user = await User.findOne({
@@ -79,6 +85,8 @@ export class UserResolver {
     if (!verifiedPassword) {
       return { errorMessage: "Wrong Email or Password" };
     }
+    const tokensManager = new TokensManager();
+    tokensManager.addToken(user.userId, deviceId, token);
     req.session.userId = user.userId;
     return { user };
   }
@@ -142,7 +150,15 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
-  logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
+  logout(
+    @Arg("deviceId") deviceId: string,
+    @Ctx() { req, res }: AppContext
+  ): Promise<unknown> {
+    const userId = req.session.userId;
+    if (userId) {
+      const tokensManager = new TokensManager();
+      tokensManager.removeTokens(userId, deviceId);
+    }
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
         res.clearCookie(COOKIE_NAME);
@@ -158,20 +174,20 @@ export class UserResolver {
     );
   }
 
-  @Mutation(() => String)
-  @UseMiddleware(isAuth)
-  async storeDeviceToken(
-    @Arg("token") token: string,
-    @Ctx() { req }: AppContext
-  ) {
-    const userId = req.session.userId;
-    if (!userId) {
-      return "user not logged In";
-    }
-    const tokensManager = new TokensManager();
-    const status = await tokensManager.addToken(userId, token);
-    return status;
-  }
+  // @Mutation(() => String)
+  // @UseMiddleware(isAuth)
+  // async storeDeviceToken(
+  //   @Arg("token") token: string,
+  //   @Ctx() { req }: AppContext
+  // ) {
+  //   const userId = req.session.userId;
+  //   if (!userId) {
+  //     return "user not logged In";
+  //   }
+  //   const tokensManager = new TokensManager();
+  //   const status = await tokensManager.addToken(userId, token);
+  //   return status;
+  // }
 
   //delete user
   // @Mutation(() => Boolean)

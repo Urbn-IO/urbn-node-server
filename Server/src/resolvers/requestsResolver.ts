@@ -8,7 +8,12 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
-import { AppContext, RequestInput, requestStatus } from "../types";
+import {
+  AppContext,
+  NotificationsPayload,
+  RequestInput,
+  requestStatus,
+} from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../services/payments/payments";
@@ -18,7 +23,10 @@ import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateRecipient } from "../utils/requestValidations";
-import { NotificationsManager } from "../services/notifications/notificationsManager";
+// import { NotificationsManager } from "../services/notifications/notificationsManager";
+import { getFcmTokens } from "../utils/fcmTokenManager";
+import { notificationsManager } from "../services/notifications/notifications";
+import { typeReturn } from "../utils/helpers";
 
 @Resolver()
 export class RequestsResolver {
@@ -98,17 +106,16 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
-    const notifications = new NotificationsManager();
-
-    const result = await notifications.sendNotifications(
-      celeb.userId,
-      userId,
-      Input.requestType,
-      false,
-      celebAlias
-    );
-    // await sendRequest
-    return result;
+    const tokens = await getFcmTokens(celeb.userId);
+    const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
+    const message: NotificationsPayload = {
+      messageTitle: `You've received a new ${requestType} request!`,
+      messageBody: `Your fan ${UserfirstName}, has sent you a ${requestType} request. Check it out!`,
+      tokens,
+    };
+    const notifications = notificationsManager(message);
+    notifications.sendInstantMessage();
+    return { success: "request sent" };
   }
 
   @Mutation(() => GenericResponse)
@@ -169,20 +176,33 @@ export class RequestsResolver {
     @Arg("requestId") requestId: number,
     @Arg("status") status: string
   ): Promise<GenericResponse> {
-    let response;
-    if (status === requestStatus.ACCEPTED) {
-      response = requestStatus.ACCEPTED;
-    } else if (status === requestStatus.REJECTED) {
-      response = requestStatus.REJECTED;
-    } else {
-      return { errorMessage: "Invalid request response" };
+    if (
+      status === requestStatus.ACCEPTED ||
+      status === requestStatus.REJECTED
+    ) {
+      try {
+        const request = await typeReturn<Requests>(
+          Requests.update({ id: requestId }, { status })
+        );
+        const requestType =
+          request.requestType === "shoutout" ? "shoutout" : "video";
+        const celebAlias = request.recepientAlias;
+        const tokens = await getFcmTokens(request.requestor as string);
+        const message: NotificationsPayload = {
+          messageTitle: `Your ${requestType} request to ${celebAlias} has been ${status}`,
+          messageBody: `${celebAlias} has ${status} your ${requestType} request`,
+          tokens,
+        };
+        const notifications = notificationsManager(message);
+        notifications.sendInstantMessage();
+      } catch (err) {
+        return {
+          errorMessage: "Error changing request state, Try again later",
+        };
+      }
+      return { success: "Request Accepted" };
     }
-    try {
-      await Requests.update({ id: requestId }, { status: response });
-    } catch (err) {
-      return { errorMessage: "Error changing request state, Try again later" };
-    }
-    return { success: "Request Accepted" };
+    return { errorMessage: "Invalid response to request" };
   }
 
   @Query(() => [Requests])

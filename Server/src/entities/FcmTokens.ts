@@ -19,6 +19,10 @@ export class FcmTokens extends BaseEntity {
   userId!: string;
 
   @Field()
+  @Column({ nullable: true })
+  deviceId!: string;
+
+  @Field()
   @Column({ unique: true })
   token!: string;
 

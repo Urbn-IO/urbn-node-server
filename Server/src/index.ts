@@ -17,7 +17,6 @@ import { initializeApp } from "firebase-admin/app";
 import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
 import { initializeSearch } from "./services/appSearch/collections";
-import { initializeScheduledJobs } from "./services/notifications/initScheduledNotifications";
 
 const app = express();
 
@@ -36,7 +35,6 @@ const main = async () => {
   await connection.runMigrations();
 
   initializeApp(firebaseConfig);
-  initializeScheduledJobs();
   initializeSearch();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
