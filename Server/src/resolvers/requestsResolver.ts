@@ -123,7 +123,7 @@ export class RequestsResolver {
     };
     const notifications = notificationsManager(message);
     notifications.sendInstantMessage();
-    return { success: "request sent" };
+    return { success: "Request Sent!" };
   }
 
   @Mutation(() => GenericResponse)
@@ -140,8 +140,9 @@ export class RequestsResolver {
       if (isValidCeleb) {
         const request = await Requests.findOne({
           where: { id: requestId },
-          select: ["requestor"],
+          select: ["requestor", "recepientAlias"],
         });
+        const celebAlias = request?.recepientAlias;
         await saveShoutout(
           video,
           thumbnail,
@@ -152,6 +153,15 @@ export class RequestsResolver {
           { id: requestId },
           { status: requestStatus.FULFILLED }
         );
+
+        const tokens = await getFcmTokens(request?.requestor as string);
+        const message: NotificationsPayload = {
+          messageTitle: `You've got a new Shoutout video!`,
+          messageBody: `Checkout the video ${celebAlias} sent to you!`,
+          tokens,
+        };
+        const notifications = notificationsManager(message);
+        notifications.sendInstantMessage();
       } else {
         return { errorMessage: "Unauthorized action" };
       }
