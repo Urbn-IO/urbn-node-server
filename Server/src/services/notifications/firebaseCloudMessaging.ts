@@ -12,8 +12,6 @@ export const propagateMessage = async ({
       title: messageTitle,
       body: messageBody,
     },
-    data,
-    tokens,
     android: {
       priority: "high",
     },
@@ -22,6 +20,8 @@ export const propagateMessage = async ({
         "apns-priority": "10",
       },
     },
+    data,
+    tokens,
   };
 
   await getMessaging()
