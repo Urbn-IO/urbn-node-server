@@ -117,8 +117,8 @@ export class RequestsResolver {
     const tokens = await getFcmTokens(celeb.userId);
     const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
     const message: NotificationsPayload = {
-      messageTitle: `You've received a new ${requestType} request!`,
-      messageBody: `Your fan ${UserfirstName}, has sent you a ${requestType} request. Check it out!`,
+      messageTitle: process.env.APP_NAME,
+      messageBody: `You've received a new ${requestType} request!`,
       tokens,
     };
     const notifications = notificationsManager(message);
@@ -140,9 +140,8 @@ export class RequestsResolver {
       if (isValidCeleb) {
         const request = await Requests.findOne({
           where: { id: requestId },
-          select: ["requestor", "recepientAlias"],
+          select: ["requestor"],
         });
-        const celebAlias = request?.recepientAlias;
         await saveShoutout(
           video,
           thumbnail,
@@ -156,8 +155,8 @@ export class RequestsResolver {
 
         const tokens = await getFcmTokens(request?.requestor as string);
         const message: NotificationsPayload = {
-          messageTitle: `You've got a new Shoutout video!`,
-          messageBody: `Checkout the video ${celebAlias} sent to you!`,
+          messageTitle: process.env.APP_NAME,
+          messageBody: `You've got a new Shoutout video!`,
           tokens,
         };
         const notifications = notificationsManager(message);
@@ -207,8 +206,8 @@ export class RequestsResolver {
         const celebAlias = request.recepientAlias;
         const tokens = await getFcmTokens(request.requestor as string);
         const message: NotificationsPayload = {
-          messageTitle: `Your ${requestType} request to ${celebAlias} has been ${status}`,
-          messageBody: `${celebAlias} has ${status} your ${requestType} request`,
+          messageTitle: process.env.APP_NAME,
+          messageBody: `Your ${requestType} request to ${celebAlias} has been ${status}`,
           tokens,
         };
         const notifications = notificationsManager(message);

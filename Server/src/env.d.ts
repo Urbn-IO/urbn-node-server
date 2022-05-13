@@ -1,6 +1,7 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
+      APP_NAME: string;
       AWS_BUCKET_NAME: string;
       AWS_PUBLIC_BUCKET_NAME: string;
       AWS_BUCKET_REGION: string;
