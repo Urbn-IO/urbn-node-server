@@ -150,19 +150,18 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
-  logout(
+  async logout(
     @Arg("deviceId") deviceId: string,
     @Ctx() { req, res }: AppContext
   ): Promise<unknown> {
     const userId = req.session.userId;
     if (userId) {
       const tokensManager = new TokensManager();
-      tokensManager.removeTokens(userId, deviceId);
+      await tokensManager.removeTokens(userId, deviceId);
     }
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
         res.clearCookie(COOKIE_NAME);
-        res.end();
         if (err) {
           console.log(err);
           resolve(false);

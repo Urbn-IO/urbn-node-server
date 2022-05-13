@@ -9,7 +9,7 @@ export default class TokensManager {
     const result = getFcmTokens(userId);
     return result;
   }
-  removeTokens(userId: string, deviceId: string) {
-    deleteFcmTokens(userId, deviceId);
+  async removeTokens(userId: string, deviceId: string) {
+    await deleteFcmTokens(userId, deviceId);
   }
 }

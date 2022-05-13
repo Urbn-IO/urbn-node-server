@@ -19,7 +19,7 @@ export class FcmTokens extends BaseEntity {
   userId!: string;
 
   @Field()
-  @Column({ nullable: true })
+  @Column()
   deviceId!: string;
 
   @Field()
