@@ -12,7 +12,7 @@ export const ValidateCallAndRequestor = async (userId: string, id: number) => {
 
 export const ValidateRecipient = async (userId: string, id: number) => {
   const request = await Requests.findOne(id, { select: ["recepient"] });
-  if (request?.recepient == userId) {
+  if (request?.recepient === userId) {
     return true;
   }
   return false;
