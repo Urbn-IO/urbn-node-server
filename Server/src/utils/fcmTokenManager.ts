@@ -20,7 +20,10 @@ export const addFcmToken = async (
 };
 
 export const getFcmTokens = async (userId: string): Promise<string[]> => {
-  const tokenObj = await FcmTokens.find({ where: userId, select: ["token"] });
+  const tokenObj = await FcmTokens.find({
+    where: { userId },
+    select: ["token"],
+  });
   if (tokenObj) {
     const tokens: string[] = [];
     tokenObj.forEach((x) => {
