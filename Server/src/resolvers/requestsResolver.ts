@@ -57,12 +57,20 @@ export class RequestsResolver {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
     }
-    if (Input.requestType !== "shoutout" && acceptsCallTypeA === false) {
+    if (
+      Input.requestType !== "shoutout" &&
+      Input.requestType === "call_type_A" &&
+      acceptsCallTypeA === false
+    ) {
       return {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
     }
-    if (Input.requestType !== "shoutout" && acceptsCallTypeB === false) {
+    if (
+      Input.requestType !== "shoutout" &&
+      Input.requestType === "call_type_B" &&
+      acceptsCallTypeB === false
+    ) {
       return {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
