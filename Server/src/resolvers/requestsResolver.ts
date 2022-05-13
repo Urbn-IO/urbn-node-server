@@ -10,6 +10,7 @@ import {
 } from "type-graphql";
 import {
   AppContext,
+  notificationRouteCode,
   NotificationsPayload,
   RequestInput,
   requestStatus,
@@ -23,9 +24,8 @@ import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateRecipient } from "../utils/requestValidations";
-// import { NotificationsManager } from "../services/notifications/notificationsManager";
 import { getFcmTokens } from "../utils/fcmTokenManager";
-import { notificationsManager } from "../services/notifications/notifications";
+import { notificationsManager } from "../services/notifications/notificationsManager";
 import { typeReturn } from "../utils/helpers";
 
 @Resolver()
@@ -65,8 +65,7 @@ export class RequestsResolver {
       return {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
-    }
-    if (
+    } else if (
       Input.requestType !== "shoutout" &&
       Input.requestType === "call_type_B" &&
       acceptsCallTypeB === false
@@ -119,6 +118,9 @@ export class RequestsResolver {
     const message: NotificationsPayload = {
       messageTitle: process.env.APP_NAME,
       messageBody: `You've received a new ${requestType} request!`,
+      data: {
+        routeCode: notificationRouteCode.RECEIVED_REQUEST,
+      },
       tokens,
     };
     const notifications = notificationsManager(message);
@@ -157,6 +159,9 @@ export class RequestsResolver {
         const message: NotificationsPayload = {
           messageTitle: process.env.APP_NAME,
           messageBody: `You've got a new Shoutout video!`,
+          data: {
+            routeCode: notificationRouteCode.PROFILE_SHOUTOUT,
+          },
           tokens,
         };
         const notifications = notificationsManager(message);
@@ -208,6 +213,7 @@ export class RequestsResolver {
         const message: NotificationsPayload = {
           messageTitle: process.env.APP_NAME,
           messageBody: `Your ${requestType} request to ${celebAlias} has been ${status}`,
+          data: { routeCode: notificationRouteCode.RESPONSE },
           tokens,
         };
         const notifications = notificationsManager(message);

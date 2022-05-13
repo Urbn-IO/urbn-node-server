@@ -21,7 +21,12 @@ export interface NotificationsPayload {
   messageTitle: string;
   messageBody: string;
   tokens: string[];
+  data: NotificationsRoute;
 }
+
+type NotificationsRoute = {
+  routeCode: notificationRouteCode;
+};
 
 export type RequestInput = {
   requestor: string;
@@ -47,4 +52,10 @@ export enum requestType {
   SHOUTOUT = "shoutout",
   CALL_TYPE_A = "call_type_A",
   CALL_TYPE_B = "call_type_B",
+}
+
+export enum notificationRouteCode {
+  RESPONSE = "0", // notification to display response from celebrity to a user on the client
+  RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
+  PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
 }

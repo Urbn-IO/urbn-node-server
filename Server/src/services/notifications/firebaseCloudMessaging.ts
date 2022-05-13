@@ -5,12 +5,14 @@ export const propagateMessage = async ({
   messageTitle,
   messageBody,
   tokens,
+  data,
 }: NotificationsPayload) => {
   const message: MulticastMessage = {
     notification: {
       title: messageTitle,
       body: messageBody,
     },
+    data,
     tokens,
     android: {
       priority: "high",
