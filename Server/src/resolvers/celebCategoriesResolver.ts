@@ -12,10 +12,12 @@ export class UserCategoriesResolver {
   @UseMiddleware(isAuth)
   async mapCelebToCategories(
     @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Arg("customCategories", () => [String], { nullable: true })
+    customCats: string[],
     @Ctx() { req }: AppContext
   ): Promise<boolean> {
     const userId = req.session.userId as string;
-    const result = celebCategoriesMapper(userId, categoryIds);
+    const result = celebCategoriesMapper(userId, categoryIds, customCats);
     return result;
   }
 

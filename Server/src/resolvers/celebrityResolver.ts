@@ -30,7 +30,9 @@ export class CelebrityResolver {
   async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
     @Arg("data") data: RegisterCelebrityInputs,
-    @Arg("categoryIds", () => [Number]) categoryIds: number[]
+    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Arg("customCategories", () => [String], { nullable: true })
+    newCats: string[]
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.userId = userId;
@@ -69,7 +71,11 @@ export class CelebrityResolver {
         relations: ["celebrity"],
       });
 
-      const mappedCategories = await celebCategoriesMapper(userId, categoryIds);
+      const mappedCategories = await celebCategoriesMapper(
+        userId,
+        categoryIds,
+        newCats
+      );
 
       if (mappedCategories) {
         upsertCelebritySearchItem(user);

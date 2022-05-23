@@ -209,7 +209,7 @@ export class RequestsResolver {
         const requestType =
           request.requestType === "shoutout" ? "shoutout" : "video";
         const celebAlias = request.recepientAlias;
-        const tokens = await getFcmTokens(request.requestor as string);
+        const tokens = await getFcmTokens(request.requestor);
         const message: NotificationsPayload = {
           messageTitle: process.env.APP_NAME,
           messageBody: `Your ${requestType} request to ${celebAlias} has been ${status}`,
