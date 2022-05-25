@@ -1,5 +1,5 @@
 import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
-import client from "../aws/sqsClient";
+import client from "../aws/clients/sqsClient";
 
 const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
 

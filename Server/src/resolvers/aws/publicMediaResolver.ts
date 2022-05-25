@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import dayjs from "dayjs";
-import client from "../../services/aws/s3Client";
+import client from "../../services/aws/clients/s3Client";
 import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../../types";

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import path from "path";
 import dayjs from "dayjs";
 import fs from "fs";
-import client from "../../services/aws/s3Client";
+import client from "../../services/aws/clients/s3Client";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3SignedObject } from "../../utils/s3Types";
