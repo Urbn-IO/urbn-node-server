@@ -2,12 +2,8 @@ import crypto from "crypto";
 import path from "path";
 import dayjs from "dayjs";
 import fs from "fs";
-import {
-  S3Client,
-  S3ClientConfig,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
+import client from "../../services/aws/s3Client";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
@@ -20,18 +16,6 @@ import { Requests } from "../../entities/Requests";
 @Resolver()
 export class ShoutoutResolver {
   bucketName = process.env.AWS_BUCKET_NAME;
-  region = process.env.AWS_BUCKET_REGION;
-  accessKey = process.env.AWS_ACCESS_KEY;
-  secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-  s3Config: S3ClientConfig = {
-    region: this.region,
-    credentials: {
-      accessKeyId: this.accessKey,
-      secretAccessKey: this.secretAccessKey,
-    },
-  };
-  s3 = new S3Client(this.s3Config);
 
   @Query(() => [s3SignedObject])
   @UseMiddleware(isAuth)
@@ -68,7 +52,7 @@ export class ShoutoutResolver {
             Key,
           });
 
-          const signedUrl = await getSignedUrl(this.s3, s3Command, {
+          const signedUrl = await getSignedUrl(client, s3Command, {
             expiresIn: 3600,
           });
           response.push({ signedUrl, fileName: Key });
@@ -87,7 +71,7 @@ export class ShoutoutResolver {
       Bucket: this.bucketName,
       Key: key,
     });
-    const signedUrl = await getSignedUrl(this.s3, s3Command, {
+    const signedUrl = await getSignedUrl(client, s3Command, {
       expiresIn: 3600,
     });
     return { signedUrl };
@@ -104,12 +88,7 @@ export class ShoutoutResolver {
       __dirname,
       "/../../../keys/private_key.pem"
     );
-
     const privateKey = fs.readFileSync(pathToPrivateKey, "utf8");
-
-    // const signedUrl = exec(
-    //   `aws cloudfront sign --url ${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName} --key-pair-id ${keyPairId} --private-key file://${pathToPrivateKey} --date-less-than ${time}`
-    // );
     const cfSigner = new Signer(keyPairId, privateKey);
     const signedUrl = cfSigner.getSignedUrl({
       url: `${process.env.AWS_CLOUD_FRONT_DOMAIN}/${fileName}`,
