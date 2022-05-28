@@ -15,9 +15,10 @@ import { upsertCategorySearchItem } from "../services/appSearch/addSearchItem";
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  async categories(
+  async getCategories(
     @Arg("categoryId", { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,
+    @Arg("isPrimary", { defaultValue: null }) primary: boolean,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
@@ -38,6 +39,10 @@ export class CategoryResolver {
       .leftJoinAndSelect("categories.celebConn", "celebrity")
       .orderBy("categories.createdAt", "DESC")
       .take(maxLimit);
+
+    if (primary !== null) {
+      queryBuilder.where('categories."primary" = :primary', { primary });
+    }
     if (cursor) {
       queryBuilder.andWhere('categories."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
