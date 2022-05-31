@@ -7,6 +7,8 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import router from "./api/webhook";
 import searchRouter from "./api/typeSense";
+import firebaseConfig from "./firebaseConfig";
+import sqsConsumer from "./services/queues/vodOutput";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -14,10 +16,8 @@ import { COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
-import { firebaseConfig } from "./firebaseConfig";
 import { entities, resolvers } from "./register";
-import { initializeScheduledJobs } from "./notifications/initScheduledNotifications";
-import { initializeSearch } from "./appSearch/profileCollection";
+import { initializeSearch } from "./services/appSearch/collections";
 
 const app = express();
 
@@ -36,8 +36,8 @@ const main = async () => {
   await connection.runMigrations();
 
   initializeApp(firebaseConfig);
-  initializeScheduledJobs();
   initializeSearch();
+  sqsConsumer.start();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
   app.use(

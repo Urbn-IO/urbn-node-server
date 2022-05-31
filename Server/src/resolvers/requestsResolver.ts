@@ -8,231 +8,224 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
-import { AppContext, RequestInput, requestStatus } from "../types";
+import {
+  AppContext,
+  notificationRouteCode,
+  NotificationsPayload,
+  RequestInput,
+  requestStatus,
+} from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
-import { Payments } from "../payments/payments";
-import { NotificationsManager } from "../notifications/notificationsManager";
+import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
-import { genericResponse } from "../utils/graphqlTypes";
+import { GenericResponse, RequestInputs } from "../utils/graphqlTypes";
 import { saveShoutout } from "../shoutOut/saveShoutOut";
-import { deleteCallToken } from "../utils/saveCallToken";
+import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
+import { ValidateRecipient } from "../utils/requestValidations";
+import { getFcmTokens } from "../utils/fcmTokenManager";
+import { notificationsManager } from "../services/notifications/notificationsManager";
+import { typeReturn } from "../utils/helpers";
 
 @Resolver()
 export class RequestsResolver {
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
-  async request(
-    @Arg("requestType") requestType: string,
-    @Arg("celebId") celebId: string,
-    @Arg("description") description: string,
-    @Arg("requestExpires") requestExpires: Date,
+  async createRequest(
+    @Arg("Input") Input: RequestInputs,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
-    const userId = req.session.userId;
-    const types = ["video", "callTypeA", "callTypeB"];
-    if (!userId) {
-      return { success: "user is not logged in" };
-    }
-
-    if (!types.includes(requestType)) {
-      return {
-        errors: [
-          {
-            errorMessage: "Invalid request type",
-            field: "requestType",
-          },
-        ],
-      };
-    }
-
-    return this.initiateRequest(
-      celebId,
-      requestType,
-      userId,
-      description,
-      requestExpires
-    );
-  }
-
-  async initiateRequest(
-    celebId: string,
-    type: string,
-    userId: string,
-    description: string,
-    requestExpires: Date
-  ): Promise<genericResponse> {
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string;
+    const celebId = Input.celebId;
     const celeb = await getConnection()
       .getRepository(Celebrity)
       .createQueryBuilder("celeb")
       .where("celeb.userId = :celebId", { celebId })
       .getOne();
     if (!celeb) {
-      return {
-        errors: [
-          {
-            errorMessage: "Invalid celebrity Id",
-            field: "celebId",
-          },
-        ],
-      };
+      return { errorMessage: "Celebrity not found" };
     }
 
     const celebAlias = celeb.alias;
     const acceptShoutOut = celeb.acceptShoutOut;
-    const acceptsCallRequests = celeb.acceptsCalls;
+    const acceptsCallTypeA = celeb.acceptsCallTypeA;
+    const acceptsCallTypeB = celeb.acceptsCallTypeB;
 
-    if (type === "video" && acceptShoutOut === false) {
+    if (Input.requestType === "shoutout" && acceptShoutOut === false) {
       return {
-        errors: [
-          {
-            errorMessage: "Celebrity doesn't accept this type of request",
-            field: "requestType",
-          },
-        ],
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
     }
-    if (type !== "video" && acceptsCallRequests === false) {
+    if (
+      Input.requestType !== "shoutout" &&
+      Input.requestType === "call_type_A" &&
+      acceptsCallTypeA === false
+    ) {
       return {
-        errors: [
-          {
-            errorMessage: "Celebrity doesn't accept this type of request",
-            field: "requestType",
-          },
-        ],
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
+      };
+    } else if (
+      Input.requestType !== "shoutout" &&
+      Input.requestType === "call_type_B" &&
+      acceptsCallTypeB === false
+    ) {
+      return {
+        errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
     }
 
-    const amount =
-      type === "video"
-        ? celeb.shoutOutRatesInNaira
-        : type === "callTypeA"
-        ? celeb._3minsCallRequestRatesInNaira
-        : celeb._5minsCallRequestRatesInNaira;
-
-    const paid = new Payments().pay();
-    if (!paid) {
-      return {
-        errors: [{ errorMessage: "Payment Error!", field: "" }],
-      };
+    if (Input.requestType === "shoutout" && Input.description === null) {
+      return { errorMessage: "Shoutout description cannot be empty" };
     }
 
     const user = await User.findOne({
       where: { userId },
       select: ["firstName"],
     });
-    const userName = user?.firstName;
+    const UserfirstName = user?.firstName;
+    if (Input.requestType !== "shoutout" && !Input.description) {
+      Input.description = `Video call request from ${UserfirstName} to ${celebAlias}`;
+    }
+
+    const amount =
+      Input.requestType === "shoutout"
+        ? celeb.shoutOutRatesInNaira
+        : Input.requestType === "call_type_A"
+        ? celeb._3minsCallRequestRatesInNaira
+        : celeb._5minsCallRequestRatesInNaira;
+
+    const paid = new Payments().pay();
+    if (!paid) {
+      return { errorMessage: "Payment Error!" };
+    }
 
     const request: RequestInput = {
       requestor: userId,
-      requestorName: userName,
+      requestorName: UserfirstName,
       recepient: celeb.userId,
-      requestType: type,
+      requestType: Input.requestType,
       requestAmountInNaira: amount,
-      description: description,
-      requestExpires,
+      description: Input.description,
+      requestExpires: Input.requestExpiration,
       recepientAlias: celebAlias,
       recepientThumbnail: celeb.thumbnail,
     };
 
     await Requests.create(request).save();
-    const notifications = new NotificationsManager();
-
-    const result = await notifications.sendNotifications(
-      celeb.userId,
-      userId,
-      type,
-      false,
-      celebAlias
-    );
-    // await sendRequest
-    return result;
+    const tokens = await getFcmTokens(celeb.userId);
+    const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
+    const message: NotificationsPayload = {
+      messageTitle: process.env.APP_NAME,
+      messageBody: `You've received a new ${requestType} request!`,
+      data: {
+        routeCode: notificationRouteCode.RECEIVED_REQUEST,
+      },
+      tokens,
+    };
+    const notifications = notificationsManager(message);
+    notifications.sendInstantMessage();
+    return { success: "Request Sent!" };
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
-  async fulfilVideoRequest(
+  async fulfilShoutoutRequest(
     @Arg("requestId") requestId: number,
     @Arg("video") video: string,
     @Arg("thumbnail") thumbnail: string,
-    @Arg("ownedBy") ownedBy: string,
     @Ctx() { req }: AppContext
-  ): Promise<genericResponse> {
-    const userId = req.session.userId;
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string; //
     try {
-      await saveShoutout(video, thumbnail, ownedBy, userId);
-      await Requests.update(
-        { id: requestId },
-        { status: requestStatus.FULFILLED }
-      );
-    } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error fulfilling request, Try again later",
-            field: "",
+      const isValidCeleb = await ValidateRecipient(userId, requestId);
+      if (isValidCeleb) {
+        const request = await Requests.findOne({
+          where: { id: requestId },
+          select: ["requestor"],
+        });
+        await saveShoutout(
+          video,
+          thumbnail,
+          request?.requestor as string,
+          userId
+        );
+        await Requests.update(
+          { id: requestId },
+          { status: requestStatus.FULFILLED }
+        );
+
+        const tokens = await getFcmTokens(request?.requestor as string);
+        const message: NotificationsPayload = {
+          messageTitle: process.env.APP_NAME,
+          messageBody: `You've got a new Shoutout video!`,
+          data: {
+            routeCode: notificationRouteCode.PROFILE_SHOUTOUT,
           },
-        ],
-      };
+          tokens,
+        };
+        const notifications = notificationsManager(message);
+        notifications.sendInstantMessage();
+      } else {
+        return { errorMessage: "Unauthorized action" };
+      }
+    } catch (err) {
+      return { errorMessage: "Error fulfilling request, Try again later" };
     }
-    return { success: "Hurray! You've made someone's day!" };
+    return { success: "Shoutout video sent!" };
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async fulfilCallRequest(
-    @Arg("requestId") requestId: number,
-    @Arg("callToken") callToken: string
-  ): Promise<genericResponse> {
+    @Arg("requestId") requestId: number
+  ): Promise<GenericResponse> {
     try {
-      deleteCallToken(callToken);
+      deleteRoom(requestId);
       await Requests.update(
         { id: requestId },
         { status: requestStatus.FULFILLED }
       );
     } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error fulfilling request, Try again later",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Error fulfilling request, Try again later" };
     }
     return { success: "Request successfully fulfilled" };
   }
 
-  @Mutation(() => genericResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
   async respondToRequest(
     @Arg("requestId") requestId: number,
     @Arg("status") status: string
-  ): Promise<genericResponse> {
-    let response;
-    if (status === requestStatus.ACCEPTED) {
-      response = requestStatus.ACCEPTED;
-    } else if (status === requestStatus.REJECTED) {
-      response = requestStatus.REJECTED;
-    } else {
-      return {
-        errors: [{ errorMessage: "Invalid request response", field: "status" }],
-      };
+  ): Promise<GenericResponse> {
+    if (
+      status === requestStatus.ACCEPTED ||
+      status === requestStatus.REJECTED
+    ) {
+      try {
+        const request = await typeReturn<Requests>(
+          Requests.update({ id: requestId }, { status })
+        );
+        const requestType =
+          request.requestType === "shoutout" ? "shoutout" : "video";
+        const celebAlias = request.recepientAlias;
+        const tokens = await getFcmTokens(request.requestor);
+        const message: NotificationsPayload = {
+          messageTitle: process.env.APP_NAME,
+          messageBody: `Your ${requestType} request to ${celebAlias} has been ${status}`,
+          data: { routeCode: notificationRouteCode.RESPONSE },
+          tokens,
+        };
+        const notifications = notificationsManager(message);
+        notifications.sendInstantMessage();
+      } catch (err) {
+        return {
+          errorMessage: "Error changing request state, Try again later",
+        };
+      }
+      return { success: "Request Accepted" };
     }
-    try {
-      await Requests.update({ id: requestId }, { status: response });
-    } catch (err) {
-      return {
-        errors: [
-          {
-            errorMessage: "Error changing request state, Try again later",
-            field: "",
-          },
-        ],
-      };
-    }
-    return { success: "Request Accepted" };
+    return { errorMessage: "Invalid response to request" };
   }
 
   @Query(() => [Requests])

@@ -1,7 +1,13 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType, Int } from "type-graphql";
+import { InputType, Field, ObjectType, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
+import { requestType } from "../types";
+
+registerEnumType(requestType, {
+  name: "requestType",
+  description: "Type of request to be made",
+});
 
 @InputType()
 export class UserInputs {
@@ -9,8 +15,6 @@ export class UserInputs {
   firstName: string;
   @Field()
   lastName: string;
-  @Field()
-  nationality: string;
   @Field()
   email!: string;
   @Field()
@@ -24,7 +28,9 @@ export class RegisterCelebrityInputs {
   @Field()
   acceptShoutOut: boolean;
   @Field()
-  acceptsCalls: boolean;
+  acceptsCallTypeA: boolean;
+  @Field()
+  acceptsCallTypeB: boolean;
   @Field()
   shoutOutRatesInNaira: string;
   @Field()
@@ -49,7 +55,9 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   acceptShoutOut: boolean;
   @Field({ nullable: true })
-  acceptsCalls: boolean;
+  acceptsCallTypeA: boolean;
+  @Field({ nullable: true })
+  acceptsCallTypeB: boolean;
   @Field({ nullable: true })
   shoutOutRatesInNaira: string;
   @Field({ nullable: true })
@@ -77,28 +85,32 @@ export class UserInputsLogin {
 }
 
 @InputType()
-export class CategoryIds {
-  @Field(() => [Int])
-  categoryId: number[];
+export class RequestInputs {
+  @Field()
+  celebId: string;
+  @Field(() => requestType)
+  requestType: requestType;
+  @Field({ nullable: true })
+  description: string;
+  @Field()
+  requestExpiration: Date;
 }
+
+// @InputType()
+// export class CategoryIds {
+//   @Field(() => [Int])
+//   categoryId: number[];
+// }
 
 //remove the field propery in future
-@ObjectType()
-export class FieldWithError {
-  @Field()
-  field: string;
-
-  @Field()
-  errorMessage: string;
-}
 
 @ObjectType()
 export class UserResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
@@ -106,8 +118,8 @@ export class CategoryResponse {
   @Field(() => Categories, { nullable: true })
   category?: Categories;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
@@ -115,26 +127,26 @@ export class CardResponse {
   @Field(() => [CardAuthorization], { nullable: true })
   cards?: CardAuthorization[];
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 @ObjectType()
-export class genericResponse {
+export class GenericResponse {
   @Field(() => String, { nullable: true })
   success?: string;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
-export class callTokenResponse {
+export class CallTokenResponse {
   @Field(() => String, { nullable: true })
   token?: string;
 
   @Field(() => String, { nullable: true })
   roomName?: string;
 
-  @Field(() => [FieldWithError], { nullable: true })
-  errors?: FieldWithError[];
+  @Field({ nullable: true })
+  errorMessage?: string;
 }

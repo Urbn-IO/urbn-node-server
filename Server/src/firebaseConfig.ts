@@ -3,8 +3,10 @@ import path from "path";
 // import fs from "fs";
 const serviceAccount = path.join(
   __dirname,
-  "/../keys/moment-fd215-firebase-adminsdk-dccgs-3cd2997a14.json"
+  "/../keys/urban-26725-firebase-adminsdk-sbxk1-96ac9b18f4.json"
 );
-export const firebaseConfig = {
+const firebaseConfig = {
   credential: credential.cert(serviceAccount),
 };
+
+export default firebaseConfig;

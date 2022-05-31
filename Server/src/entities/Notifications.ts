@@ -1,4 +1,3 @@
-import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -8,23 +7,22 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-@ObjectType()
 @Entity()
-export class FcmTokens extends BaseEntity {
+export class Categories extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field()
-  @Column()
-  userId!: string;
-
-  @Field()
-  @Column()
-  deviceId!: string;
-
-  @Field()
   @Column({ unique: true })
-  token!: string;
+  messageTitle!: string;
+
+  @Column()
+  messageBody!: boolean;
+
+  @Column({ default: false })
+  tokens!: string[];
+
+  @Column({ nullable: true, default: false })
+  statusFlag: boolean;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;

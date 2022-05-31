@@ -7,20 +7,11 @@ export const validateInput = (input: UserInputs): UserResponse | null => {
   const validEmail = regexp.test(input.email);
 
   if (!validEmail) {
-    return {
-      errors: [{ field: "email", errorMessage: "Invalid email format" }],
-    };
+    return { errorMessage: "Invalid email format" };
   }
 
   if (input.password.length < 8) {
-    return {
-      errors: [
-        {
-          field: "password",
-          errorMessage: "Password must be at least 8 characters long!",
-        },
-      ],
-    };
+    return { errorMessage: "Password must be at least 8 characters long!" };
   }
 
   return null;

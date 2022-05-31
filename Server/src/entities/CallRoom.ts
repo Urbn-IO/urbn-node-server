@@ -4,24 +4,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
   PrimaryGeneratedColumn,
 } from "typeorm";
 
 @ObjectType()
 @Entity()
-export class CallTokens extends BaseEntity {
+export class CallRoom extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Field()
-  @Index()
-  @Column()
-  requestId!: number;
-
-  @Field()
   @Column({ unique: true })
-  token!: string;
+  requestId!: number;
 
   @Field()
   @Column({ unique: true })

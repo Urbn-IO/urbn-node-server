@@ -24,7 +24,7 @@ export class Categories extends BaseEntity {
   name!: string;
 
   @Field(() => Boolean)
-  @Column()
+  @Column({ default: false })
   recommendable!: boolean;
 
   @Field(() => Boolean)

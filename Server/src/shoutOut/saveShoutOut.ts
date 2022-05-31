@@ -7,12 +7,12 @@ export const saveShoutout = async (
   ownedBy: string,
   userId: string | undefined
 ) => {
-  const owner = await User.findOne({ where: { userId: ownedBy } });
+  const user = await User.findOne({ where: { userId: ownedBy } });
   const shoutOut = Shoutout.create({
     video,
     celebId: userId,
     thumbnail,
-    user: owner,
+    user,
   });
   try {
     await shoutOut.save();

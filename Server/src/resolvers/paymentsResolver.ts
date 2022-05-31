@@ -51,26 +51,12 @@ export class PaymentsResolver {
     const userId = req.session.userId;
     const user = await User.findOne({ where: { userId: userId } });
     if (!user) {
-      return {
-        errors: [
-          {
-            field: "",
-            errorMessage: "User not found",
-          },
-        ],
-      };
+      return { errorMessage: "User not found" };
     }
     const cards = await CardAuthorization.find({ where: { user } });
 
     if (!cards) {
-      return {
-        errors: [
-          {
-            field: "",
-            errorMessage: "User has no cards",
-          },
-        ],
-      };
+      return { errorMessage: "User has no cards" };
     }
     return { cards };
   }

@@ -1,5 +1,5 @@
 import express from "express";
-import { client } from "../appSearch/client";
+import { client } from "../services/appSearch/client";
 
 const searchRouter = express.Router();
 
@@ -32,7 +32,7 @@ searchRouter.get("/dropCollection", async (req, res) => {
   }
 });
 
-searchRouter.get("/search", async (req, res) => {
+searchRouter.get("/searchCelebrity", async (req, res) => {
   const { q } = req.query;
 
   const searchParameters = {
@@ -51,13 +51,26 @@ searchRouter.get("/search", async (req, res) => {
   }
 });
 
-searchRouter.post("/add", async (req, res) => {
+searchRouter.post("/addCelebrity", async (req, res) => {
   const celebs = req.body;
   try {
     const result = await client
       .collections("celebrity")
       .documents()
       .import(celebs, { action: "upsert" });
+    res.send(result);
+  } catch (err) {
+    res.send(err);
+  }
+});
+
+searchRouter.post("/addCategory", async (req, res) => {
+  const category = req.body.data;
+  try {
+    const result = await client
+      .collections("category")
+      .documents()
+      .import(category, { action: "upsert" });
     res.send(result);
   } catch (err) {
     res.send(err);

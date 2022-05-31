@@ -1,3 +1,4 @@
+import TokensManager from "../utils/tokensManager";
 import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";
@@ -10,6 +11,7 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import {
+  GenericResponse,
   UserInputs,
   UserInputsLogin,
   UserResponse,
@@ -19,17 +21,18 @@ import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuth } from "../middleware/isAuth";
 import { validateInput } from "../utils/validateInput";
-import { TokensManager } from "../utils/tokensManager";
 import { Celebrity } from "../entities/Celebrity";
 import { In } from "typeorm";
 @Resolver()
 export class UserResolver {
   //create User resolver
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => GenericResponse)
   async createUser(
     @Arg("userInput") userInput: UserInputs,
+    @Arg("notificationToken") token: string,
+    @Arg("deviceId") deviceId: string,
     @Ctx() { req }: AppContext
-  ): Promise<UserResponse> {
+  ): Promise<GenericResponse> {
     const invalidInput = validateInput(userInput);
     if (invalidInput) {
       return invalidInput;
@@ -37,62 +40,53 @@ export class UserResolver {
     const email = userInput.email.toLowerCase();
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
-    let user;
     try {
-      const createUser = User.create({
+      await User.create({
         firstName: userInput.firstName,
         lastName: userInput.lastName,
-        nationality: userInput.nationality,
         email,
         password: hashedPassword,
         userId: id,
-      });
-      user = createUser;
-      await user.save();
+      }).save();
     } catch (err) {
       if (err.code === "23505") {
-        return {
-          errors: [
-            {
-              field: "email",
-              errorMessage: "Email already exists, go to login page!",
-            },
-          ],
-        };
+        return { errorMessage: "Email already exists, go to login page!" };
+      } else {
+        return { errorMessage: "An error occured" };
       }
     }
-    req.session.userId = user?.userId; //keep a new user logged in
-    return { user };
+    const tokensManager = new TokensManager();
+    tokensManager.addToken(id, deviceId, token);
+    req.session.userId = id; //keep a new user logged in
+    return { success: "Account created successfully" };
   }
 
   //Login resolver
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => UserResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
+    @Arg("notificationToken") token: string,
+    @Arg("deviceId") deviceId: string,
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const user = await User.findOne({
       where: {
         email: userInput.email.toLowerCase(),
       },
-      relations: ["shoutouts", "celebrity"],
+      relations: ["celebrity"],
     });
     if (!user) {
-      return {
-        errors: [{ field: "email", errorMessage: "Wrong Email or Password" }],
-      };
+      return { errorMessage: "Wrong Email or Password" };
     }
     const verifiedPassword = await argon2.verify(
       user.password,
       userInput.password
     );
     if (!verifiedPassword) {
-      return {
-        errors: [
-          { field: "password", errorMessage: "Wrong Email or Password" },
-        ],
-      };
+      return { errorMessage: "Wrong Email or Password" };
     }
+    const tokensManager = new TokensManager();
+    tokensManager.addToken(user.userId, deviceId, token);
     req.session.userId = user.userId;
     return { user };
   }
@@ -116,33 +110,20 @@ export class UserResolver {
 
   //change password
   @Mutation(() => UserResponse)
+  @UseMiddleware(isAuth)
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
     @Ctx() { redis, req }: AppContext
   ): Promise<UserResponse> {
     if (newPassword.length < 8) {
-      return {
-        errors: [
-          {
-            field: "newPassword",
-            errorMessage: "Password must contain at least 8 characters ",
-          },
-        ],
-      };
+      return { errorMessage: "Password must contain at least 8 characters" };
     }
 
     const key = FORGET_PASSWORD_PREFIX + token;
     const userEmail = await redis.get(key);
     if (!userEmail) {
-      return {
-        errors: [
-          {
-            field: "token",
-            errorMessage: "token expired",
-          },
-        ],
-      };
+      return { errorMessage: "token expired" };
     }
 
     const user = await User.findOne({
@@ -150,14 +131,7 @@ export class UserResolver {
     });
 
     if (!user) {
-      return {
-        errors: [
-          {
-            field: "token",
-            errorMessage: "user no longer exists",
-          },
-        ],
-      };
+      return { errorMessage: "user no longer exists" };
     }
 
     await User.update(
@@ -176,7 +150,15 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
-  logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
+  async logout(
+    @Arg("deviceId") deviceId: string,
+    @Ctx() { req, res }: AppContext
+  ): Promise<unknown> {
+    const userId = req.session.userId;
+    if (userId) {
+      const tokensManager = new TokensManager();
+      await tokensManager.removeTokens(userId, deviceId);
+    }
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
         res.clearCookie(COOKIE_NAME);
@@ -191,20 +173,20 @@ export class UserResolver {
     );
   }
 
-  @Mutation(() => String)
-  @UseMiddleware(isAuth)
-  async storeDeviceToken(
-    @Arg("token") token: string,
-    @Ctx() { req }: AppContext
-  ) {
-    const userId = req.session.userId;
-    if (!userId) {
-      return "user not logged In";
-    }
-    const tokensManager = new TokensManager();
-    const status = await tokensManager.addToken(userId, token);
-    return status;
-  }
+  // @Mutation(() => String)
+  // @UseMiddleware(isAuth)
+  // async storeDeviceToken(
+  //   @Arg("token") token: string,
+  //   @Ctx() { req }: AppContext
+  // ) {
+  //   const userId = req.session.userId;
+  //   if (!userId) {
+  //     return "user not logged In";
+  //   }
+  //   const tokensManager = new TokensManager();
+  //   const status = await tokensManager.addToken(userId, token);
+  //   return status;
+  // }
 
   //delete user
   // @Mutation(() => Boolean)
@@ -224,23 +206,14 @@ export class UserResolver {
   @UseMiddleware(isAuth)
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     if (!req.session.userId) {
-      return {
-        errors: [{ field: "", errorMessage: "No session Id" }],
-      };
+      return { errorMessage: "No session Id" };
     }
     const user = await User.findOne({
       where: { userId: req.session.userId },
       relations: ["shoutouts", "celebrity"],
     });
     if (!user) {
-      return {
-        errors: [
-          {
-            field: "",
-            errorMessage: "User not found",
-          },
-        ],
-      };
+      return { errorMessage: "User not found" };
     }
     if (user.shoutouts.length > 0) {
       const ids = [];

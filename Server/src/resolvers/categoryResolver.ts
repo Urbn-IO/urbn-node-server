@@ -1,14 +1,24 @@
-import { Arg, Int, Mutation, Query, Resolver } from "type-graphql";
+import { isAuth } from "../middleware/isAuth";
+import {
+  Arg,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
+import { upsertCategorySearchItem } from "../services/appSearch/addSearchItem";
 
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  async categories(
+  async getCategories(
     @Arg("categoryId", { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,
+    @Arg("isPrimary", { defaultValue: null }) primary: boolean,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
@@ -29,6 +39,10 @@ export class CategoryResolver {
       .leftJoinAndSelect("categories.celebConn", "celebrity")
       .orderBy("categories.createdAt", "DESC")
       .take(maxLimit);
+
+    if (primary !== null) {
+      queryBuilder.where('categories."primary" = :primary', { primary });
+    }
     if (cursor) {
       queryBuilder.andWhere('categories."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
@@ -37,6 +51,7 @@ export class CategoryResolver {
     return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
+  @UseMiddleware(isAuth)
   async createCategory(
     @Arg("name") name: string,
     @Arg("recommendable") recommendable: boolean
@@ -48,20 +63,16 @@ export class CategoryResolver {
     try {
       await category.save();
     } catch (err) {
-      return {
-        errors: [
-          {
-            field: "create category",
-            errorMessage: "An Error occured while creating a category",
-          },
-        ],
-      };
+      return { errorMessage: "An Error occured while creating a category" };
     }
+
+    upsertCategorySearchItem([category]);
 
     return { category };
   }
 
   @Mutation(() => Categories, { nullable: true })
+  @UseMiddleware(isAuth)
   async updateCategory(
     @Arg("id") id: number,
     @Arg("name") name: string
@@ -74,7 +85,7 @@ export class CategoryResolver {
       category.name = name;
       await Categories.update({ id: category.id }, { name: category.name });
     }
-
+    upsertCategorySearchItem([category]);
     return category;
   }
 

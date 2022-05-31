@@ -33,10 +33,6 @@ export class User extends BaseEntity {
   lastName!: string;
 
   @Field()
-  @Column()
-  nationality!: string;
-
-  @Field()
   @Column({ unique: true })
   email!: string;
 
@@ -59,7 +55,7 @@ export class User extends BaseEntity {
   @JoinColumn()
   celebrity?: Celebrity;
 
-  @Field(() => [Shoutout])
+  @Field(() => [Shoutout], { nullable: true })
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user)
   shoutouts: Shoutout[];
 

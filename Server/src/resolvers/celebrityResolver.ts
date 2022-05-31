@@ -1,7 +1,7 @@
 import {
+  GenericResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
-  UserResponse,
 } from "../utils/graphqlTypes";
 import {
   Arg,
@@ -17,19 +17,24 @@ import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { AppContext } from "../types";
 import { getConnection } from "typeorm";
-import { upsertSearchItem } from "../appSearch/addSearchItem";
 import { hashRow } from "../utils/hashRow";
+import { CelebCategories } from "../entities/CelebCategories";
+import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
+import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 
 @Resolver()
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
-  @Mutation(() => UserResponse)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuth)
-  async registerUserasCeleb(
+  async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("data") data: RegisterCelebrityInputs
-  ): Promise<UserResponse> {
-    const userId = req.session.userId;
+    @Arg("data") data: RegisterCelebrityInputs,
+    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Arg("customCategories", () => [String], { nullable: true })
+    newCats: string[]
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string;
     data.userId = userId;
     const thumbnail = data.thumbnail;
     const image = `${data.image}_image.webp`;
@@ -42,14 +47,7 @@ export class CelebrityResolver {
       parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
       parseInt(data.shoutOutRatesInNaira) > maxRate
     ) {
-      return {
-        errors: [
-          {
-            errorMessage: "Maximum price rate for any request exceeded",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
     if (data.image) {
@@ -73,24 +71,30 @@ export class CelebrityResolver {
         relations: ["celebrity"],
       });
 
-      upsertSearchItem(user);
+      const mappedCategories = await celebCategoriesMapper(
+        userId,
+        categoryIds,
+        newCats
+      );
 
-      return { user };
+      if (mappedCategories) {
+        upsertCelebritySearchItem(user);
+      }
+
+      return { success: `${user?.celebrity?.alias} registered successfully` };
     } catch (err) {
-      return {
-        errors: [{ errorMessage: "An Error Occured", field: "" }],
-      };
+      return { errorMessage: "An Error Occured" };
     }
   }
 
   //update user details
-  @Mutation(() => UserResponse, { nullable: true })
+  @Mutation(() => GenericResponse, { nullable: true })
   @UseMiddleware(isAuth)
   async updateCelebDetails(
     @Arg("data") data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
-  ): Promise<UserResponse> {
-    const userId = req.session.userId;
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string;
     const thumbnail = data.thumbnail;
     const image = `${data.image}_image.webp`;
     const imageThumbnail = `${data.image}_thumbnail.webp`;
@@ -102,35 +106,18 @@ export class CelebrityResolver {
       parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
       parseInt(data.shoutOutRatesInNaira) > maxRate
     ) {
-      return {
-        errors: [
-          {
-            errorMessage: "Maximum price rate for any request exceeded",
-            field: "",
-          },
-        ],
-      };
+      return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
-    if (data.acceptsCalls === false && data.acceptShoutOut === false) {
-      return {
-        errors: [
-          {
-            field: "acceptsCallRequets | acceptShoutOut",
-            errorMessage: "Minimum of one request type must be selected",
-          },
-        ],
-      };
+    if (
+      data.acceptsCallTypeA === false &&
+      data.acceptsCallTypeB === false &&
+      data.acceptShoutOut === false
+    ) {
+      return { errorMessage: "Minimum of one request type must be selected" };
     }
     if (Object.keys(data).length === 0) {
-      return {
-        errors: [
-          {
-            field: "data",
-            errorMessage: "Nothing to update",
-          },
-        ],
-      };
+      return { errorMessage: "Nothing to update" };
     }
     if (data.image) {
       data.image = `${this.cdnUrl}/${image}`;
@@ -151,45 +138,36 @@ export class CelebrityResolver {
       .where("user.userId = :userId", { userId })
       .leftJoinAndSelect("user.celebrity", "celebrity")
       .getOne();
-    upsertSearchItem(user);
 
-    return { user };
+    upsertCelebritySearchItem(user);
+
+    return { success: "updated succesfully!" };
   }
 
-  @Query(() => [User], { nullable: true })
-  @UseMiddleware(isAuth)
+  @Query(() => [Celebrity], { nullable: true })
   async celebrities(
-    @Arg("userId", { nullable: true }) userId: string,
+    @Arg("celebId", () => Int, { nullable: true }) celebId: number,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
-    if (userId) {
-      const celeb = await User.findOne({
-        where: { userId },
-        relations: ["celebrity", "celebrity.categoriesConn"],
-      });
-      // if (celeb?.celebrity?.profileObject) {
-      //   celeb.celebrity.profileObject =
-      //     this.cdnUrl + "/" + celeb.celebrity.profileObject;
-      // }
-      // if (celeb?.celebrity?.profileThumbnail) {
-      //   celeb.celebrity.profileThumbnail =
-      //     this.cdnUrl + "/" + celeb.celebrity.profileThumbnail;
-      // }
+    if (celebId) {
+      const celeb = await Celebrity.findOne(celebId);
+      if (!celeb) {
+        return [];
+      }
       return [celeb];
     }
     const maxLimit = Math.min(18, limit);
 
     const queryBuilder = getConnection()
-      .getRepository(User)
-      .createQueryBuilder("user")
-      .leftJoinAndSelect("user.celebrity", "celebrity")
-      .where("user.celebrity is not null")
-      .orderBy("celebrity.createdAt", "DESC")
+      .getRepository(Celebrity)
+      .createQueryBuilder("celeb")
+      .where("celeb.Id is not null")
+      .orderBy("celeb.updatedAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('celebrity."createdAt" < :cursor', {
+      queryBuilder.andWhere('celeb."updatedAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -201,5 +179,43 @@ export class CelebrityResolver {
     //   celebrity: obj.celebrity?.profileObject,
     // }));
     return celebs;
+  }
+
+  @Query(() => [Celebrity])
+  async similarToCelebrity(
+    @Arg("celebId") celebId: number,
+    @Arg("limit", () => Int) limit: number
+  ) {
+    const maxLimit = Math.min(8, limit);
+    try {
+      const catIds = [];
+      const categoryObj = await getConnection()
+        .getRepository(CelebCategories)
+        .createQueryBuilder("celebCat")
+        .select("celebCat.categoryId")
+        .where("celebCat.celebId = :celebId", { celebId })
+        .getMany();
+
+      for (const item of categoryObj) {
+        catIds.push(item.categoryId);
+      }
+      const celebs = await getConnection().query(
+        `
+      SELECT "c".*, RANDOM() AS random
+      FROM "celeb_categories"
+      LEFT JOIN "celebrity" c
+      ON "c"."id" = "celeb_categories"."celebId"
+      WHERE ("celeb_categories"."celebId" != $1 AND "celeb_categories"."categoryId" = ANY ($2) )
+      GROUP BY "c"."id", "c"."userId"
+      ORDER BY random
+      LIMIT $3
+      `,
+        [celebId, catIds, maxLimit]
+      );
+
+      return celebs;
+    } catch (err) {
+      return [];
+    }
   }
 }
