@@ -1,0 +1,10 @@
+Server/node_modules
+Server/dist
+Server/src/constants.ts
+Server/src/migrations
+.DS_Store
+node_modules
+.vscode
+.env
+Keys
+.env.production
