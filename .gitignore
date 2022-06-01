@@ -1,7 +1,6 @@
-Server/node_modules
-Server/dist
-Server/src/constants.ts
-Server/src/migrations
+dist
+src/constants.ts
+src/migrations
 .DS_Store
 node_modules
 .vscode
