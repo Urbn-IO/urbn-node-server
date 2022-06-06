@@ -20,7 +20,6 @@ import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
 import { GenericResponse, RequestInputs } from "../utils/graphqlTypes";
-import { saveShoutout } from "../shoutOut/saveShoutOut";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateRecipient } from "../utils/requestValidations";
@@ -132,8 +131,6 @@ export class RequestsResolver {
   @UseMiddleware(isAuth)
   async fulfilShoutoutRequest(
     @Arg("requestId") requestId: number,
-    @Arg("video") video: string,
-    @Arg("thumbnail") thumbnail: string,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string; //
@@ -144,12 +141,12 @@ export class RequestsResolver {
           where: { id: requestId },
           select: ["requestor"],
         });
-        await saveShoutout(
-          video,
-          thumbnail,
-          request?.requestor as string,
-          userId
-        );
+        // await saveShoutout(
+        //   video,
+        //   thumbnail,
+        //   request?.requestor as string,
+        //   userId
+        // );
         await Requests.update(
           { id: requestId },
           { status: requestStatus.FULFILLED }

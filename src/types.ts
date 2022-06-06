@@ -24,6 +24,21 @@ export interface NotificationsPayload {
   data: NotificationsRoute;
 }
 
+export interface VideoOutput {
+  workFlowId: string | undefined;
+  hlsUrl: string | undefined;
+  thumbnailUrl: string | undefined;
+  mp4Url: string | undefined;
+  srcVideo: string | undefined;
+  datePublished: string | undefined;
+  durationInSeconds: string | undefined;
+  userId: string | undefined;
+  ownerId: string | undefined;
+  requestId: string | undefined;
+  alias: string | undefined;
+  contentType: number | undefined;
+}
+
 type NotificationsRoute = {
   routeCode: notificationRouteCode;
 };
@@ -58,4 +73,9 @@ export enum notificationRouteCode {
   RESPONSE = "0", // notification to display response from celebrity to a user on the client
   RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
+}
+
+export enum contentType {
+  SHOUTOUT,
+  MOMENT,
 }

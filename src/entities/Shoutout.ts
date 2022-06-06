@@ -5,6 +5,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Index,
 } from "typeorm";
 import { User } from "./User";
 
@@ -19,16 +20,35 @@ export class Shoutout extends BaseEntity {
   celebId!: string;
 
   @Field()
-  @Column({ nullable: true })
+  @Column()
   celebAlias!: string;
 
-  @Field()
-  @Column({ unique: true })
-  video!: string;
+  @Column()
+  workFlowId!: string;
+
+  @Column()
+  srcVideo: string;
 
   @Field()
-  @Column({ unique: true })
-  thumbnail!: string;
+  @Column()
+  hlsUrl: string;
+
+  @Field()
+  @Column()
+  mp4Url: string;
+
+  @Field()
+  @Column()
+  thumbnailUrl: string;
+
+  @Field()
+  @Column()
+  durationInSeconds: string;
+
+  @Field(() => String)
+  @Index()
+  @Column({ type: "timestamp" })
+  datePublished: Date;
 
   @ManyToOne(() => User, (user) => user.shoutouts)
   user: User;
