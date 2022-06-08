@@ -1,3 +1,5 @@
+import crypto from "crypto";
+import { s3SecondaryClient } from "../services/aws/clients/s3Client";
 import { Celebrity } from "../entities/Celebrity";
 import {
   Arg,
@@ -10,6 +12,7 @@ import {
 } from "type-graphql";
 import {
   AppContext,
+  contentType,
   notificationRouteCode,
   NotificationsPayload,
   RequestInput,
@@ -19,13 +22,19 @@ import { Requests } from "../entities/Requests";
 import { isAuth } from "../middleware/isAuth";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
-import { GenericResponse, RequestInputs } from "../utils/graphqlTypes";
+import {
+  GenericResponse,
+  RequestInputs,
+  videoUploadData,
+} from "../utils/graphqlTypes";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
-import { ValidateRecipient } from "../utils/requestValidations";
+import { ValidateShoutoutRecipient } from "../utils/requestValidations";
 import { getFcmTokens } from "../utils/fcmTokenManager";
 import { notificationsManager } from "../services/notifications/notificationsManager";
 import { typeReturn } from "../utils/helpers";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 @Resolver()
 export class RequestsResolver {
@@ -132,44 +141,73 @@ export class RequestsResolver {
   async fulfilShoutoutRequest(
     @Arg("requestId") requestId: number,
     @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
+  ): Promise<videoUploadData> {
     const userId = req.session.userId as string; //
+    const bucketName = process.env.AWS_BUCKET_NAME;
     try {
-      const isValidCeleb = await ValidateRecipient(userId, requestId);
-      if (isValidCeleb) {
-        const request = await Requests.findOne({
-          where: { id: requestId },
-          select: ["requestor"],
+      const request = await ValidateShoutoutRecipient(userId, requestId);
+      if (request) {
+        const owner = request.requestor;
+        const celebAlias = request.recepientAlias;
+        const time = Math.floor(new Date().getTime() / 1000);
+        const randomNumber = Math.random().toString();
+        const id = crypto
+          .createHash("md5")
+          .update(time + randomNumber)
+          .digest("hex");
+        const videoKey = `${owner}-${time}-${id}`;
+        const metadataKey = `${owner}-${time}-${id}.json`;
+        const keys = [videoKey, metadataKey];
+        const urls = keys.map(async (key) => {
+          const s3Command = new PutObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+          });
+          const signedUrl = await getSignedUrl(s3SecondaryClient, s3Command, {
+            expiresIn: 3600,
+          });
+          return signedUrl;
         });
-        // await saveShoutout(
-        //   video,
-        //   thumbnail,
-        //   request?.requestor as string,
-        //   userId
-        // );
-        await Requests.update(
-          { id: requestId },
-          { status: requestStatus.FULFILLED }
-        );
 
-        const tokens = await getFcmTokens(request?.requestor as string);
-        const message: NotificationsPayload = {
-          messageTitle: process.env.APP_NAME,
-          messageBody: `You've got a new Shoutout video!`,
-          data: {
-            routeCode: notificationRouteCode.PROFILE_SHOUTOUT,
+        return {
+          videoData: {
+            videoUrl: await urls[0],
+            metadataUrl: await urls[1],
+            metadata: {
+              srcVideo: videoKey,
+              customMetadata: {
+                contentType: contentType.SHOUTOUT,
+                userId,
+                alias: celebAlias,
+                requestId: requestId,
+                owner: request.requestor,
+              },
+            },
           },
-          tokens,
         };
-        const notifications = notificationsManager(message);
-        notifications.sendInstantMessage();
+
+        // await Requests.update(
+        //   { id: requestId },
+        //   { status: requestStatus.FULFILLED }
+        // );
+
+        // const tokens = await getFcmTokens(request?.requestor as string);
+        // const message: NotificationsPayload = {
+        //   messageTitle: process.env.APP_NAME,
+        //   messageBody: `You've got a new Shoutout video!`,
+        //   data: {
+        //     routeCode: notificationRouteCode.PROFILE_SHOUTOUT,
+        //   },
+        //   tokens,
+        // };
+        // const notifications = notificationsManager(message);
+        // notifications.sendInstantMessage();
       } else {
         return { errorMessage: "Unauthorized action" };
       }
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
     }
-    return { success: "Shoutout video sent!" };
   }
 
   @Mutation(() => GenericResponse)

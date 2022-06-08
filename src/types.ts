@@ -33,7 +33,7 @@ export interface VideoOutput {
   datePublished: string | undefined;
   durationInSeconds: string | undefined;
   userId: string | undefined;
-  ownerId: string | undefined;
+  owner: string | undefined;
   requestId: string | undefined;
   alias: string | undefined;
   contentType: number | undefined;

@@ -10,10 +10,12 @@ export const ValidateCallAndRequestor = async (userId: string, id: number) => {
   return false;
 };
 
-export const ValidateRecipient = async (userId: string, id: number) => {
-  const request = await Requests.findOne(id, { select: ["recepient"] });
+export const ValidateShoutoutRecipient = async (userId: string, id: number) => {
+  const request = await Requests.findOne(id, {
+    select: ["recepient", "recepientAlias", "requestor"],
+  });
   if (request?.recepient === userId) {
-    return true;
+    return request;
   }
-  return false;
+  return null;
 };

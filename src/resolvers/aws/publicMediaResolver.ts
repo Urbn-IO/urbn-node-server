@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import dayjs from "dayjs";
-import client from "../../services/aws/clients/s3Client";
-import { s3SignedObject } from "../../utils/s3Types";
+import { s3primaryClient } from "../../services/aws/clients/s3Client";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../../types";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { isAuth } from "../../middleware/isAuth";
+import { s3SignedObject } from "../../utils/graphqlTypes";
 
 @Resolver()
 export class PublicMediaResolver {
@@ -34,7 +34,7 @@ export class PublicMediaResolver {
       Bucket: this.bucketName,
       Key,
     });
-    const signedUrl = await getSignedUrl(client, s3Command, {
+    const signedUrl = await getSignedUrl(s3primaryClient, s3Command, {
       expiresIn: 60,
     });
 
@@ -50,7 +50,7 @@ export class PublicMediaResolver {
       Bucket: this.bucketName,
       Key: key,
     });
-    const signedUrl = await getSignedUrl(client, s3Command, {
+    const signedUrl = await getSignedUrl(s3primaryClient, s3Command, {
       expiresIn: 60,
     });
     return { signedUrl };

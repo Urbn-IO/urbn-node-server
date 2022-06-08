@@ -2,16 +2,16 @@ import crypto from "crypto";
 import path from "path";
 import dayjs from "dayjs";
 import fs from "fs";
-import client from "../../services/aws/clients/s3Client";
+import { s3primaryClient } from "../../services/aws/clients/s3Client";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3SignedObject } from "../../utils/s3Types";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
 import { isAuth } from "../../middleware/isAuth";
 import { Signer } from "../../utils/cloudFront";
-import { ValidateRecipient } from "../../utils/requestValidations";
+import { ValidateShoutoutRecipient } from "../../utils/requestValidations";
 import { AppContext } from "../../types";
 import { Requests } from "../../entities/Requests";
+import { s3SignedObject } from "../../utils/graphqlTypes";
 
 @Resolver()
 export class ShoutoutResolver {
@@ -31,7 +31,7 @@ export class ShoutoutResolver {
       .update(datetime + randomNumber)
       .digest("hex");
 
-    const isValidRequestRecepient = await ValidateRecipient(
+    const isValidRequestRecepient = await ValidateShoutoutRecipient(
       identity,
       requestId
     );
@@ -52,7 +52,7 @@ export class ShoutoutResolver {
             Key,
           });
 
-          const signedUrl = await getSignedUrl(client, s3Command, {
+          const signedUrl = await getSignedUrl(s3primaryClient, s3Command, {
             expiresIn: 3600,
           });
           response.push({ signedUrl, fileName: Key });
@@ -71,7 +71,7 @@ export class ShoutoutResolver {
       Bucket: this.bucketName,
       Key: key,
     });
-    const signedUrl = await getSignedUrl(client, s3Command, {
+    const signedUrl = await getSignedUrl(s3primaryClient, s3Command, {
       expiresIn: 3600,
     });
     return { signedUrl };

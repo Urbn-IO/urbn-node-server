@@ -48,7 +48,7 @@ const main = async () => {
         maxAge: 1000 * 60 * 60 * 24 * 150, //max cookie age of 150 days
         httpOnly: true,
         sameSite: "lax", //subject to change
-        secure: __prod__, // cookie only works using https (we use https in production)
+        secure: __prod__, // cookie only works using https
       },
       saveUninitialized: false,
       secret: process.env.SESSION_SECRET,

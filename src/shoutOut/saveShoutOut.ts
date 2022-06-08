@@ -5,14 +5,14 @@ import { In } from "typeorm";
 
 export const saveShoutout = async (data: VideoOutput[]) => {
   const shoutouts: Shoutout[] = [];
-  const ownerIds = data.map((x) => x.ownerId);
+  const ownerIds = data.map((x) => x.owner);
   const user = await User.find({ where: { userId: In(ownerIds) } });
   if (!user) {
     return;
   }
 
   data.forEach((x) => {
-    const userObj = user.find((y) => y.userId === x.ownerId);
+    const userObj = user.find((y) => y.userId === x.owner);
     const shoutOutObj = Shoutout.create({
       celebAlias: x.alias,
       celebId: x.userId,

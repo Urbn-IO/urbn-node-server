@@ -4,8 +4,8 @@ declare global {
       APP_NAME: string;
       AWS_BUCKET_NAME: string;
       AWS_PUBLIC_BUCKET_NAME: string;
-      AWS_BUCKET_REGION: string;
-      AWS_VOD_REGION: string;
+      AWS_PRIMARY_REGION: string;
+      AWS_SECONDRY_REGION: string;
       AWS_ACCESS_KEY: string;
       AWS_SECRET_ACCESS_KEY: string;
       AWS_CLOUD_FRONT_DOMAIN: string;

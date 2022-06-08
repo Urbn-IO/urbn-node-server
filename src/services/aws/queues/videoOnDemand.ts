@@ -26,7 +26,7 @@ const consumerOptions: ConsumerOptions = {
         srcVideo: body.srcVideo,
         datePublished: body.endTime,
         userId: body.customMetadata.userId,
-        ownerId: body.customMetadata.ownerId,
+        owner: body.customMetadata.ownerId,
         alias: body.customMetadata.alias,
         requestId: body.customMetadata.requestId,
         contentType: body.customMetadata.contentType,

@@ -7,7 +7,7 @@ import { CallRoom } from "../entities/CallRoom";
 import { jwt } from "twilio";
 import { AppContext } from "../types";
 import {
-  ValidateRecipient,
+  ValidateShoutoutRecipient,
   ValidateCallAndRequestor,
 } from "../utils/requestValidations";
 
@@ -74,7 +74,7 @@ export class VideoCallResolver {
     const AccessToken = jwt.AccessToken;
     const VideoGrant = AccessToken.VideoGrant;
     let token, roomName;
-    const isValidRequestRecepient = await ValidateRecipient(
+    const isValidRequestRecepient = await ValidateShoutoutRecipient(
       identity,
       requestId
     );

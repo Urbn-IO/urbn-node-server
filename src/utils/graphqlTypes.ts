@@ -2,7 +2,7 @@ import { User } from "../entities/User";
 import { InputType, Field, ObjectType, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
-import { requestType } from "../types";
+import { contentType, requestType } from "../types";
 
 registerEnumType(requestType, {
   name: "requestType",
@@ -149,4 +149,57 @@ export class CallTokenResponse {
 
   @Field({ nullable: true })
   errorMessage?: string;
+}
+
+@ObjectType()
+export class videoUploadData {
+  @Field(() => videoData, { nullable: true })
+  videoData?: videoData;
+  @Field({ nullable: true })
+  errorMessage?: string;
+}
+
+@ObjectType()
+export class videoData {
+  @Field(() => String)
+  videoUrl: string;
+  @Field(() => String)
+  metadataUrl: string;
+  @Field(() => videoMetadata)
+  metadata: videoMetadata;
+}
+
+@ObjectType()
+class videoMetadata {
+  @Field(() => String)
+  srcVideo: string;
+
+  @Field(() => customVideoMetadata)
+  customMetadata: customVideoMetadata;
+}
+@ObjectType()
+class customVideoMetadata {
+  @Field()
+  userId: string;
+
+  @Field()
+  contentType: contentType;
+
+  @Field({ nullable: true })
+  owner?: string;
+
+  @Field({ nullable: true })
+  alias?: string;
+
+  @Field({ nullable: true })
+  requestId?: number;
+}
+
+@ObjectType()
+export class s3SignedObject {
+  @Field()
+  signedUrl: string;
+
+  @Field({ nullable: true })
+  fileName?: string;
 }
