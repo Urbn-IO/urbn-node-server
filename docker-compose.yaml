@@ -3,14 +3,15 @@ version: '3.8'
 services:
   server:
     build: .
-    image: 'shoutout'
-    container_name: shout_out
+    image: 'urban:latest'
+    container_name: urban
     restart: "unless-stopped"
     platform: 'linux/amd64'
     networks:
       - 'default'
     depends_on:
       - 'db'
+      - 'redis'
     expose:
       - 8000
   reverse-proxy:
@@ -27,8 +28,9 @@ services:
     image: 'postgres'
     container_name: 'database'
     environment:
-      POSTGRES_PASSWORD: '12345'
-      POSTGRES_USER: 'shoutout'
+      POSTGRES_DB: 'urban'
+      POSTGRES_PASSWORD: '12345678'
+      POSTGRES_USER: 'urban'
     restart: 'unless-stopped'
     volumes:
       - data:/var/lib/postgresql/data
