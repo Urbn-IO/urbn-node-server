@@ -16,7 +16,7 @@ import { upsertCategorySearchItem } from "../services/appSearch/addSearchItem";
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
   async getCategories(
-    @Arg("categoryId", { nullable: true }) id: number,
+    @Arg("categoryId", () => Int, { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,
     @Arg("isPrimary", { defaultValue: null }) primary: boolean,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
@@ -74,7 +74,7 @@ export class CategoryResolver {
   @Mutation(() => Categories, { nullable: true })
   @UseMiddleware(isAuth)
   async updateCategory(
-    @Arg("id") id: number,
+    @Arg("id", () => Int) id: number,
     @Arg("name") name: string
   ): Promise<Categories | boolean> {
     const category = await Categories.findOne({ id });

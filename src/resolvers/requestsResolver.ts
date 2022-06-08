@@ -121,25 +121,25 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
-    const tokens = await getFcmTokens(celeb.userId);
-    const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
-    const message: NotificationsPayload = {
-      messageTitle: process.env.APP_NAME,
-      messageBody: `You've received a new ${requestType} request!`,
-      data: {
-        routeCode: notificationRouteCode.RECEIVED_REQUEST,
-      },
-      tokens,
-    };
-    const notifications = notificationsManager(message);
-    notifications.sendInstantMessage();
+    // const tokens = await getFcmTokens(celeb.userId);
+    // const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
+    // const message: NotificationsPayload = {
+    //   messageTitle: process.env.APP_NAME,
+    //   messageBody: `You've received a new ${requestType} request!`,
+    //   data: {
+    //     routeCode: notificationRouteCode.RECEIVED_REQUEST,
+    //   },
+    //   tokens,
+    // };
+    // const notifications = notificationsManager(message);
+    // notifications.sendInstantMessage();
     return { success: "Request Sent!" };
   }
 
-  @Mutation(() => GenericResponse)
+  @Mutation(() => videoUploadData)
   @UseMiddleware(isAuth)
   async fulfilShoutoutRequest(
-    @Arg("requestId") requestId: number,
+    @Arg("requestId", () => Int) requestId: number,
     @Ctx() { req }: AppContext
   ): Promise<videoUploadData> {
     const userId = req.session.userId as string; //
@@ -265,7 +265,7 @@ export class RequestsResolver {
 
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async SentRequests(
+  async sentRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
@@ -290,7 +290,7 @@ export class RequestsResolver {
 
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async ReceivedRequests(
+  async receivedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
@@ -318,7 +318,7 @@ export class RequestsResolver {
 
   @Query(() => [Requests])
   @UseMiddleware(isAuth)
-  async AcceptedRequests(
+  async acceptedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext

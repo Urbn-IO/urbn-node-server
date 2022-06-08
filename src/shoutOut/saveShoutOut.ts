@@ -7,7 +7,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
   const shoutouts: Shoutout[] = [];
   const ownerIds = data.map((x) => x.owner);
   const user = await User.find({ where: { userId: In(ownerIds) } });
-  if (!user) {
+  if (user === undefined || user.length === 0) {
     return;
   }
 

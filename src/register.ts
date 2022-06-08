@@ -8,7 +8,6 @@ import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
 import { Shoutout } from "./entities/Shoutout";
 import { User } from "./entities/User";
-import { ShoutoutResolver } from "./resolvers/aws/shoutoutResolver";
 import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
 import { CategoryResolver } from "./resolvers/categoryResolver";
 import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
@@ -35,7 +34,6 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CategoryResolver,
   UserResolver,
   UserCategoriesResolver,
-  ShoutoutResolver,
   PublicMediaResolver,
   CelebrityResolver,
   RequestsResolver,

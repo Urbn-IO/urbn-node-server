@@ -1,5 +1,11 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType, registerEnumType } from "type-graphql";
+import {
+  InputType,
+  Field,
+  ObjectType,
+  registerEnumType,
+  Int,
+} from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { contentType, requestType } from "../types";
@@ -152,32 +158,6 @@ export class CallTokenResponse {
 }
 
 @ObjectType()
-export class videoUploadData {
-  @Field(() => videoData, { nullable: true })
-  videoData?: videoData;
-  @Field({ nullable: true })
-  errorMessage?: string;
-}
-
-@ObjectType()
-export class videoData {
-  @Field(() => String)
-  videoUrl: string;
-  @Field(() => String)
-  metadataUrl: string;
-  @Field(() => videoMetadata)
-  metadata: videoMetadata;
-}
-
-@ObjectType()
-class videoMetadata {
-  @Field(() => String)
-  srcVideo: string;
-
-  @Field(() => customVideoMetadata)
-  customMetadata: customVideoMetadata;
-}
-@ObjectType()
 class customVideoMetadata {
   @Field()
   userId: string;
@@ -191,8 +171,34 @@ class customVideoMetadata {
   @Field({ nullable: true })
   alias?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   requestId?: number;
+}
+
+@ObjectType()
+class videoMetadata {
+  @Field(() => String)
+  srcVideo: string;
+
+  @Field(() => customVideoMetadata)
+  customMetadata: customVideoMetadata;
+}
+@ObjectType()
+export class videoData {
+  @Field(() => String)
+  videoUrl: string;
+  @Field(() => String)
+  metadataUrl: string;
+  @Field(() => videoMetadata)
+  metadata: videoMetadata;
+}
+
+@ObjectType()
+export class videoUploadData {
+  @Field(() => videoData, { nullable: true })
+  videoData?: videoData;
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()
