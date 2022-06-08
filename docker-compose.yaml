@@ -3,8 +3,8 @@ version: '3.8'
 services:
   server:
     build: .
-    image: 'urban:latest'
-    container_name: urban
+    image: 'urbn:latest'
+    container_name: urbn
     restart: "unless-stopped"
     platform: 'linux/amd64'
     networks:
@@ -28,9 +28,9 @@ services:
     image: 'postgres'
     container_name: 'database'
     environment:
-      POSTGRES_DB: 'urban'
+      POSTGRES_DB: 'urbn'
       POSTGRES_PASSWORD: '12345678'
-      POSTGRES_USER: 'urban'
+      POSTGRES_USER: 'urbn'
     restart: 'unless-stopped'
     volumes:
       - data:/var/lib/postgresql/data

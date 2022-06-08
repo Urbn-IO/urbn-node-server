@@ -36,7 +36,7 @@ export class VideoCallResolver {
         .createHash("md5")
         .update(currentTime + randomNumber)
         .digest("hex");
-      const roomName = `urban_video_room:${serial}`;
+      const roomName = `urbn_video_room:${serial}`;
 
       // Create Video Grant
       const videoGrant = new VideoGrant({
