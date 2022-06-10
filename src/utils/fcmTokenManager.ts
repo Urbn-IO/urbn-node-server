@@ -31,12 +31,23 @@ export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
   return [];
 };
 
-export const deleteFcmTokens = async (userId: string, deviceId: string) => {
-  await getConnection()
+export const deleteFcmTokens = async (userId?: string, tokens?: string[]) => {
+  const queryBuilder = getConnection()
     .createQueryBuilder()
     .delete()
-    .from(FcmTokens)
-    .where("userId = :userId", { userId })
-    .andWhere("deviceId = :deviceId", { deviceId })
-    .execute();
+    .from(FcmTokens);
+
+  if (userId) {
+    queryBuilder.where("userId = :userId", { userId });
+  } else if (tokens) {
+    queryBuilder.where("token In (:...tokens)", { tokens });
+  } else {
+    throw new Error("User token to be deleted not supplied");
+  }
+
+  try {
+    queryBuilder.execute();
+  } catch (err) {
+    throw new Error("An error occured while attempting to delete tokens");
+  }
 };

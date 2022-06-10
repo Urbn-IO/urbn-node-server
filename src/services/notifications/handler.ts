@@ -1,14 +1,14 @@
-import { getFcmTokens } from "../../utils/fcmTokenManager";
 import { notificationRouteCode, NotificationsPayload } from "../../types";
 import { notificationsManager } from "./notificationsManager";
+import tokensManager from "../../utils/tokensManager";
 
 export async function sendPushNotification(
-  userId: string[],
+  userIds: string[],
   messageTitle: string,
   messageBody: string,
   route: notificationRouteCode = notificationRouteCode.DEFAULT
 ) {
-  const tokens = await getFcmTokens(userId);
+  const tokens = await tokensManager().getNotificationTokens(userIds);
   const message: NotificationsPayload = {
     messageTitle,
     messageBody,
@@ -17,6 +17,5 @@ export async function sendPushNotification(
     },
     tokens,
   };
-  const notifications = notificationsManager(message);
-  notifications.sendInstantMessage();
+  notificationsManager(message).sendInstantMessage();
 }

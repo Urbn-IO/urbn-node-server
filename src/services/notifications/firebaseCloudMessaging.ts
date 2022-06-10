@@ -1,4 +1,5 @@
 import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
+import tokensManager from "../../utils/tokensManager";
 import { NotificationsPayload } from "../../types";
 
 export const propagateMessage = async ({
@@ -36,6 +37,7 @@ export const propagateMessage = async ({
             }
           });
           console.log("List of tokens that caused failures: " + failedTokens);
+          tokensManager().removeNotificationTokens(undefined, failedTokens);
         }
       });
   } catch (err) {

@@ -1,4 +1,4 @@
-import TokensManager from "../utils/tokensManager";
+import tokensManager from "../utils/tokensManager";
 import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";
@@ -55,8 +55,7 @@ export class UserResolver {
         return { errorMessage: "An error occured" };
       }
     }
-    const tokensManager = new TokensManager();
-    tokensManager.addToken(id, deviceId, token);
+    tokensManager().addNotificationToken(id, deviceId, token);
     req.session.userId = id; //keep a new user logged in
     return { success: "Account created successfully" };
   }
@@ -85,8 +84,7 @@ export class UserResolver {
     if (!verifiedPassword) {
       return { errorMessage: "Wrong Email or Password" };
     }
-    const tokensManager = new TokensManager();
-    tokensManager.addToken(user.userId, deviceId, token);
+    tokensManager().addNotificationToken(user.userId, deviceId, token);
     req.session.userId = user.userId;
     return { user };
   }
@@ -150,14 +148,10 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
-  async logout(
-    @Arg("deviceId") deviceId: string,
-    @Ctx() { req, res }: AppContext
-  ): Promise<unknown> {
+  async logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
     const userId = req.session.userId;
     if (userId) {
-      const tokensManager = new TokensManager();
-      await tokensManager.removeTokens(userId, deviceId);
+      await tokensManager().removeNotificationTokens(userId);
     }
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
@@ -172,21 +166,6 @@ export class UserResolver {
       })
     );
   }
-
-  // @Mutation(() => String)
-  // @UseMiddleware(isAuth)
-  // async storeDeviceToken(
-  //   @Arg("token") token: string,
-  //   @Ctx() { req }: AppContext
-  // ) {
-  //   const userId = req.session.userId;
-  //   if (!userId) {
-  //     return "user not logged In";
-  //   }
-  //   const tokensManager = new TokensManager();
-  //   const status = await tokensManager.addToken(userId, token);
-  //   return status;
-  // }
 
   //delete user
   // @Mutation(() => Boolean)
