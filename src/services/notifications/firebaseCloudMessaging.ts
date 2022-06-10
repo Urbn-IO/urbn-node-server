@@ -41,6 +41,6 @@ export const propagateMessage = async ({
         }
       });
   } catch (err) {
-    throw new Error(err);
+    console.error("error: ", err);
   }
 };
