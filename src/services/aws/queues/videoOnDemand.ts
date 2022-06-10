@@ -1,5 +1,5 @@
 import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
-import { saveShoutout } from "../../../shoutOut/saveShoutOut";
+import { saveShoutout } from "../../../shoutout/saveShoutOut";
 import { contentType, VideoOutput } from "../../../types";
 import client from "../clients/sqsClient";
 
