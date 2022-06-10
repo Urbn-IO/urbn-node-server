@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -15,7 +16,8 @@ export class FcmTokens extends BaseEntity {
   id!: number;
 
   @Field()
-  @Column()
+  @Column({ type: "uuid" })
+  @Index()
   userId!: string;
 
   @Field()

@@ -8,9 +8,9 @@ const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
 const consumerOptions: ConsumerOptions = {
   queueUrl,
   batchSize: 10,
-  waitTimeSeconds: 15,
+  waitTimeSeconds: 20,
   visibilityTimeout: 120,
-  pollingWaitTimeMs: 0,
+  pollingWaitTimeMs: 120000,
   sqs: client,
   handleMessageBatch: async (messages) => {
     const payload = messages.map((x) => {

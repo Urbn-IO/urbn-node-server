@@ -1,7 +1,9 @@
-import { VideoOutput } from "../types";
+import { notificationRouteCode, requestStatus, VideoOutput } from "../types";
 import { Shoutout } from "../entities/Shoutout";
 import { User } from "../entities/User";
-import { In } from "typeorm";
+import { getConnection, In } from "typeorm";
+import { sendPushNotification } from "../services/notifications/handler";
+import { Requests } from "../entities/Requests";
 
 export const saveShoutout = async (data: VideoOutput[]) => {
   const shoutouts: Shoutout[] = [];
@@ -30,6 +32,20 @@ export const saveShoutout = async (data: VideoOutput[]) => {
 
   try {
     await Shoutout.save(shoutouts);
+    const requestIds = data.map((x) => x.requestId) as string[];
+    await getConnection()
+      .createQueryBuilder()
+      .update(Requests)
+      .set({ status: requestStatus.FULFILLED })
+      .where("id In (:...requestIds)", { requestIds })
+      .execute();
+
+    sendPushNotification(
+      ownerIds as string[],
+      "New Shoutout!",
+      "You have received a new shoutout video",
+      notificationRouteCode.PROFILE_SHOUTOUT
+    );
   } catch (err) {
     throw new Error("An error Occured");
   }

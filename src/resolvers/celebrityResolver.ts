@@ -30,7 +30,7 @@ export class CelebrityResolver {
   async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
     @Arg("data") data: RegisterCelebrityInputs,
-    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Arg("categoryIds", () => [Int]) categoryIds: number[],
     @Arg("customCategories", () => [String], { nullable: true })
     newCats: string[]
   ): Promise<GenericResponse> {

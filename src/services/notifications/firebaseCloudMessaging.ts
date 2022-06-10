@@ -7,34 +7,38 @@ export const propagateMessage = async ({
   tokens,
   data,
 }: NotificationsPayload) => {
-  const message: MulticastMessage = {
-    notification: {
-      title: messageTitle,
-      body: messageBody,
-    },
-    android: {
-      priority: "high",
-    },
-    apns: {
-      headers: {
-        "apns-priority": "10",
+  try {
+    const message: MulticastMessage = {
+      notification: {
+        title: messageTitle,
+        body: messageBody,
       },
-    },
-    data,
-    tokens,
-  };
+      android: {
+        priority: "high",
+      },
+      apns: {
+        headers: {
+          "apns-priority": "10",
+        },
+      },
+      data,
+      tokens,
+    };
 
-  await getMessaging()
-    .sendMulticast(message)
-    .then((response) => {
-      if (response.failureCount > 0) {
-        const failedTokens: string[] = [];
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success) {
-            failedTokens.push(tokens[idx]);
-          }
-        });
-        console.log("List of tokens that caused failures: " + failedTokens);
-      }
-    });
+    await getMessaging()
+      .sendMulticast(message)
+      .then((response) => {
+        if (response.failureCount > 0) {
+          const failedTokens: string[] = [];
+          response.responses.forEach((resp, idx) => {
+            if (!resp.success) {
+              failedTokens.push(tokens[idx]);
+            }
+          });
+          console.log("List of tokens that caused failures: " + failedTokens);
+        }
+      });
+  } catch (err) {
+    throw new Error(err);
+  }
 };

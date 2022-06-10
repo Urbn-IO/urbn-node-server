@@ -1,4 +1,4 @@
-import { getConnection } from "typeorm";
+import { getConnection, In } from "typeorm";
 import { FcmTokens } from "../entities/FcmTokens";
 
 export const addFcmToken = async (
@@ -19,16 +19,13 @@ export const addFcmToken = async (
   return "sucessfully added token";
 };
 
-export const getFcmTokens = async (userId: string): Promise<string[]> => {
+export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
   const tokenObj = await FcmTokens.find({
-    where: { userId },
+    where: { userId: In(userId) },
     select: ["token"],
   });
   if (tokenObj) {
-    const tokens: string[] = [];
-    tokenObj.forEach((x) => {
-      tokens.push(x.token);
-    });
+    const tokens = tokenObj.map((x) => x.token);
     return tokens;
   }
   return [];

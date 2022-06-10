@@ -6,7 +6,7 @@ export default class TokensManager {
     return status;
   }
   getTokens(userId: string) {
-    const result = getFcmTokens(userId);
+    const result = getFcmTokens([userId]);
     return result;
   }
   async removeTokens(userId: string, deviceId: string) {

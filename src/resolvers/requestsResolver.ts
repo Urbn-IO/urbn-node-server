@@ -14,7 +14,6 @@ import {
   AppContext,
   contentType,
   notificationRouteCode,
-  NotificationsPayload,
   RequestInput,
   requestStatus,
 } from "../types";
@@ -30,11 +29,9 @@ import {
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateShoutoutRecipient } from "../utils/requestValidations";
-import { getFcmTokens } from "../utils/fcmTokenManager";
-import { notificationsManager } from "../services/notifications/notificationsManager";
-import { typeReturn } from "../utils/helpers";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { sendPushNotification } from "../services/notifications/handler";
 
 @Resolver()
 export class RequestsResolver {
@@ -121,18 +118,14 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
-    // const tokens = await getFcmTokens(celeb.userId);
-    // const requestType = Input.requestType === "shoutout" ? "shoutout" : "video";
-    // const message: NotificationsPayload = {
-    //   messageTitle: process.env.APP_NAME,
-    //   messageBody: `You've received a new ${requestType} request!`,
-    //   data: {
-    //     routeCode: notificationRouteCode.RECEIVED_REQUEST,
-    //   },
-    //   tokens,
-    // };
-    // const notifications = notificationsManager(message);
-    // notifications.sendInstantMessage();
+    const requestType =
+      Input.requestType === "shoutout" ? "shoutout" : "video call";
+    sendPushNotification(
+      [celeb.userId],
+      "New Request Alert",
+      `You have received a new ${requestType} request`,
+      notificationRouteCode.RECEIVED_REQUEST
+    );
     return { success: "Request Sent!" };
   }
 
@@ -185,23 +178,6 @@ export class RequestsResolver {
             },
           },
         };
-
-        // await Requests.update(
-        //   { id: requestId },
-        //   { status: requestStatus.FULFILLED }
-        // );
-
-        // const tokens = await getFcmTokens(request?.requestor as string);
-        // const message: NotificationsPayload = {
-        //   messageTitle: process.env.APP_NAME,
-        //   messageBody: `You've got a new Shoutout video!`,
-        //   data: {
-        //     routeCode: notificationRouteCode.PROFILE_SHOUTOUT,
-        //   },
-        //   tokens,
-        // };
-        // const notifications = notificationsManager(message);
-        // notifications.sendInstantMessage();
       } else {
         return { errorMessage: "Unauthorized action" };
       }
@@ -238,21 +214,25 @@ export class RequestsResolver {
       status === requestStatus.REJECTED
     ) {
       try {
-        const request = await typeReturn<Requests>(
-          Requests.update({ id: requestId }, { status })
-        );
+        // const request = await typeReturn<Requests>(
+        //   Requests.update({ id: requestId }, { status })
+        // );
+        const request = await (
+          await Requests.createQueryBuilder()
+            .update({ status })
+            .where({ id: requestId })
+            .returning('requestor, "requestType", "recepientAlias"')
+            .execute()
+        ).raw[0];
         const requestType =
-          request.requestType === "shoutout" ? "shoutout" : "video";
+          request.requestType === "shoutout" ? "shoutout" : "video call";
         const celebAlias = request.recepientAlias;
-        const tokens = await getFcmTokens(request.requestor);
-        const message: NotificationsPayload = {
-          messageTitle: process.env.APP_NAME,
-          messageBody: `Your ${requestType} request to ${celebAlias} has been ${status}`,
-          data: { routeCode: notificationRouteCode.RESPONSE },
-          tokens,
-        };
-        const notifications = notificationsManager(message);
-        notifications.sendInstantMessage();
+        sendPushNotification(
+          [request.requestor],
+          "Response Alert",
+          `Your ${requestType} request to ${celebAlias} has been ${status}`,
+          notificationRouteCode.RESPONSE
+        );
       } catch (err) {
         return {
           errorMessage: "Error changing request state, Try again later",

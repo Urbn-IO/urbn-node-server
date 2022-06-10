@@ -73,6 +73,7 @@ export enum notificationRouteCode {
   RESPONSE = "0", // notification to display response from celebrity to a user on the client
   RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
+  DEFAULT = "10", //default route
 }
 
 export enum contentType {
