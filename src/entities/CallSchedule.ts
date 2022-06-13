@@ -22,7 +22,7 @@ export class CallSchedule {
   @Index()
   celebId: number;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: "uuid", nullable: true })
   @Index()
   callerUserId: string;
@@ -33,11 +33,11 @@ export class CallSchedule {
   day: number;
 
   @Field(() => String)
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: "time", nullable: true })
   startTime: Date;
 
   @Field(() => String)
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: "time", nullable: true })
   endTime: Date;
 
   @Column({ default: true })
@@ -46,14 +46,16 @@ export class CallSchedule {
   @Column({ default: false, nullable: true })
   locked: boolean;
 
+  @Field(() => [CallSchedule], { nullable: true })
   @TreeChildren()
   children: CallSchedule[];
 
+  @Field(() => CallSchedule, { nullable: true })
   @TreeParent()
   parent: CallSchedule;
 
+  @Field()
   @TreeLevelColumn()
   @Column()
   level: number;
 }
-//

@@ -15,6 +15,10 @@ import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
 import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 import { scheduleCall } from "../scheduler/videoCallScheduler";
+import { CallSchedule } from "../entities/CallSchedule";
+import { GraphQLJSONObject } from "graphql-type-json";
+
+import _ from "lodash";
 
 @Resolver()
 export class CelebrityResolver {
@@ -142,6 +146,29 @@ export class CelebrityResolver {
       const result = await scheduleCall(celeb.id, schedule);
       return result;
     } else return false;
+  }
+
+  @Query(() => GraphQLJSONObject)
+  @UseMiddleware(isAuthenticated)
+  async getAvailableTimeSlots(@Arg("celebId") celebId: number) {
+    const callScheduleTreerepo = getConnection().getTreeRepository(CallSchedule);
+    const parent = await callScheduleTreerepo.find({ where: { celebId, level: 0 } });
+    const promise = parent.map(async (x) => {
+      const slots = await callScheduleTreerepo
+        .createDescendantsQueryBuilder("call_schedule", "call_schedule_closure", x)
+        .andWhere("call_schedule.available = true")
+        .andWhere("call_schedule.level != 0")
+        .getMany();
+
+      return slots;
+    });
+    const scheduleArray2d = await Promise.all(promise);
+
+    const ScheduleflatArray = scheduleArray2d.flat();
+
+    const timeSlots = _.groupBy(ScheduleflatArray, (obj) => obj.day);
+
+    return timeSlots;
   }
 
   @Query(() => [Celebrity], { nullable: true })
