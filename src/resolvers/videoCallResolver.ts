@@ -1,15 +1,12 @@
 import crypto from "crypto";
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
-import { isAuth } from "../middleware/isAuth";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 import { CallTokenResponse } from "../utils/graphqlTypes";
 import { storeRoomName } from "../utils/videoRoomManager";
 import { CallRoom } from "../entities/CallRoom";
 import { jwt } from "twilio";
 import { AppContext } from "../types";
-import {
-  ValidateShoutoutRecipient,
-  ValidateCallAndRequestor,
-} from "../utils/requestValidations";
+import { ValidateShoutoutRecipient, ValidateCallAndRequestor } from "../utils/requestValidations";
 
 @Resolver()
 export class VideoCallResolver {
@@ -18,7 +15,7 @@ export class VideoCallResolver {
   private twilioApiSecret = process.env.TWILIO_API_SECRET;
 
   @Query(() => CallTokenResponse, { nullable: true })
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async callInitiatorToken(
     @Arg("requestId") requestId: number,
     @Ctx() { req }: AppContext
@@ -45,12 +42,10 @@ export class VideoCallResolver {
 
       // Create an access token which we will sign and return to the client,
       // containing the grant we just created
-      const token = new AccessToken(
-        this.twilioAccountSid,
-        this.twilioApiKey,
-        this.twilioApiSecret,
-        { identity, ttl: 900 }
-      );
+      const token = new AccessToken(this.twilioAccountSid, this.twilioApiKey, this.twilioApiSecret, {
+        identity,
+        ttl: 900,
+      });
       token.addGrant(videoGrant);
 
       // Serialize the token to a JWT string
@@ -64,7 +59,7 @@ export class VideoCallResolver {
   }
 
   @Query(() => CallTokenResponse, { nullable: true })
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async callRecepientToken(
     @Arg("requestId") requestId: number,
     @Ctx() { req }: AppContext
@@ -74,10 +69,7 @@ export class VideoCallResolver {
     const AccessToken = jwt.AccessToken;
     const VideoGrant = AccessToken.VideoGrant;
     let token, roomName;
-    const isValidRequestRecepient = await ValidateShoutoutRecipient(
-      identity,
-      requestId
-    );
+    const isValidRequestRecepient = await ValidateShoutoutRecipient(identity, requestId);
     if (isValidRequestRecepient) {
       const room = await CallRoom.findOne({
         where: { requestId },
@@ -88,15 +80,10 @@ export class VideoCallResolver {
         const videoGrant = new VideoGrant({
           room: roomName,
         });
-        token = new AccessToken(
-          this.twilioAccountSid,
-          this.twilioApiKey,
-          this.twilioApiSecret,
-          {
-            identity,
-            ttl: 900,
-          }
-        );
+        token = new AccessToken(this.twilioAccountSid, this.twilioApiKey, this.twilioApiSecret, {
+          identity,
+          ttl: 900,
+        });
         token.addGrant(videoGrant);
         token = token.toJwt();
       } else {

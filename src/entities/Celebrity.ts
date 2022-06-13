@@ -79,11 +79,11 @@ export class Celebrity extends BaseEntity {
   profileHash: string;
 
   @Field(() => String)
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
   @Field(() => String)
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
@@ -91,9 +91,7 @@ export class Celebrity extends BaseEntity {
 
   //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
-  async categories(
-    @Ctx() { categoriesLoader }: AppContext
-  ): Promise<Categories[] | null> {
+  async categories(@Ctx() { categoriesLoader }: AppContext): Promise<Categories[] | null> {
     return categoriesLoader.load(this.id);
   }
 }

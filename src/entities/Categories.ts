@@ -36,20 +36,18 @@ export class Categories extends BaseEntity {
   thumbnail: string;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamptz" })
+  @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
   @Field(() => String)
-  @UpdateDateColumn({ type: "timestamptz" })
+  @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
   celebConn: Promise<CelebCategories[]>;
   //dataloader takes in the categoryId and maps the Id to the celebs
   @Field(() => [Celebrity], { nullable: true })
-  async celebs(
-    @Ctx() { celebsLoader }: AppContext
-  ): Promise<Celebrity[] | null> {
+  async celebs(@Ctx() { celebsLoader }: AppContext): Promise<Celebrity[] | null> {
     return celebsLoader.load(this.id);
   }
 }

@@ -2,12 +2,7 @@ import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
 import tokensManager from "../../utils/tokensManager";
 import { NotificationsPayload } from "../../types";
 
-export const propagateMessage = async ({
-  messageTitle,
-  messageBody,
-  tokens,
-  data,
-}: NotificationsPayload) => {
+export const propagateMessage = async ({ messageTitle, messageBody, tokens, data }: NotificationsPayload) => {
   try {
     const message: MulticastMessage = {
       notification: {

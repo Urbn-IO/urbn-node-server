@@ -60,7 +60,6 @@ const main = async () => {
       extended: true,
     })
   );
-
   app.use(express.json());
   app.use(
     cors({
@@ -76,6 +75,7 @@ const main = async () => {
     schema: await buildSchema({
       resolvers,
       validate: false,
+      dateScalarMode: "isoDate",
     }),
     context: ({ req, res }) => ({
       req,

@@ -1,32 +1,26 @@
 import {
+  CallScheduleInput,
   GenericResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
 } from "../utils/graphqlTypes";
-import {
-  Arg,
-  Ctx,
-  Int,
-  Mutation,
-  Query,
-  Resolver,
-  UseMiddleware,
-} from "type-graphql";
+import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
-import { isAuth } from "../middleware/isAuth";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 import { AppContext } from "../types";
 import { getConnection } from "typeorm";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
 import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
+import { scheduleCall } from "../scheduler/videoCallScheduler";
 
 @Resolver()
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
     @Arg("data") data: RegisterCelebrityInputs,
@@ -71,11 +65,7 @@ export class CelebrityResolver {
         relations: ["celebrity"],
       });
 
-      const mappedCategories = await celebCategoriesMapper(
-        userId,
-        categoryIds,
-        newCats
-      );
+      const mappedCategories = await celebCategoriesMapper(userId, categoryIds, newCats);
 
       if (mappedCategories) {
         upsertCelebritySearchItem(user);
@@ -89,7 +79,7 @@ export class CelebrityResolver {
 
   //update user details
   @Mutation(() => GenericResponse, { nullable: true })
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async updateCelebDetails(
     @Arg("data") data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
@@ -109,11 +99,7 @@ export class CelebrityResolver {
       return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
-    if (
-      data.acceptsCallTypeA === false &&
-      data.acceptsCallTypeB === false &&
-      data.acceptShoutOut === false
-    ) {
+    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
       return { errorMessage: "Minimum of one request type must be selected" };
     }
     if (Object.keys(data).length === 0) {
@@ -142,6 +128,20 @@ export class CelebrityResolver {
     upsertCelebritySearchItem(user);
 
     return { success: "updated succesfully!" };
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuthenticated)
+  async setVideoCallTimeSlots(
+    @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
+    if (celeb) {
+      const result = await scheduleCall(celeb.id, schedule);
+      return result;
+    } else return false;
   }
 
   @Query(() => [Celebrity], { nullable: true })
@@ -182,10 +182,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity])
-  async similarToCelebrity(
-    @Arg("celebId") celebId: number,
-    @Arg("limit", () => Int) limit: number
-  ) {
+  async similarToCelebrity(@Arg("celebId") celebId: number, @Arg("limit", () => Int) limit: number) {
     const maxLimit = Math.min(8, limit);
     try {
       const catIds = [];

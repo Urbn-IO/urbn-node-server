@@ -1,11 +1,5 @@
 import { User } from "../entities/User";
-import {
-  InputType,
-  Field,
-  ObjectType,
-  registerEnumType,
-  Int,
-} from "type-graphql";
+import { InputType, Field, ObjectType, registerEnumType, Int } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { contentType, requestType } from "../types";
@@ -100,6 +94,19 @@ export class RequestInputs {
   description: string;
   @Field()
   requestExpiration: Date;
+}
+@InputType()
+export class CallScheduleInput {
+  celebId?: number;
+
+  @Field(() => Int)
+  day: number;
+
+  @Field()
+  startTime: Date;
+
+  @Field()
+  endTime: Date;
 }
 
 // @InputType()

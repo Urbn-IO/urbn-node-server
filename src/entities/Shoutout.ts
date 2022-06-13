@@ -1,12 +1,5 @@
 import { Field, ObjectType } from "type-graphql";
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Index,
-} from "typeorm";
+import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 
 @ObjectType()
@@ -46,7 +39,6 @@ export class Shoutout extends BaseEntity {
   durationInSeconds: string;
 
   @Field(() => String)
-  @Index()
   @Column({ type: "timestamp" })
   datePublished: Date;
 

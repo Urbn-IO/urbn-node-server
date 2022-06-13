@@ -2,24 +2,12 @@ import tokensManager from "../utils/tokensManager";
 import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";
-import {
-  Arg,
-  Ctx,
-  Mutation,
-  Query,
-  Resolver,
-  UseMiddleware,
-} from "type-graphql";
-import {
-  GenericResponse,
-  UserInputs,
-  UserInputsLogin,
-  UserResponse,
-} from "../utils/graphqlTypes";
+import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
 import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
-import { isAuth } from "../middleware/isAuth";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 import { validateInput } from "../utils/validateInput";
 import { Celebrity } from "../entities/Celebrity";
 import { In } from "typeorm";
@@ -77,10 +65,7 @@ export class UserResolver {
     if (!user) {
       return { errorMessage: "Wrong Email or Password" };
     }
-    const verifiedPassword = await argon2.verify(
-      user.password,
-      userInput.password
-    );
+    const verifiedPassword = await argon2.verify(user.password, userInput.password);
     if (!verifiedPassword) {
       return { errorMessage: "Wrong Email or Password" };
     }
@@ -90,10 +75,7 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(
-    @Arg("email") email: string,
-    @Ctx() { redis }: AppContext
-  ): Promise<boolean> {
+  async forgotPassword(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<boolean> {
     const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
       //user doesn't exist
@@ -108,7 +90,7 @@ export class UserResolver {
 
   //change password
   @Mutation(() => UserResponse)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
@@ -182,7 +164,7 @@ export class UserResolver {
   //QUERIES
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     if (!req.session.userId) {
       return { errorMessage: "No session Id" };
@@ -218,7 +200,7 @@ export class UserResolver {
   //fetch all users, with optional parameter to fetch a single user by userId
 
   // @Query(() => [User], { nullable: true })
-  // @UseMiddleware(isAuth)
+  // @UseMiddleware(isAuthenticated)
   // async users(@Arg("userId", { nullable: true }) userId: string) {
   //   if (userId) {
   //     const user = await User.find({

@@ -5,7 +5,7 @@ declare global {
       AWS_BUCKET_NAME: string;
       AWS_PUBLIC_BUCKET_NAME: string;
       AWS_PRIMARY_REGION: string;
-      AWS_SECONDRY_REGION: string;
+      AWS_SECONDARY_REGION: string;
       AWS_ACCESS_KEY: string;
       AWS_SECRET_ACCESS_KEY: string;
       AWS_CLOUD_FRONT_DOMAIN: string;

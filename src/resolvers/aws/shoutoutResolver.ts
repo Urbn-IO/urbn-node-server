@@ -6,7 +6,7 @@
 // import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 // import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 // import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
-// import { isAuth } from "../../middleware/isAuth";
+// import { isAuthenticated } from "../../middleware/isAuthenticated";
 // import { Signer } from "../../utils/cloudFront";
 // import { ValidateShoutoutRecipient } from "../../utils/requestValidations";
 // import { AppContext } from "../../types";
@@ -18,7 +18,7 @@
 //   bucketName = process.env.AWS_BUCKET_NAME;
 
 //   @Query(() => [s3SignedObject])
-//   @UseMiddleware(isAuth)
+//   @UseMiddleware(isAuthenticated)
 //   async shoutoutUploadUrl(
 //     @Arg("requestId") requestId: number,
 //     @Ctx() { req }: AppContext
@@ -65,7 +65,7 @@
 //   }
 
 //   @Query(() => s3SignedObject)
-//   @UseMiddleware(isAuth)
+//   @UseMiddleware(isAuthenticated)
 //   async shoutoutDeleteUrl(@Arg("key") key: string): Promise<s3SignedObject> {
 //     const s3Command = new DeleteObjectCommand({
 //       Bucket: this.bucketName,
@@ -78,7 +78,7 @@
 //   }
 
 //   @Query(() => s3SignedObject)
-//   @UseMiddleware(isAuth)
+//   @UseMiddleware(isAuthenticated)
 //   async shoutoutDownloadUrl(
 //     @Arg("key") fileName: string
 //   ): Promise<s3SignedObject> {

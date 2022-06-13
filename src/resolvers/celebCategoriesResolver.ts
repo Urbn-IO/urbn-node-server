@@ -3,13 +3,13 @@ import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../types";
 import { Celebrity } from "../entities/Celebrity";
 import { getConnection } from "typeorm";
-import { isAuth } from "../middleware/isAuth";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 
 @Resolver()
 export class UserCategoriesResolver {
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async mapCelebToCategories(
     @Arg("categoryIds", () => [Number]) categoryIds: number[],
     @Arg("customCategories", () => [String], { nullable: true })
@@ -22,7 +22,7 @@ export class UserCategoriesResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async detachCelebFromCategories(
     @Arg("categoryIds", () => [Number]) categoryIds: number[],
     @Ctx() { req }: AppContext

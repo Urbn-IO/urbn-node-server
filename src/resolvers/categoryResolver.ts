@@ -1,12 +1,5 @@
-import { isAuth } from "../middleware/isAuth";
-import {
-  Arg,
-  Int,
-  Mutation,
-  Query,
-  Resolver,
-  UseMiddleware,
-} from "type-graphql";
+import { isAuthenticated } from "../middleware/isAuthenticated";
+import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
@@ -51,7 +44,7 @@ export class CategoryResolver {
     return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async createCategory(
     @Arg("name") name: string,
     @Arg("recommendable") recommendable: boolean
@@ -72,11 +65,8 @@ export class CategoryResolver {
   }
 
   @Mutation(() => Categories, { nullable: true })
-  @UseMiddleware(isAuth)
-  async updateCategory(
-    @Arg("id", () => Int) id: number,
-    @Arg("name") name: string
-  ): Promise<Categories | boolean> {
+  @UseMiddleware(isAuthenticated)
+  async updateCategory(@Arg("id", () => Int) id: number, @Arg("name") name: string): Promise<Categories | boolean> {
     const category = await Categories.findOne({ id });
     if (!category) {
       return false;

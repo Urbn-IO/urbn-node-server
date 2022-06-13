@@ -40,11 +40,11 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field(() => String)
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
   @Field(() => String)
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date;
 
   @Field({ nullable: true })

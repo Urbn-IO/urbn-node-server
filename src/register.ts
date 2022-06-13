@@ -1,5 +1,6 @@
 import { NonEmptyArray } from "type-graphql";
 import { CallRoom } from "./entities/CallRoom";
+import { CallSchedule } from "./entities/CallSchedule";
 import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
 import { CelebCategories } from "./entities/CelebCategories";
@@ -27,6 +28,7 @@ export const entities = [
   CardAuthorization,
   Shoutout,
   CallRoom,
+  CallSchedule,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types

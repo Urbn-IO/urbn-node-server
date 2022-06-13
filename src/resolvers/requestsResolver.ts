@@ -1,31 +1,13 @@
 import crypto from "crypto";
 import { s3SecondaryClient } from "../services/aws/clients/s3Client";
 import { Celebrity } from "../entities/Celebrity";
-import {
-  Arg,
-  Ctx,
-  Int,
-  Mutation,
-  Query,
-  Resolver,
-  UseMiddleware,
-} from "type-graphql";
-import {
-  AppContext,
-  contentType,
-  notificationRouteCode,
-  RequestInput,
-  requestStatus,
-} from "../types";
+import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { AppContext, contentType, notificationRouteCode, RequestInput, requestStatus } from "../types";
 import { Requests } from "../entities/Requests";
-import { isAuth } from "../middleware/isAuth";
+import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
-import {
-  GenericResponse,
-  RequestInputs,
-  videoUploadData,
-} from "../utils/graphqlTypes";
+import { GenericResponse, RequestInputs, videoUploadData } from "../utils/graphqlTypes";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateShoutoutRecipient } from "../utils/requestValidations";
@@ -36,11 +18,8 @@ import { sendPushNotification } from "../services/notifications/handler";
 @Resolver()
 export class RequestsResolver {
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuth)
-  async createRequest(
-    @Arg("Input") Input: RequestInputs,
-    @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
+  @UseMiddleware(isAuthenticated)
+  async createRequest(@Arg("Input") Input: RequestInputs, @Ctx() { req }: AppContext): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
     const celeb = await getConnection()
@@ -62,19 +41,11 @@ export class RequestsResolver {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
     }
-    if (
-      Input.requestType !== "shoutout" &&
-      Input.requestType === "call_type_A" &&
-      acceptsCallTypeA === false
-    ) {
+    if (Input.requestType !== "shoutout" && Input.requestType === "call_type_A" && acceptsCallTypeA === false) {
       return {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
-    } else if (
-      Input.requestType !== "shoutout" &&
-      Input.requestType === "call_type_B" &&
-      acceptsCallTypeB === false
-    ) {
+    } else if (Input.requestType !== "shoutout" && Input.requestType === "call_type_B" && acceptsCallTypeB === false) {
       return {
         errorMessage: `${celebAlias} doesn't accept this type of request`,
       };
@@ -118,8 +89,7 @@ export class RequestsResolver {
     };
 
     await Requests.create(request).save();
-    const requestType =
-      Input.requestType === "shoutout" ? "shoutout" : "video call";
+    const requestType = Input.requestType === "shoutout" ? "shoutout" : "video call";
     sendPushNotification(
       [celeb.userId],
       "New Request Alert",
@@ -130,7 +100,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => videoUploadData)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async fulfilShoutoutRequest(
     @Arg("requestId", () => Int) requestId: number,
     @Ctx() { req }: AppContext
@@ -187,16 +157,11 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuth)
-  async fulfilCallRequest(
-    @Arg("requestId") requestId: number
-  ): Promise<GenericResponse> {
+  @UseMiddleware(isAuthenticated)
+  async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
     try {
       deleteRoom(requestId);
-      await Requests.update(
-        { id: requestId },
-        { status: requestStatus.FULFILLED }
-      );
+      await Requests.update({ id: requestId }, { status: requestStatus.FULFILLED });
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
     }
@@ -204,19 +169,10 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuth)
-  async respondToRequest(
-    @Arg("requestId") requestId: number,
-    @Arg("status") status: string
-  ): Promise<GenericResponse> {
-    if (
-      status === requestStatus.ACCEPTED ||
-      status === requestStatus.REJECTED
-    ) {
+  @UseMiddleware(isAuthenticated)
+  async respondToRequest(@Arg("requestId") requestId: number, @Arg("status") status: string): Promise<GenericResponse> {
+    if (status === requestStatus.ACCEPTED || status === requestStatus.REJECTED) {
       try {
-        // const request = await typeReturn<Requests>(
-        //   Requests.update({ id: requestId }, { status })
-        // );
         const request = await (
           await Requests.createQueryBuilder()
             .update({ status })
@@ -224,8 +180,7 @@ export class RequestsResolver {
             .returning('requestor, "requestType", "recepientAlias"')
             .execute()
         ).raw[0];
-        const requestType =
-          request.requestType === "shoutout" ? "shoutout" : "video call";
+        const requestType = request.requestType === "shoutout" ? "shoutout" : "video call";
         const celebAlias = request.recepientAlias;
         sendPushNotification(
           [request.requestor],
@@ -244,7 +199,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async sentRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
@@ -269,7 +224,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async receivedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
@@ -297,7 +252,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuth)
+  @UseMiddleware(isAuthenticated)
   async acceptedRequests(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
@@ -311,10 +266,7 @@ export class RequestsResolver {
       .createQueryBuilder("requests")
       .where(
         new Brackets((qb) => {
-          qb.where("requests.recepient = :userId", { userId }).orWhere(
-            "requests.requestor = :userId",
-            { userId }
-          );
+          qb.where("requests.recepient = :userId", { userId }).orWhere("requests.requestor = :userId", { userId });
         })
       )
       .andWhere("requests.status = :status", { status })
