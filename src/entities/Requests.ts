@@ -1,6 +1,6 @@
-import { requestStatus } from "../types";
+import { RequestStatus, RequestType } from "../types";
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
 @ObjectType()
 @Entity()
@@ -30,8 +30,8 @@ export class Requests extends BaseEntity {
   recepientThumbnail!: string;
 
   @Field()
-  @Column()
-  requestType!: string;
+  @Column({ type: "enum", enum: RequestType, default: RequestType.SHOUTOUT })
+  requestType: RequestType;
 
   @Field()
   @Column()
@@ -39,11 +39,15 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
-  description!: string;
+  description: string;
 
   @Field()
-  @Column({ type: "enum", enum: requestStatus, default: requestStatus.PENDING })
-  status: requestStatus;
+  @Index()
+  @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PENDING })
+  status: RequestStatus;
+
+  @Column({ default: 0 })
+  callAttempts: number;
 
   @Field(() => String)
   @Column({ type: "timestamp", nullable: true })
@@ -51,13 +55,9 @@ export class Requests extends BaseEntity {
 
   @Field(() => String)
   @Column({ type: "timestamp" })
-  requestExpires!: Date;
+  requestExpires: Date;
 
   @Field(() => String)
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
-
-  @Field(() => String)
-  @UpdateDateColumn({ type: "timestamp" })
-  updatedAt: Date;
 }

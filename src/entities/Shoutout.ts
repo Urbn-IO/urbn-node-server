@@ -1,5 +1,5 @@
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 
 @ObjectType()
@@ -41,6 +41,10 @@ export class Shoutout extends BaseEntity {
   @Field(() => String)
   @Column({ type: "timestamp" })
   datePublished: Date;
+
+  @Field(() => String)
+  @CreateDateColumn({ type: "timestamp" })
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.shoutouts)
   user: User;

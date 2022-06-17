@@ -12,7 +12,7 @@ import sqsConsumer from "./services/aws/queues/videoOnDemand";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { COOKIE_NAME } from "./constants";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
@@ -61,10 +61,10 @@ const main = async () => {
     })
   );
   app.use(express.json());
-  app.set("trust proxy", true);
+  app.set("trust proxy", !__prod__);
   app.use(
     cors({
-      origin: ["https://studio.apollographql.com", "http://localhost:8000"], //to be revisited when making web version of  app
+      origin: ["https://studio.apollographql.com", "http://localhost:8000", "https://geturbn.io"], //to be revisited when making web version of  app
       credentials: true,
     })
   );
@@ -99,6 +99,7 @@ const main = async () => {
   apolloServer.applyMiddleware({ app, cors: false });
   app.listen(Port, () => {
     console.log(`running on port ${Port}`);
+    console.log("Production Environment: ", __prod__);
   });
 };
 main().catch((err) => {

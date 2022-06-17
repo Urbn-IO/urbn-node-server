@@ -150,13 +150,13 @@ export class CelebrityResolver {
 
   @Query(() => GraphQLJSONObject)
   @UseMiddleware(isAuthenticated)
-  async getAvailableTimeSlots(@Arg("celebId") celebId: number) {
+  async getAvailableTimeSlots(@Arg("celebId", () => Int) celebId: number) {
     const callScheduleTreerepo = getConnection().getTreeRepository(CallSchedule);
-    const parent = await callScheduleTreerepo.find({ where: { celebId, level: 0 } });
+    const parent = await callScheduleTreerepo.find({ where: { celebId, level: 0, locked: false } });
     const promise = parent.map(async (x) => {
       const slots = await callScheduleTreerepo
         .createDescendantsQueryBuilder("call_schedule", "call_schedule_closure", x)
-        .andWhere("call_schedule.available = true")
+        .where("call_schedule.available = true")
         .andWhere("call_schedule.level != 0")
         .getMany();
 

@@ -1,6 +1,6 @@
 import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
 import { saveShoutout } from "../../../shoutout/saveShoutOut";
-import { contentType, VideoOutput } from "../../../types";
+import { ContentType, VideoOutput } from "../../../types";
 import client from "../clients/sqsClient";
 
 const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
@@ -32,9 +32,7 @@ const consumerOptions: ConsumerOptions = {
         contentType: body.customMetadata.contentType,
       };
     });
-    const shoutouts: VideoOutput[] = payload.filter(
-      (x) => x.contentType === contentType.SHOUTOUT
-    );
+    const shoutouts: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
     if (shoutouts.length > 0) {
       saveShoutout(shoutouts);
     }

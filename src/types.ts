@@ -40,7 +40,7 @@ export interface VideoOutput {
 }
 
 type NotificationsRoute = {
-  routeCode: notificationRouteCode;
+  routeCode: NotificationRouteCode;
 };
 
 export type RequestInput = {
@@ -49,13 +49,12 @@ export type RequestInput = {
   recepient: string;
   recepientAlias: string | undefined;
   recepientThumbnail: string;
-  requestType: string;
   requestAmountInNaira: string;
   description: string;
   requestExpires: Date;
 };
 
-export enum requestStatus {
+export enum RequestStatus {
   PENDING = "pending",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
@@ -63,20 +62,35 @@ export enum requestStatus {
   UNFULFILLED = "unfulfilled",
 }
 
-export enum requestType {
+export enum RequestType {
   SHOUTOUT = "shoutout",
   CALL_TYPE_A = "call_type_A",
   CALL_TYPE_B = "call_type_B",
 }
 
-export enum notificationRouteCode {
+export enum CallType {
+  CALL_TYPE_A,
+  CALL_TYPE_B,
+}
+
+export enum NotificationRouteCode {
   RESPONSE = "0", // notification to display response from celebrity to a user on the client
   RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
   DEFAULT = "10", //default route
 }
 
-export enum contentType {
+export enum ContentType {
   SHOUTOUT,
   MOMENT,
+}
+
+export enum DayOfTheWeek {
+  MONDAY,
+  TUESDAY,
+  WEDNESDAY,
+  THURSDAY,
+  FRIDAY,
+  SATURDAY,
+  SUNDAY,
 }

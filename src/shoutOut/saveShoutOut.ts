@@ -1,4 +1,4 @@
-import { notificationRouteCode, requestStatus, VideoOutput } from "../types";
+import { NotificationRouteCode, RequestStatus, VideoOutput } from "../types";
 import { Shoutout } from "../entities/Shoutout";
 import { User } from "../entities/User";
 import { getConnection, In } from "typeorm";
@@ -36,7 +36,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
     await getConnection()
       .createQueryBuilder()
       .update(Requests)
-      .set({ status: requestStatus.FULFILLED })
+      .set({ status: RequestStatus.FULFILLED })
       .where("id In (:...requestIds)", { requestIds })
       .execute();
 
@@ -44,7 +44,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
       ownerIds as string[],
       "New Shoutout!",
       "You have received a new shoutout video",
-      notificationRouteCode.PROFILE_SHOUTOUT
+      NotificationRouteCode.PROFILE_SHOUTOUT
     );
   } catch (err) {
     throw new Error("An error Occured");

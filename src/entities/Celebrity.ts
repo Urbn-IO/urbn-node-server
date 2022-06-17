@@ -23,9 +23,9 @@ export class Celebrity extends BaseEntity {
   @Column({ unique: true })
   userId!: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  alias?: string;
+  @Field()
+  @Column()
+  alias: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -43,8 +43,8 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   imagePlaceholder: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
+  @Field()
+  @Column()
   description: string;
 
   @Field()

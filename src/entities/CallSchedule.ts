@@ -9,10 +9,12 @@ import {
   Index,
   TreeLevelColumn,
 } from "typeorm";
+import { DayOfTheWeek } from "../types";
 
 @ObjectType()
 @Entity()
 @Tree("closure-table")
+@Index(["celebId", "level", "locked"])
 export class CallSchedule {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,28 +24,23 @@ export class CallSchedule {
   @Index()
   celebId: number;
 
-  @Field({ nullable: true })
-  @Column({ type: "uuid", nullable: true })
+  @Field()
+  @Column({ type: "enum", enum: DayOfTheWeek })
   @Index()
-  callerUserId: string;
-
-  @Field(() => Int)
-  @Column()
-  @Index()
-  day: number;
+  day: DayOfTheWeek;
 
   @Field(() => String)
-  @Column({ type: "time", nullable: true })
+  @Column({ type: "time" })
   startTime: Date;
 
   @Field(() => String)
-  @Column({ type: "time", nullable: true })
+  @Column({ type: "time" })
   endTime: Date;
 
   @Column({ default: true })
   available: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false })
   locked: boolean;
 
   @Field(() => [CallSchedule], { nullable: true })

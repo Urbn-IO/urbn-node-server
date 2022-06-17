@@ -2,101 +2,151 @@ import crypto from "crypto";
 import { s3SecondaryClient } from "../services/aws/clients/s3Client";
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext, contentType, notificationRouteCode, RequestInput, requestStatus } from "../types";
+import { AppContext, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
-import { GenericResponse, RequestInputs, videoUploadData } from "../utils/graphqlTypes";
+import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, videoUploadData } from "../utils/graphqlTypes";
 import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateShoutoutRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sendPushNotification } from "../services/notifications/handler";
+import { appendCdnLink } from "../utils/cdnHelper";
+import { CallSchedule } from "../entities/CallSchedule";
+import { getNextAvailableDate } from "../utils/helpers";
 
 @Resolver()
 export class RequestsResolver {
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async createRequest(@Arg("Input") Input: RequestInputs, @Ctx() { req }: AppContext): Promise<GenericResponse> {
+  async createShoutoutRequest(
+    @Arg("Input") Input: ShoutoutRequestInput,
+    @Ctx() { req }: AppContext
+  ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
+    if (Input.description.length > 300 || Input.description.length < 11) {
+      return {
+        errorMessage: "Invalid description length",
+      };
+    }
     const celebId = Input.celebId;
-    const celeb = await getConnection()
-      .getRepository(Celebrity)
-      .createQueryBuilder("celeb")
-      .where("celeb.userId = :celebId", { celebId })
-      .getOne();
+    const celeb = await Celebrity.findOne(celebId);
     if (!celeb) {
-      return { errorMessage: "Celebrity not found" };
+      return { errorMessage: "We cannot find this celebrity" };
     }
-
     const celebAlias = celeb.alias;
-    const acceptShoutOut = celeb.acceptShoutOut;
-    const acceptsCallTypeA = celeb.acceptsCallTypeA;
-    const acceptsCallTypeB = celeb.acceptsCallTypeB;
-
-    if (Input.requestType === "shoutout" && acceptShoutOut === false) {
-      return {
-        errorMessage: `${celebAlias} doesn't accept this type of request`,
-      };
-    }
-    if (Input.requestType !== "shoutout" && Input.requestType === "call_type_A" && acceptsCallTypeA === false) {
-      return {
-        errorMessage: `${celebAlias} doesn't accept this type of request`,
-      };
-    } else if (Input.requestType !== "shoutout" && Input.requestType === "call_type_B" && acceptsCallTypeB === false) {
-      return {
-        errorMessage: `${celebAlias} doesn't accept this type of request`,
-      };
-    }
-
-    if (Input.requestType === "shoutout" && Input.description === null) {
-      return { errorMessage: "Shoutout description cannot be empty" };
-    }
-
+    const acceptsShoutOut = celeb.acceptShoutOut;
+    const celebThumbnail = appendCdnLink(celeb.thumbnail);
+    if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
     const user = await User.findOne({
       where: { userId },
       select: ["firstName"],
     });
-    const UserfirstName = user?.firstName;
-    if (Input.requestType !== "shoutout" && !Input.description) {
-      Input.description = `Video call request from ${UserfirstName} to ${celebAlias}`;
+    const requestorName = user?.firstName;
+    const transactionAmount = celeb.shoutOutRatesInNaira;
+    const paid = new Payments().pay();
+    if (!paid) {
+      return { errorMessage: "Payment Error!" };
     }
+    const request = {
+      requestor: userId,
+      requestorName,
+      recepient: celeb.userId,
+      requestAmountInNaira: transactionAmount,
+      description: Input.description,
+      requestExpires: Input.requestExpiration,
+      recepientAlias: celebAlias,
+      recepientThumbnail: celebThumbnail,
+    };
+    const save = await Requests.create(request).save();
+    if (save) {
+      sendPushNotification(
+        [celeb.userId],
+        "New Request Alert",
+        "You have received a new shoutout request",
+        NotificationRouteCode.RECEIVED_REQUEST
+      );
+      return { success: "Request Sent!" };
+    }
+    return { errorMessage: "Failed to create your request at this time. Try again later" };
+  }
 
-    const amount =
-      Input.requestType === "shoutout"
-        ? celeb.shoutOutRatesInNaira
-        : Input.requestType === "call_type_A"
-        ? celeb._3minsCallRequestRatesInNaira
-        : celeb._5minsCallRequestRatesInNaira;
+  @Mutation(() => GenericResponse)
+  @UseMiddleware(isAuthenticated)
+  async createVideoCallRequest(
+    @Arg("Input") Input: VideoCallRequestInputs,
+    @Ctx() { req }: AppContext
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string;
+    const celebId = Input.celebId;
+    const celeb = await Celebrity.findOne(celebId);
+    if (!celeb) {
+      return { errorMessage: "We cannot find this celebrity" };
+    }
+    const celebAlias = celeb.alias;
+    const celebThumbnail = appendCdnLink(celeb.thumbnail);
+    const acceptsCallTypeA = celeb.acceptsCallTypeA;
+    const acceptsCallTypeB = celeb.acceptsCallTypeB;
+    let callRequestType;
+    if (acceptsCallTypeA === true && Input.callType === 0) callRequestType = RequestType.CALL_TYPE_A;
+    else if (acceptsCallTypeB === true && Input.callType === 1) callRequestType = RequestType.CALL_TYPE_B;
+    else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
+    const CallScheduleRepo = getConnection().getTreeRepository(CallSchedule);
+    const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
+    if (!availableSlot || availableSlot.available === false || availableSlot.locked === true) {
+      return {
+        errorMessage: "The selected time slot is no longer available, please select another time for this call",
+      };
+    }
 
     const paid = new Payments().pay();
     if (!paid) {
       return { errorMessage: "Payment Error!" };
     }
+    const user = await User.findOne({
+      where: { userId },
+      select: ["firstName"],
+    });
+    const UserfirstName = user?.firstName;
+    const transactionAmount = celeb.shoutOutRatesInNaira;
+    const availabeDate = getNextAvailableDate(availableSlot.day);
+    const startTime = availableSlot.startTime as unknown as string;
+    const startTimeSplit = startTime.split(":");
+    const availableDay = availabeDate
+      .set("hour", parseInt(startTimeSplit[0]))
+      .set("minute", parseInt(startTimeSplit[1]))
+      .set("second", parseInt(startTimeSplit[2]));
 
-    const request: RequestInput = {
+    const callRequestBegins = availableDay;
+    const requestExpires = availableDay.add(5, "minute");
+
+    const request = {
       requestor: userId,
       requestorName: UserfirstName,
       recepient: celeb.userId,
-      requestType: Input.requestType,
-      requestAmountInNaira: amount,
-      description: Input.description,
-      requestExpires: Input.requestExpiration,
+      requestType: callRequestType,
+      requestAmountInNaira: transactionAmount,
+      description: `Video call request from ${UserfirstName} to ${celebAlias}`,
+      callRequestBegins,
+      requestExpires,
       recepientAlias: celebAlias,
-      recepientThumbnail: celeb.thumbnail,
+      recepientThumbnail: celebThumbnail,
     };
-
-    await Requests.create(request).save();
-    const requestType = Input.requestType === "shoutout" ? "shoutout" : "video call";
-    sendPushNotification(
-      [celeb.userId],
-      "New Request Alert",
-      `You have received a new ${requestType} request`,
-      notificationRouteCode.RECEIVED_REQUEST
-    );
-    return { success: "Request Sent!" };
+    const save = await Requests.create(request).save();
+    if (save) {
+      CallScheduleRepo.update(availableSlot.id, { available: false });
+      sendPushNotification(
+        [celeb.userId],
+        "New Request Alert",
+        "You have received a new video call request",
+        NotificationRouteCode.RECEIVED_REQUEST
+      );
+      return { success: "Request Sent!" };
+    }
+    return { errorMessage: "Failed to create your request at this time. Try again later" };
   }
 
   @Mutation(() => videoUploadData)
@@ -139,7 +189,7 @@ export class RequestsResolver {
             metadata: {
               srcVideo: videoKey,
               customMetadata: {
-                contentType: contentType.SHOUTOUT,
+                contentType: ContentType.SHOUTOUT,
                 userId,
                 alias: celebAlias,
                 requestId: requestId,
@@ -161,7 +211,7 @@ export class RequestsResolver {
   async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
     try {
       deleteRoom(requestId);
-      await Requests.update({ id: requestId }, { status: requestStatus.FULFILLED });
+      await Requests.update({ id: requestId }, { status: RequestStatus.FULFILLED });
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
     }
@@ -171,7 +221,7 @@ export class RequestsResolver {
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async respondToRequest(@Arg("requestId") requestId: number, @Arg("status") status: string): Promise<GenericResponse> {
-    if (status === requestStatus.ACCEPTED || status === requestStatus.REJECTED) {
+    if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
         const request = await (
           await Requests.createQueryBuilder()
@@ -186,7 +236,7 @@ export class RequestsResolver {
           [request.requestor],
           "Response Alert",
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
-          notificationRouteCode.RESPONSE
+          NotificationRouteCode.RESPONSE
         );
       } catch (err) {
         return {
@@ -211,11 +261,11 @@ export class RequestsResolver {
       .getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.requestor = :userId", { userId })
-      .orderBy("requests.updatedAt", "DESC")
+      .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -232,17 +282,17 @@ export class RequestsResolver {
   ) {
     const userId = req.session.userId;
     const maxLimit = Math.min(9, limit);
-    const status = requestStatus.PENDING;
+    const status = RequestStatus.PENDING;
     const queryBuilder = getConnection()
       .getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.recepient = :userId", { userId })
       .andWhere("requests.status = :status", { status })
-      .orderBy("requests.updatedAt", "DESC")
+      .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }
@@ -260,7 +310,7 @@ export class RequestsResolver {
   ) {
     const userId = req.session.userId;
     const maxLimit = Math.min(9, limit);
-    const status = requestStatus.ACCEPTED;
+    const status = RequestStatus.ACCEPTED;
     const queryBuilder = getConnection()
       .getRepository(Requests)
       .createQueryBuilder("requests")
@@ -270,11 +320,11 @@ export class RequestsResolver {
         })
       )
       .andWhere("requests.status = :status", { status })
-      .orderBy("requests.updatedAt", "DESC")
+      .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
 
     if (cursor) {
-      queryBuilder.andWhere('requests."updatedAt" < :cursor', {
+      queryBuilder.andWhere('requests."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
       });
     }

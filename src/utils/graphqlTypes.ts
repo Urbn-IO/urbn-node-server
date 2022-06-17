@@ -1,12 +1,17 @@
 import { User } from "../entities/User";
-import { InputType, Field, ObjectType, registerEnumType, Int } from "type-graphql";
+import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
-import { contentType, requestType } from "../types";
+import { CallType, ContentType, DayOfTheWeek } from "../types";
 
-registerEnumType(requestType, {
-  name: "requestType",
-  description: "Type of request to be made",
+registerEnumType(CallType, {
+  name: "CallType",
+  description: "Type of video call to be made",
+});
+
+registerEnumType(DayOfTheWeek, {
+  name: "DayOfTheWeek",
+  description: "Enum representing each day of the week",
 });
 
 @InputType()
@@ -85,22 +90,32 @@ export class UserInputsLogin {
 }
 
 @InputType()
-export class RequestInputs {
+export class ShoutoutRequestInput {
+  @Field(() => Int)
+  celebId: number;
   @Field()
-  celebId: string;
-  @Field(() => requestType)
-  requestType: requestType;
-  @Field({ nullable: true })
   description: string;
   @Field()
   requestExpiration: Date;
 }
 @InputType()
+export class VideoCallRequestInputs {
+  @Field(() => Int)
+  celebId: number;
+
+  @Field(() => Int)
+  selectedTimeSlotId: number;
+
+  @Field(() => CallType)
+  callType: CallType;
+}
+
+@InputType()
 export class CallScheduleInput {
   celebId?: number;
 
   @Field(() => Int)
-  day: number;
+  day: DayOfTheWeek;
 
   @Field()
   startTime: Date;
@@ -170,7 +185,7 @@ class customVideoMetadata {
   userId: string;
 
   @Field()
-  contentType: contentType;
+  contentType: ContentType;
 
   @Field({ nullable: true })
   owner?: string;
