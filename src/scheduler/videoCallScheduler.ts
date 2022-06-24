@@ -46,7 +46,7 @@ const createSchedule = async (
       celebId,
       children,
     });
-
+    children.length = 0;
     await CallScheduleBase.save(parentEntity);
     return true;
   } catch (err) {
