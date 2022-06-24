@@ -46,6 +46,10 @@ export class Requests extends BaseEntity {
   @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PENDING })
   status: RequestStatus;
 
+  @Index()
+  @Column({ nullable: true })
+  callScheduleId: number;
+
   @Column({ default: 0 })
   callAttempts: number;
 

@@ -8,14 +8,14 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
 import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, videoUploadData } from "../utils/graphqlTypes";
-import { deleteRoom } from "../utils/videoRoomManager";
 import { User } from "../entities/User";
 import { ValidateShoutoutRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sendPushNotification } from "../services/notifications/handler";
 import { appendCdnLink } from "../utils/cdnHelper";
-import { CallSchedule } from "../entities/CallSchedule";
+import { deleteRoom } from "../utils/videoRoomManager";
+import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 
 @Resolver()
@@ -94,9 +94,9 @@ export class RequestsResolver {
     if (acceptsCallTypeA === true && Input.callType === 0) callRequestType = RequestType.CALL_TYPE_A;
     else if (acceptsCallTypeB === true && Input.callType === 1) callRequestType = RequestType.CALL_TYPE_B;
     else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
-    const CallScheduleRepo = getConnection().getTreeRepository(CallSchedule);
+    const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
     const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
-    if (!availableSlot || availableSlot.available === false || availableSlot.locked === true) {
+    if (!availableSlot || availableSlot.available === false) {
       return {
         errorMessage: "The selected time slot is no longer available, please select another time for this call",
       };
@@ -112,7 +112,7 @@ export class RequestsResolver {
     });
     const UserfirstName = user?.firstName;
     const transactionAmount = celeb.shoutOutRatesInNaira;
-    const availabeDate = getNextAvailableDate(availableSlot.day);
+    const availabeDate = getNextAvailableDate(availableSlot.day as number);
     const startTime = availableSlot.startTime as unknown as string;
     const startTimeSplit = startTime.split(":");
     const availableDay = availabeDate
@@ -130,6 +130,7 @@ export class RequestsResolver {
       requestType: callRequestType,
       requestAmountInNaira: transactionAmount,
       description: `Video call request from ${UserfirstName} to ${celebAlias}`,
+      callScheduleId: availableSlot.id,
       callRequestBegins,
       requestExpires,
       recepientAlias: celebAlias,
@@ -211,7 +212,15 @@ export class RequestsResolver {
   async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
     try {
       deleteRoom(requestId);
-      await Requests.update({ id: requestId }, { status: RequestStatus.FULFILLED });
+      const request = await (
+        await Requests.createQueryBuilder()
+          .update({ status: RequestStatus.FULFILLED })
+          .where({ id: requestId })
+          .returning('"callScheduleId"')
+          .execute()
+      ).raw[0];
+      const callScheduleTreeRepo = getConnection().getTreeRepository(CallScheduleBase);
+      await callScheduleTreeRepo.update(request.callScheduleId, { available: true });
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
     }

@@ -1,7 +1,14 @@
 import dayjs from "dayjs";
+import { DayOfTheWeek } from "../types";
 import { CallScheduleInput } from "../utils/graphqlTypes";
 
-export const toOneHourCallIntervals = (daySchedule: CallScheduleInput[]) => {
+export const processTimeSchedule = (daySchedule: CallScheduleInput[]) => {
+  const timeRange = toOneHourCallIntervals(daySchedule);
+  const result = toTenMinuteCallIntervals(timeRange);
+  return result;
+};
+
+const toOneHourCallIntervals = (daySchedule: CallScheduleInput[]) => {
   const timeRange: CallScheduleInput[] = [];
   daySchedule.forEach((x) => {
     for (
@@ -20,8 +27,14 @@ export const toOneHourCallIntervals = (daySchedule: CallScheduleInput[]) => {
   return timeRange;
 };
 
-export const toTenMinuteCallIntervals = (hourSchedule: CallScheduleInput[]) => {
+const toTenMinuteCallIntervals = (hourSchedule: CallScheduleInput[]) => {
   const timeRange: CallScheduleInput[] = [];
+  const timeRangeGroup: {
+    day: DayOfTheWeek;
+    startTime: string;
+    endTime: string;
+    derivedSchedule: CallScheduleInput[];
+  }[] = [];
   hourSchedule.forEach((x) => {
     for (
       let time = x.startTime;
@@ -30,11 +43,27 @@ export const toTenMinuteCallIntervals = (hourSchedule: CallScheduleInput[]) => {
     ) {
       const begin = time,
         end = dayjs(time).add(10, "minute").toDate();
-      const objCopy = { ...x };
-      objCopy.startTime = begin;
-      objCopy.endTime = end;
+      const objCopy = { ...x } as any;
+      objCopy.startTime = dayjs(begin).format("HH:mm:ss");
+      objCopy.endTime = dayjs(end).format("HH:mm:ss");
+      objCopy.celebId = 1;
+      objCopy.available = true;
       timeRange.push(objCopy);
     }
+
+    timeRangeGroup.push({
+      day: x.day,
+      startTime: dayjs(x.startTime).format("HH:mm:ss"),
+      endTime: dayjs(x.endTime).format("HH:mm:ss"),
+      derivedSchedule: timeRange.filter((y) => {
+        const dateString = dayjs(x.startTime).format("YYYY-MM-DD") + " ";
+        const startTimeWithDate = dayjs(dateString + y.startTime);
+        if (y.day === x.day && dayjs(startTimeWithDate).isBetween(x.startTime, x.endTime, null, "[)")) {
+          return true;
+        }
+        return false;
+      }),
+    });
   });
-  return timeRange;
+  return timeRangeGroup;
 };

@@ -112,9 +112,7 @@ export class VideoCallRequestInputs {
 
 @InputType()
 export class CallScheduleInput {
-  celebId?: number;
-
-  @Field(() => Int)
+  @Field(() => DayOfTheWeek)
   day: DayOfTheWeek;
 
   @Field()

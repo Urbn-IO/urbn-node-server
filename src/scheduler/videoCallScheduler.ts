@@ -1,70 +1,53 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { getConnection } from "typeorm";
-import { CallSchedule } from "../entities/CallSchedule";
+import _ from "lodash";
+import { CallScheduleBase } from "../entities/CallScheduleBase";
+import { DayOfTheWeek } from "../types";
 import { CallScheduleInput } from "../utils/graphqlTypes";
-import { toOneHourCallIntervals, toTenMinuteCallIntervals } from "./timeSplit";
+import { processTimeSchedule } from "./timeSplit";
 
 dayjs.extend(isBetween);
 
+const grandChildren: CallScheduleBase[] = [];
+const children: CallScheduleBase[] = [];
+
+const saveChild = (day: number, celebId: number) => {
+  const entity = CallScheduleBase.create({
+    celebId,
+    day,
+    children: grandChildren,
+  });
+  children.push(entity);
+  grandChildren.length = 0;
+};
+
 const createSchedule = async (
-  baseLevelSchedule: CallScheduleInput[],
-  firstLevelSchedule: CallScheduleInput[],
-  secondLevelSchedule: CallScheduleInput[]
+  celebId: number,
+  schedule: { day: DayOfTheWeek; startTime: string; endTime: string; derivedSchedule: CallScheduleInput[] }[]
 ) => {
-  const CallScheduleRepo = getConnection().getRepository(CallSchedule);
-  const baseScheduleList: CallSchedule[] = [];
-  const firstLevelList: CallSchedule[] = [];
-  const secondLevelList: CallSchedule[] = [];
   try {
-    baseLevelSchedule.forEach((x) => {
-      const base = CallScheduleRepo.create({
-        celebId: x.celebId,
-        day: x.day,
-        startTime: dayjs(x.startTime).format("HH:mm:ss"),
-        endTime: dayjs(x.endTime).format("HH:mm:ss"),
-        level: 0,
-      });
-      baseScheduleList.push(base);
+    const groupedSchedule = _.groupBy(schedule, (obj) => obj.day);
+    const scheduleKeys = Object.keys(groupedSchedule);
+    scheduleKeys.forEach((x) => {
+      const grouped = groupedSchedule[x];
+      for (let y = 0; y < grouped.length; y++) {
+        const entity = CallScheduleBase.create({
+          celebId,
+          startTime: grouped[y].startTime,
+          endTime: grouped[y].endTime,
+          children: grouped[y].derivedSchedule,
+        });
+        grandChildren.push(entity);
+        if (y === grouped.length - 1) saveChild(parseInt(x), celebId);
+      }
     });
-    const baseLevelResult = await CallScheduleRepo.save(baseScheduleList);
-    baseLevelResult.forEach((x) => {
-      firstLevelSchedule.forEach((y) => {
-        if (y.day === x.day) {
-          const firstLevel = CallScheduleRepo.create({
-            celebId: y.celebId,
-            day: y.day,
-            startTime: dayjs(y.startTime).format("HH:mm:ss"),
-            endTime: dayjs(y.endTime).format("HH:mm:ss"),
-            level: 1,
-            parent: x,
-          });
-          firstLevelList.push(firstLevel);
-        }
-      });
+
+    const parentEntity = CallScheduleBase.create({
+      celebId,
+      children,
     });
-    const firstLevelResult = await CallScheduleRepo.save(firstLevelList);
-    firstLevelResult.forEach((y) => {
-      secondLevelSchedule.forEach((z) => {
-        const dateString = dayjs().format("YYYY-MM-DD") + " ";
-        const formattedStartTime = dayjs(z.startTime).format("HH:mm:ss");
-        const parentStartTime = dayjs(dateString + y.startTime);
-        const parentEndTime = dayjs(dateString + y.endTime);
-        const startTimeWithDate = dayjs(dateString + formattedStartTime);
-        if (z.day === y.day && dayjs(startTimeWithDate).isBetween(parentStartTime, parentEndTime, null, "[)")) {
-          const secondLevel = CallScheduleRepo.create({
-            celebId: z.celebId,
-            day: z.day,
-            startTime: formattedStartTime,
-            endTime: dayjs(z.endTime).format("HH:mm:ss"),
-            level: 2,
-            parent: y,
-          });
-          secondLevelList.push(secondLevel);
-        }
-      });
-    });
-    await CallScheduleRepo.save(secondLevelList);
+
+    await CallScheduleBase.save(parentEntity);
     return true;
   } catch (err) {
     console.error(err);
@@ -72,18 +55,23 @@ const createSchedule = async (
   }
 };
 
-export const scheduleCall = async (celebId: number, inputArray: CallScheduleInput[]) => {
-  const baseLevelSchedule: CallScheduleInput[] = inputArray.map((x) => {
-    return {
-      celebId,
-      day: x.day,
-      startTime: x.startTime,
-      endTime: x.endTime,
-    };
-  });
-
-  const firstLevelSchedule = toOneHourCallIntervals(baseLevelSchedule);
-  const secondLevelSchedule = toTenMinuteCallIntervals(firstLevelSchedule);
-  const result = await createSchedule(baseLevelSchedule, firstLevelSchedule, secondLevelSchedule);
+export const scheduleCallSlot = async (celebId: number, inputArray: CallScheduleInput[]) => {
+  const schedule = processTimeSchedule(inputArray);
+  const result = await createSchedule(celebId, schedule);
   return result;
 };
+
+// export const updateSchedule = async (celebId: number, updateItems: CallScheduleInput[]) => {
+//   const baseLevelSchedule: CallScheduleInput[] = updateItems.map((x) => {
+//     return {
+//       celebId,
+//       day: x.day,
+//       startTime: x.startTime,
+//       endTime: x.endTime,
+//     };
+//   });
+//   const result = await scheduleCall(celebId, updateItems);
+//   return result;
+//   // const CallScheduleRepo = getConnection().getRepository(CallSchedule);
+// };
+//

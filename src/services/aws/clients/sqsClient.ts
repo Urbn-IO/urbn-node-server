@@ -1,4 +1,4 @@
-import { SQSClientConfig, SQS } from "@aws-sdk/client-sqs";
+import { SQSClientConfig, SQSClient } from "@aws-sdk/client-sqs";
 
 const region = process.env.AWS_SECONDARY_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;
@@ -12,5 +12,5 @@ const sqsConfig: SQSClientConfig = {
   },
 };
 
-const client = new SQS(sqsConfig);
+const client = new SQSClient(sqsConfig);
 export default client;
