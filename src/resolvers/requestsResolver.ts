@@ -34,9 +34,8 @@ export class RequestsResolver {
     }
     const celebId = Input.celebId;
     const celeb = await Celebrity.findOne(celebId);
-    if (!celeb) {
-      return { errorMessage: "We cannot find this celebrity" };
-    }
+    if (!celeb) return { errorMessage: "We cannot find this celebrity" };
+    // if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
     const acceptsShoutOut = celeb.acceptShoutOut;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
@@ -48,9 +47,7 @@ export class RequestsResolver {
     const requestorName = user?.firstName;
     const transactionAmount = celeb.shoutOutRatesInNaira;
     const paid = new Payments().pay();
-    if (!paid) {
-      return { errorMessage: "Payment Error!" };
-    }
+    if (!paid) return { errorMessage: "Payment Error!" };
     const request = {
       requestor: userId,
       requestorName,
@@ -83,9 +80,8 @@ export class RequestsResolver {
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
     const celeb = await Celebrity.findOne(celebId);
-    if (!celeb) {
-      return { errorMessage: "We cannot find this celebrity" };
-    }
+    if (!celeb) return { errorMessage: "We cannot find this celebrity" };
+    if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
@@ -96,16 +92,14 @@ export class RequestsResolver {
     else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
     const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
     const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
-    if (!availableSlot || availableSlot.available === false) {
+    if (!availableSlot || availableSlot.available === (false || null)) {
       return {
         errorMessage: "The selected time slot is no longer available, please select another time for this call",
       };
     }
 
     const paid = new Payments().pay();
-    if (!paid) {
-      return { errorMessage: "Payment Error!" };
-    }
+    if (!paid) return { errorMessage: "Payment Error!" };
     const user = await User.findOne({
       where: { userId },
       select: ["firstName"],

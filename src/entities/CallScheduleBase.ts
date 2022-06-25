@@ -2,12 +2,11 @@ import { Field, Int, ObjectType } from "type-graphql";
 import { Entity, Tree, Column, PrimaryGeneratedColumn, TreeChildren, TreeParent, Index, BaseEntity } from "typeorm";
 import { DayOfTheWeek } from "../types";
 
-// import { DayOfTheWeek } from "../types";
-
 @ObjectType()
 @Entity("call_schedule")
 @Tree("closure-table")
 export class CallScheduleBase extends BaseEntity {
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -19,7 +19,6 @@ export class Celebrity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field()
   @Column({ unique: true })
   userId!: string;
 

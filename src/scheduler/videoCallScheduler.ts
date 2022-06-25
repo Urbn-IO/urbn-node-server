@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import _ from "lodash";
+import { getConnection } from "typeorm";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { DayOfTheWeek } from "../types";
 import { CallScheduleInput } from "../utils/graphqlTypes";
@@ -61,17 +62,13 @@ export const scheduleCallSlot = async (celebId: number, inputArray: CallSchedule
   return result;
 };
 
-// export const updateSchedule = async (celebId: number, updateItems: CallScheduleInput[]) => {
-//   const baseLevelSchedule: CallScheduleInput[] = updateItems.map((x) => {
-//     return {
-//       celebId,
-//       day: x.day,
-//       startTime: x.startTime,
-//       endTime: x.endTime,
-//     };
-//   });
-//   const result = await scheduleCall(celebId, updateItems);
-//   return result;
-//   // const CallScheduleRepo = getConnection().getRepository(CallSchedule);
-// };
-//
+export const updateCallSlot = async (celebId: number, updateItems: CallScheduleInput[]) => {
+  const callScheduleTreerepo = getConnection().getTreeRepository(CallScheduleBase);
+  const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: null } });
+  if (parent) {
+    await callScheduleTreerepo.remove(parent);
+  }
+  const schedule = processTimeSchedule(updateItems);
+  const result = await createSchedule(celebId, schedule);
+  return result;
+};

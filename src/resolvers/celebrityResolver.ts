@@ -14,7 +14,7 @@ import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
 import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
-import { scheduleCallSlot } from "../scheduler/videoCallScheduler";
+import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallScheduler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 
 @Resolver()
@@ -147,20 +147,20 @@ export class CelebrityResolver {
     } else return false;
   }
 
-  // @Mutation(() => Boolean)
-  // @UseMiddleware(isAuthenticated)
-  // async updateVideoCallTimeSlots(
-  //   // @Arg("removedDays", () => [Number], { nullable: true }) removedDays: number[],
-  //   @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
-  //   @Ctx() { req }: AppContext
-  // ) {
-  //   const userId = req.session.userId;
-  //   const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
-  //   if (celeb && schedule.length > 0) {
-  //     const result = await scheduleCall(celeb.id, schedule);
-  //     return result;
-  //   } else return false;
-  // }
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuthenticated)
+  async updateVideoCallTimeSlots(
+    // @Arg("removedDays", () => [Number], { nullable: true }) removedDays: number[],
+    @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
+    @Ctx() { req }: AppContext
+  ) {
+    const userId = req.session.userId;
+    const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
+    if (celeb && schedule.length > 0) {
+      const result = await updateCallSlot(celeb.id, schedule);
+      return result;
+    } else return false;
+  }
 
   @Query(() => CallScheduleBase, { nullable: true })
   @UseMiddleware(isAuthenticated)
@@ -183,24 +183,6 @@ export class CelebrityResolver {
       return result;
     }
     return null;
-
-    // const parent = await callScheduleTreerepo.find({ where: { celebId, level: 0, locked: false } });
-    // const promise = parent.map(async (x) => {
-    //   const slots = await callScheduleTreerepo
-    //     .createDescendantsQueryBuilder("call_schedule", "call_schedule_closure", x)
-    //     .where("call_schedule.available = true")
-    //     .andWhere("call_schedule.level != 0")
-    //     .getMany();
-
-    //   return slots;
-    // });
-    // const scheduleArray2d = await Promise.all(promise);
-
-    // const ScheduleflatArray = scheduleArray2d.flat();
-
-    // const timeSlots = _.groupBy(ScheduleflatArray, (obj) => obj.day);
-
-    // return timeSlots;
   }
 
   @Query(() => [Celebrity], { nullable: true })
