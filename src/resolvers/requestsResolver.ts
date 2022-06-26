@@ -2,21 +2,21 @@ import crypto from "crypto";
 import { s3SecondaryClient } from "../services/aws/clients/s3Client";
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
+import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
 import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, videoUploadData } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
-import { ValidateShoutoutRecipient } from "../utils/requestValidations";
+import { ValidateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sendPushNotification } from "../services/notifications/handler";
 import { appendCdnLink } from "../utils/cdnHelper";
-import { deleteRoom } from "../utils/videoRoomManager";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
+import { deleteRoom } from "../services/video/videoRoomManager";
 
 @Resolver()
 export class RequestsResolver {
@@ -87,9 +87,14 @@ export class RequestsResolver {
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
     let callRequestType;
-    if (acceptsCallTypeA === true && Input.callType === 0) callRequestType = RequestType.CALL_TYPE_A;
-    else if (acceptsCallTypeB === true && Input.callType === 1) callRequestType = RequestType.CALL_TYPE_B;
-    else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
+    let callDurationInSeconds;
+    if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
+      callRequestType = RequestType.CALL_TYPE_A;
+      callDurationInSeconds = 190;
+    } else if (acceptsCallTypeB === true && Input.callType === CallType.CALL_TYPE_B) {
+      callRequestType = RequestType.CALL_TYPE_B;
+      callDurationInSeconds = 310;
+    } else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
     const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
     const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
     if (!availableSlot || availableSlot.available === (false || null)) {
@@ -125,6 +130,7 @@ export class RequestsResolver {
       requestAmountInNaira: transactionAmount,
       description: `Video call request from ${UserfirstName} to ${celebAlias}`,
       callScheduleId: availableSlot.id,
+      callDurationInSeconds,
       callRequestBegins,
       requestExpires,
       recepientAlias: celebAlias,
@@ -153,7 +159,7 @@ export class RequestsResolver {
     const userId = req.session.userId as string; //
     const bucketName = process.env.AWS_BUCKET_NAME;
     try {
-      const request = await ValidateShoutoutRecipient(userId, requestId);
+      const request = await ValidateRecipient(userId, requestId);
       if (request) {
         const owner = request.requestor;
         const celebAlias = request.recepientAlias;
@@ -188,7 +194,7 @@ export class RequestsResolver {
                 userId,
                 alias: celebAlias,
                 requestId: requestId,
-                owner: request.requestor,
+                owner,
               },
             },
           },

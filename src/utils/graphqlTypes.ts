@@ -39,17 +39,11 @@ export class RegisterCelebrityInputs {
   @Field()
   shoutOutRatesInNaira: string;
   @Field()
-  thumbnail: string;
-  @Field()
   _3minsCallRequestRatesInNaira: string;
   @Field()
   _5minsCallRequestRatesInNaira: string;
   @Field()
   description: string;
-  @Field()
-  image: string;
-  imageThumbnail: string;
-  imagePlaceholder: string;
   profileHash: string;
   userId: string | undefined;
 }

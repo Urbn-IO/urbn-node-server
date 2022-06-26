@@ -46,19 +46,14 @@ export const upsertCelebritySearchItem = async (user: User | undefined) => {
   }
 };
 
-export const upsertCategorySearchItem = async (
-  category: Categories[] | undefined
-) => {
+export const upsertCategorySearchItem = async (category: Categories[] | undefined) => {
   if (category) {
     const catObj = category.map((x) => ({
       category_id: x.id,
       category_name: x.name,
     }));
     try {
-      await client
-        .collections("category")
-        .documents()
-        .import(catObj, { action: "upsert" });
+      await client.collections("category").documents().import(catObj, { action: "upsert" });
     } catch (err) {
       console.log("typesense error: ", err);
     }

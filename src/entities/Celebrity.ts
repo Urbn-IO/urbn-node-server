@@ -71,10 +71,6 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  fanRatings?: string;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
   profileHash: string;
 
   @Field(() => String)

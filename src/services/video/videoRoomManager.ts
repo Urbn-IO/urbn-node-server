@@ -1,5 +1,5 @@
 import { getConnection } from "typeorm";
-import { CallRoom } from "../entities/CallRoom";
+import { CallRoom } from "../../entities/CallRoom";
 
 export const storeRoomName = async (requestId: number, roomName: string) => {
   await getConnection().query(

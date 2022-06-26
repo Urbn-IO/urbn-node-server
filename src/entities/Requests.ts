@@ -50,6 +50,9 @@ export class Requests extends BaseEntity {
   @Column({ nullable: true })
   callScheduleId: number;
 
+  @Column({ nullable: true })
+  callDurationInSeconds: number;
+
   @Column({ default: 0 })
   callAttempts: number;
 

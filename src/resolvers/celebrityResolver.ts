@@ -13,7 +13,6 @@ import { getConnection } from "typeorm";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
-import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
 import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallScheduler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 
@@ -24,72 +23,10 @@ export class CelebrityResolver {
   @UseMiddleware(isAuthenticated)
   async registerUserAsCeleb(
     @Ctx() { req }: AppContext,
-    @Arg("data") data: RegisterCelebrityInputs,
-    @Arg("categoryIds", () => [Int]) categoryIds: number[],
-    @Arg("customCategories", () => [String], { nullable: true })
-    newCats: string[]
+    @Arg("data") data: RegisterCelebrityInputs
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.userId = userId;
-    const thumbnail = data.thumbnail;
-    const image = `${data.image}_image.webp`;
-    const imageThumbnail = `${data.image}_thumbnail.webp`;
-    const imagePlaceholder = `${data.image}_placeholder.webp`;
-    const maxRate = 50000000;
-
-    if (
-      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data.shoutOutRatesInNaira) > maxRate
-    ) {
-      return { errorMessage: "Maximum price rate for any request exceeded" };
-    }
-
-    if (data.image) {
-      data.image = `${this.cdnUrl}/${image}`;
-      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
-      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
-    }
-    if (data.thumbnail) {
-      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
-    }
-    const hashString = hashRow(data);
-    data.profileHash = hashString;
-
-    try {
-      const celeb = Celebrity.create(data);
-      await celeb.save();
-
-      await User.update({ userId }, { celebrity: celeb });
-      const user = await User.findOne({
-        where: { userId },
-        relations: ["celebrity"],
-      });
-
-      const mappedCategories = await celebCategoriesMapper(userId, categoryIds, newCats);
-
-      if (mappedCategories) {
-        upsertCelebritySearchItem(user);
-      }
-
-      return { success: `${user?.celebrity?.alias} registered successfully` };
-    } catch (err) {
-      return { errorMessage: "An Error Occured" };
-    }
-  }
-
-  //update user details
-  @Mutation(() => GenericResponse, { nullable: true })
-  @UseMiddleware(isAuthenticated)
-  async updateCelebDetails(
-    @Arg("data") data: UpdateCelebrityInputs,
-    @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
-    const userId = req.session.userId as string;
-    const thumbnail = data.thumbnail;
-    const image = `${data.image}_image.webp`;
-    const imageThumbnail = `${data.image}_thumbnail.webp`;
-    const imagePlaceholder = `${data.image}_placeholder.webp`;
     const maxRate = 50000000;
 
     if (
@@ -101,33 +38,79 @@ export class CelebrityResolver {
     }
 
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
-      return { errorMessage: "Minimum of one request type must be selected" };
-    }
-    if (Object.keys(data).length === 0) {
-      return { errorMessage: "Nothing to update" };
-    }
-    if (data.image) {
-      data.image = `${this.cdnUrl}/${image}`;
-      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
-      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
-    }
-    if (data.thumbnail) {
-      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
+      return { errorMessage: "You have to accept at least one type of request" };
     }
 
     const hashString = hashRow(data);
     data.profileHash = hashString;
 
-    const user = await getConnection()
-      .getRepository(User)
-      .createQueryBuilder("user")
-      .where("user.userId = :userId", { userId })
-      .leftJoinAndSelect("user.celebrity", "celebrity")
-      .getOne();
+    try {
+      const celeb = Celebrity.create(data);
+      const celebrity = await celeb.save();
 
-    upsertCelebritySearchItem(user);
+      await User.update({ userId }, { celebrity });
+      return { success: `Soft creation for ${celebrity.alias} successful` };
+    } catch (err) {
+      return { errorMessage: "An Error Occured" };
+    }
+  }
 
-    return { success: "updated succesfully!" };
+  //update celeb details
+  @Mutation(() => GenericResponse, { nullable: true })
+  @UseMiddleware(isAuthenticated)
+  async updateCelebDetails(
+    @Arg("data") data: UpdateCelebrityInputs,
+    @Ctx() { req }: AppContext
+  ): Promise<GenericResponse> {
+    const userId = req.session.userId as string;
+    const maxRate = 50000000;
+
+    if (Object.keys(data).length === 0) {
+      return { errorMessage: "Nothing to update" };
+    }
+
+    if (
+      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
+      parseInt(data.shoutOutRatesInNaira) > maxRate
+    ) {
+      return { errorMessage: "Maximum price rate for any request exceeded" };
+    }
+
+    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
+      return { errorMessage: "You have to accept at least one type of request" };
+    }
+
+    if (data.image) {
+      const image = `${data.image}_image.webp`;
+      const imageThumbnail = `${data.image}_thumbnail.webp`;
+      const imagePlaceholder = `${data.image}_placeholder.webp`;
+      data.image = `${this.cdnUrl}/${image}`;
+      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
+      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
+    }
+    if (data.thumbnail) {
+      const thumbnail = data.thumbnail;
+      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
+    }
+
+    const hashString = hashRow(data);
+    data.profileHash = hashString;
+    try {
+      await Celebrity.update({ userId }, data);
+      const user = await getConnection()
+        .getRepository(User)
+        .createQueryBuilder("user")
+        .where("user.userId = :userId", { userId })
+        .leftJoinAndSelect("user.celebrity", "celebrity")
+        .getOne();
+
+      upsertCelebritySearchItem(user);
+
+      return { success: "updated succesfully!" };
+    } catch (err) {
+      return { errorMessage: "An Error Occured" };
+    }
   }
 
   @Mutation(() => Boolean)
@@ -150,7 +133,6 @@ export class CelebrityResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
   async updateVideoCallTimeSlots(
-    // @Arg("removedDays", () => [Number], { nullable: true }) removedDays: number[],
     @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
     @Ctx() { req }: AppContext
   ) {
