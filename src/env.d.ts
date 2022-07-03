@@ -2,6 +2,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       APP_NAME: string;
+      APP_BUNDLE_NAME: string;
       AWS_BUCKET_NAME: string;
       AWS_PUBLIC_BUCKET_NAME: string;
       AWS_PRIMARY_REGION: string;
@@ -14,10 +15,12 @@ declare global {
       AWS_SQS_VOD_QUEUE_URL: string;
       DATABASE_URL: string;
       REDIS_URL: string;
-      PORT: string;
+      REDIS_HOST: string;
+      REDIS_PORT: string;
       SESSION_SECRET: string;
       PAYSTACK_PUBLIC_KEY: string;
       PAYSTACK_SECRET_KEY: string;
+      PORT: string;
       TYPESENSE_API_KEY: string;
       TYPESENSE_NODE_CLUSTER: string;
       TWILIO_ACCOUNT_SID: string;
@@ -28,4 +31,4 @@ declare global {
   }
 }
 
-export {}
+export {};

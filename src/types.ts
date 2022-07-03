@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { Redis } from "ioredis";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
+import { RedisPubSub } from "graphql-redis-subscriptions";
 
 export type AppContext = {
   req: Request;
   res: Response;
   redis: Redis;
+  pubsub: RedisPubSub;
   categoriesLoader: ReturnType<typeof createCategoriesLoader>;
   celebsLoader: ReturnType<typeof createCelebsLoader>;
 };
@@ -18,10 +20,12 @@ declare module "express-session" {
 }
 
 export interface NotificationsPayload {
-  messageTitle: string;
-  messageBody: string;
+  messageTitle?: string;
+  messageBody?: string;
   tokens: string[];
-  data: NotificationsRoute;
+  data?: { [key: string]: string };
+  priority?: NotificationPriority;
+  ttl?: number;
 }
 
 export interface VideoOutput {
@@ -39,10 +43,6 @@ export interface VideoOutput {
   contentType: number | undefined;
 }
 
-type NotificationsRoute = {
-  routeCode: NotificationRouteCode;
-};
-
 export type RequestInput = {
   requestor: string;
   requestorName: string | undefined;
@@ -53,6 +53,11 @@ export type RequestInput = {
   description: string;
   requestExpires: Date;
 };
+
+export enum NotificationPriority {
+  HIGH,
+  NORMAL,
+}
 
 export enum RequestStatus {
   PENDING = "pending",
@@ -71,6 +76,11 @@ export enum RequestType {
 export enum CallType {
   CALL_TYPE_A,
   CALL_TYPE_B,
+}
+
+export enum SubscriptionTopics {
+  VIDEO_CALL = "video_call",
+  TEST_TOPIC = "test",
 }
 
 export enum NotificationRouteCode {

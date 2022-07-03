@@ -2,7 +2,7 @@ import { NotificationRouteCode, RequestStatus, VideoOutput } from "../types";
 import { Shoutout } from "../entities/Shoutout";
 import { User } from "../entities/User";
 import { getConnection, In } from "typeorm";
-import { sendPushNotification } from "../services/notifications/handler";
+import { sendInstantNotification } from "../services/notifications/handler";
 import { Requests } from "../entities/Requests";
 
 export const saveShoutout = async (data: VideoOutput[]) => {
@@ -40,7 +40,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
       .where("id In (:...requestIds)", { requestIds })
       .execute();
 
-    sendPushNotification(
+    sendInstantNotification(
       ownerIds as string[],
       "New Shoutout!",
       "You have received a new shoutout video",

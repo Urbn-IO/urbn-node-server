@@ -1,4 +1,4 @@
-import tokensManager from "../utils/tokensManager";
+import tokensManager from "../services/notifications/tokensManager";
 import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";

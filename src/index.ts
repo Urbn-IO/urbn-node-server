@@ -9,6 +9,7 @@ import router from "./api/webhook";
 import searchRouter from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
+import pubsub from "./pubsub";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -17,9 +18,16 @@ import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
 import { entities, resolvers } from "./register";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+import { createServer } from "http";
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import { getUserId } from "./utils/helpers";
+
 // import { initializeSearch } from "./services/appSearch/collections";
 
 const app = express();
+const httpServer = createServer(app);
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
@@ -40,10 +48,11 @@ const main = async () => {
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
+  const store = new RedisStore({ client: redis, disableTouch: true });
   app.use(
     session({
       name: COOKIE_NAME,
-      store: new RedisStore({ client: redis, disableTouch: true }),
+      store,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 150, //max cookie age of 150 days
         httpOnly: true,
@@ -72,16 +81,61 @@ const main = async () => {
   app.use("/paystack-webhook", router);
   app.use("/text-search", searchRouter);
 
+  const schema = await buildSchema({
+    resolvers,
+    validate: false,
+    dateScalarMode: "isoDate",
+    pubSub: pubsub,
+  });
+
+  // Create our WebSocket server using the HTTP server we just set up.
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+  });
+
+  // Save the returned server's info so we can shutdown this server later
+  const serverCleanup = useServer(
+    {
+      schema,
+      context: async ({ extra }) => {
+        const userId = await getUserId(extra.request.headers.cookie as string, store);
+        if (!userId) {
+          throw new Error("User not logged in");
+        }
+        return userId;
+      },
+      onDisconnect: () => {
+        console.log("socket connection disconnected 🔌");
+      },
+    },
+    wsServer
+  );
+
   const apolloServer = new ApolloServer({
-    schema: await buildSchema({
-      resolvers,
-      validate: false,
-      dateScalarMode: "isoDate",
-    }),
+    schema,
+    cache: "bounded",
+    csrfPrevention: true,
+    plugins: [
+      // Proper shutdown for the HTTP server.
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+
+      // Proper shutdown for the WebSocket server.
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
     context: ({ req, res }) => ({
       req,
       res,
       redis,
+      pubsub,
       categoriesLoader: createCategoriesLoader(),
       celebsLoader: createCelebsLoader(),
     }),
@@ -97,8 +151,8 @@ const main = async () => {
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
-  app.listen(Port, () => {
-    console.log(`running on port ${Port}`);
+  httpServer.listen(Port, () => {
+    console.log(`server running on port ${Port} 🚀🚀`);
     console.log("Production Environment: ", __prod__);
   });
 };

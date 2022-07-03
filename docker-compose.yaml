@@ -12,6 +12,8 @@ services:
     depends_on:
       - 'db'
       - 'redis'
+    env_file:
+      - .env
     expose:
       - 8000
   reverse-proxy:
@@ -45,7 +47,7 @@ services:
     container_name: 'redis'
     restart: 'unless-stopped'
     ports:
-      - '6379:6379'
+      - '6379:${REDIS_PORT}'
 
 volumes:
   data:

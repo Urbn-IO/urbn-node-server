@@ -9,10 +9,10 @@ import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
 import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, videoUploadData } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
-import { ValidateRecipient } from "../utils/requestValidations";
+import { validateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { sendPushNotification } from "../services/notifications/handler";
+import { sendInstantNotification } from "../services/notifications/handler";
 import { appendCdnLink } from "../utils/cdnHelper";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
@@ -60,7 +60,7 @@ export class RequestsResolver {
     };
     const save = await Requests.create(request).save();
     if (save) {
-      sendPushNotification(
+      sendInstantNotification(
         [celeb.userId],
         "New Request Alert",
         "You have received a new shoutout request",
@@ -139,7 +139,7 @@ export class RequestsResolver {
     const save = await Requests.create(request).save();
     if (save) {
       CallScheduleRepo.update(availableSlot.id, { available: false });
-      sendPushNotification(
+      sendInstantNotification(
         [celeb.userId],
         "New Request Alert",
         "You have received a new video call request",
@@ -159,7 +159,7 @@ export class RequestsResolver {
     const userId = req.session.userId as string; //
     const bucketName = process.env.AWS_BUCKET_NAME;
     try {
-      const request = await ValidateRecipient(userId, requestId);
+      const request = await validateRecipient(userId, requestId);
       if (request) {
         const owner = request.requestor;
         const celebAlias = request.recepientAlias;
@@ -241,7 +241,7 @@ export class RequestsResolver {
         ).raw[0];
         const requestType = request.requestType === "shoutout" ? "shoutout" : "video call";
         const celebAlias = request.recepientAlias;
-        sendPushNotification(
+        sendInstantNotification(
           [request.requestor],
           "Response Alert",
           `Your ${requestType} request to ${celebAlias} has been ${status}`,

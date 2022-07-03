@@ -1,11 +1,7 @@
 import { getConnection, In } from "typeorm";
-import { FcmTokens } from "../entities/FcmTokens";
+import { FcmTokens } from "../../entities/FcmTokens";
 
-export const addFcmToken = async (
-  userId: string,
-  deviceId: string,
-  fcmToken: string
-): Promise<string> => {
+export const addFcmToken = async (userId: string, deviceId: string, fcmToken: string): Promise<string> => {
   try {
     const fcmTokens = FcmTokens.create({ userId, deviceId, token: fcmToken });
     await fcmTokens.save();
@@ -32,10 +28,7 @@ export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
 };
 
 export const deleteFcmTokens = async (userId?: string, tokens?: string[]) => {
-  const queryBuilder = getConnection()
-    .createQueryBuilder()
-    .delete()
-    .from(FcmTokens);
+  const queryBuilder = getConnection().createQueryBuilder().delete().from(FcmTokens);
 
   if (userId) {
     queryBuilder.where("userId = :userId", { userId });

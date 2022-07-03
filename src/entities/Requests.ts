@@ -14,8 +14,8 @@ export class Requests extends BaseEntity {
   requestor!: string;
 
   @Field()
-  @Column({ nullable: true })
-  requestorName?: string;
+  @Column()
+  requestorName: string;
 
   @Field()
   @Column()

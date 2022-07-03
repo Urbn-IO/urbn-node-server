@@ -167,6 +167,8 @@ export class CallTokenResponse {
   @Field(() => String, { nullable: true })
   roomName?: string;
 
+  requestor?: string;
+
   @Field({ nullable: true })
   errorMessage?: string;
 }
@@ -222,4 +224,35 @@ export class s3SignedObject {
 
   @Field({ nullable: true })
   fileName?: string;
+}
+
+@ObjectType()
+export class Person {
+  @Field()
+  name: string;
+
+  @Field(() => Int)
+  age: number;
+
+  @Field()
+  gender: string;
+}
+@InputType()
+export class PersonInput {
+  @Field()
+  name: string;
+
+  @Field(() => Int)
+  age: number;
+
+  @Field()
+  gender: string;
+}
+
+@ObjectType()
+export class SubPayload {
+  @Field()
+  newPerson: Person;
+  @Field()
+  userId: string;
 }

@@ -1,22 +1,20 @@
-import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
-import tokensManager from "../../utils/tokensManager";
-import { NotificationsPayload } from "../../types";
+import { AndroidConfig, ApnsConfig, getMessaging, MulticastMessage, Notification } from "firebase-admin/messaging";
+import tokensManager from "./tokensManager";
 
-export const propagateMessage = async ({ messageTitle, messageBody, tokens, data }: NotificationsPayload) => {
+export const propagateMessage = async (
+  tokens: string[],
+  notification?: Notification,
+  android?: AndroidConfig,
+  apns?: ApnsConfig,
+  data?: {
+    [key: string]: string;
+  }
+) => {
   try {
     const message: MulticastMessage = {
-      notification: {
-        title: messageTitle,
-        body: messageBody,
-      },
-      android: {
-        priority: "high",
-      },
-      apns: {
-        headers: {
-          "apns-priority": "10",
-        },
-      },
+      notification,
+      android,
+      apns,
       data,
       tokens,
     };

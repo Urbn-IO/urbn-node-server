@@ -1,12 +1,13 @@
-import { NotificationRouteCode, NotificationsPayload } from "../../types";
+import { NotificationPriority, NotificationRouteCode, NotificationsPayload } from "../../types";
 import { notificationsManager } from "./notificationsManager";
-import tokensManager from "../../utils/tokensManager";
+import tokensManager from "./tokensManager";
 
-export async function sendPushNotification(
+export async function sendInstantNotification(
   userIds: string[],
   messageTitle: string,
   messageBody: string,
-  route: NotificationRouteCode = NotificationRouteCode.DEFAULT
+  route: NotificationRouteCode = NotificationRouteCode.DEFAULT,
+  priority: NotificationPriority = NotificationPriority.HIGH
 ) {
   const tokens = await tokensManager().getNotificationTokens(userIds);
   const message: NotificationsPayload = {
@@ -16,6 +17,19 @@ export async function sendPushNotification(
       routeCode: route,
     },
     tokens,
+    priority,
   };
-  notificationsManager(message).sendInstantMessage();
+  notificationsManager().sendInstantMessage(message);
+}
+
+export async function sendCallNotification(userId: string, requestId: number, callerName: string) {
+  const tokens = await tokensManager().getNotificationTokens([userId]);
+  const message: NotificationsPayload = {
+    data: {
+      requestId: requestId.toString(),
+      callerName,
+    },
+    tokens,
+  };
+  notificationsManager().sendCallNotification(message);
 }

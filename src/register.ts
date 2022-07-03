@@ -15,6 +15,7 @@ import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
 import { CelebrityResolver } from "./resolvers/celebrityResolver";
 import { PaymentsResolver } from "./resolvers/paymentsResolver";
 import { RequestsResolver } from "./resolvers/requestsResolver";
+import { SubscriptionTestResolver } from "./resolvers/subscribTestResolver";
 import { UserResolver } from "./resolvers/userResolver";
 import { VideoCallResolver } from "./resolvers/videoCallResolver";
 
@@ -41,4 +42,5 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   RequestsResolver,
   PaymentsResolver,
   VideoCallResolver,
+  SubscriptionTestResolver,
 ];

@@ -1,7 +1,6 @@
 import crypto from "crypto";
 import client from "./twilio/client";
 import { jwt } from "twilio";
-import { storeRoomName } from "./videoRoomManager";
 
 export const createVideoCallRoom = async (callDurationInSeconds: number) => {
   try {
@@ -28,7 +27,7 @@ export const createVideoCallRoom = async (callDurationInSeconds: number) => {
   }
 };
 
-export const getVideoCallToken = (requestId: number, identity: string, roomName: string) => {
+export const getVideoCallToken = (identity: string[], roomName: string) => {
   const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
   const twilioApiKey = process.env.TWILIO_API_KEY;
   const twilioApiSecret = process.env.TWILIO_API_SECRET;
@@ -38,13 +37,16 @@ export const getVideoCallToken = (requestId: number, identity: string, roomName:
   const videoGrant = new VideoGrant({
     room: roomName,
   });
-  const token = new AccessToken(twilioAccountSid, twilioApiKey, twilioApiSecret, {
-    identity,
-    ttl: 120,
+
+  const tokens = identity.map((x) => {
+    const token = new AccessToken(twilioAccountSid, twilioApiKey, twilioApiSecret, {
+      identity: x,
+      ttl: 120,
+    });
+    token.addGrant(videoGrant);
+    // Serialize the token to a JWT string and return
+    return token.toJwt();
   });
-  token.addGrant(videoGrant);
-  // Serialize the token to a JWT string
-  const callToken = token.toJwt();
-  storeRoomName(requestId, roomName);
-  return callToken;
+
+  return tokens;
 };

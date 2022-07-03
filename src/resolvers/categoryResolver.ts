@@ -11,7 +11,8 @@ export class CategoryResolver {
   async getCategories(
     @Arg("categoryId", () => Int, { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,
-    @Arg("isPrimary", { defaultValue: null }) primary: boolean,
+    @Arg("withCelebs", { defaultValue: false }) withCelebs: boolean,
+    @Arg("isPrimary", { defaultValue: false }) primary: boolean,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
@@ -33,9 +34,14 @@ export class CategoryResolver {
       .orderBy("categories.createdAt", "DESC")
       .take(maxLimit);
 
-    if (primary !== null) {
+    if (primary) {
       queryBuilder.where('categories."primary" = :primary', { primary });
     }
+
+    if (withCelebs) {
+      queryBuilder.andWhere("celebrity is not null");
+    }
+
     if (cursor) {
       queryBuilder.andWhere('categories."createdAt" < :cursor', {
         cursor: new Date(parseInt(cursor)),
