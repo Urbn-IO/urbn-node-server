@@ -3,7 +3,7 @@ import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql
 import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
-import { upsertCategorySearchItem } from "../services/appSearch/addSearchItem";
+import { upsertCategorySearchItem } from "../services/search/addSearchItem";
 
 @Resolver()
 export class CategoryResolver {

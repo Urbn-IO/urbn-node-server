@@ -150,6 +150,19 @@ export class CardResponse {
   @Field({ nullable: true })
   errorMessage?: string;
 }
+
+@ObjectType()
+export class InitializeCardResponse {
+  @Field(() => String, { nullable: true })
+  authUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  ref?: string;
+
+  @Field({ nullable: true })
+  errorMessage?: string;
+}
+
 @ObjectType()
 export class GenericResponse {
   @Field(() => String, { nullable: true })
@@ -174,7 +187,7 @@ export class CallTokenResponse {
 }
 
 @ObjectType()
-class customVideoMetadata {
+class CustomVideoMetadata {
   @Field()
   userId: string;
 
@@ -192,33 +205,33 @@ class customVideoMetadata {
 }
 
 @ObjectType()
-class videoMetadata {
+class VideoMetadata {
   @Field(() => String)
   srcVideo: string;
 
-  @Field(() => customVideoMetadata)
-  customMetadata: customVideoMetadata;
+  @Field(() => CustomVideoMetadata)
+  customMetadata: CustomVideoMetadata;
 }
 @ObjectType()
-export class videoData {
+export class VideoData {
   @Field(() => String)
   videoUrl: string;
   @Field(() => String)
   metadataUrl: string;
-  @Field(() => videoMetadata)
-  metadata: videoMetadata;
+  @Field(() => VideoMetadata)
+  metadata: VideoMetadata;
 }
 
 @ObjectType()
-export class videoUploadData {
-  @Field(() => videoData, { nullable: true })
-  videoData?: videoData;
+export class VideoUploadData {
+  @Field(() => VideoData, { nullable: true })
+  videoData?: VideoData;
   @Field({ nullable: true })
   errorMessage?: string;
 }
 
 @ObjectType()
-export class s3SignedObject {
+export class S3SignedObject {
   @Field()
   signedUrl: string;
 

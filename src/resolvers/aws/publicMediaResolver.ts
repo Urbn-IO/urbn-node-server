@@ -6,18 +6,18 @@ import { AppContext } from "../../types";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { isAuthenticated } from "../../middleware/isAuthenticated";
-import { s3SignedObject } from "../../utils/graphqlTypes";
+import { S3SignedObject } from "../../utils/graphqlTypes";
 
 @Resolver()
 export class PublicMediaResolver {
   bucketName = process.env.AWS_PUBLIC_BUCKET_NAME;
 
-  @Query(() => s3SignedObject)
+  @Query(() => S3SignedObject)
   @UseMiddleware(isAuthenticated)
   async getPublicFileUploadUrl(
     @Arg("isHomeThumbnail") isHomeThumbnail: boolean,
     @Ctx() { req }: AppContext
-  ): Promise<s3SignedObject> {
+  ): Promise<S3SignedObject> {
     const userId = req.session.userId;
     const randomNumber = Math.random().toString();
     const datetime = dayjs().format("DD-MM-YYYY");
@@ -41,9 +41,9 @@ export class PublicMediaResolver {
     return { signedUrl, fileName: Key };
   }
 
-  @Query(() => s3SignedObject)
+  @Query(() => S3SignedObject)
   @UseMiddleware(isAuthenticated)
-  async getPublicFileDeleteUrl(@Arg("key") key: string): Promise<s3SignedObject> {
+  async getPublicFileDeleteUrl(@Arg("key") key: string): Promise<S3SignedObject> {
     const s3Command = new DeleteObjectCommand({
       Bucket: this.bucketName,
       Key: key,

@@ -12,7 +12,7 @@ import { AppContext } from "../types";
 import { getConnection } from "typeorm";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
-import { upsertCelebritySearchItem } from "../services/appSearch/addSearchItem";
+import { upsertCelebritySearchItem } from "../services/search/addSearchItem";
 import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallScheduler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 

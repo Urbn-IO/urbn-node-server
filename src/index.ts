@@ -5,7 +5,7 @@ import cors from "cors";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-import router from "./api/webhook";
+import router from "./services/payments/webhooks/paystack";
 import searchRouter from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
@@ -78,7 +78,7 @@ const main = async () => {
     })
   );
 
-  app.use("/paystack-webhook", router);
+  app.use("/paystack", router);
   app.use("/text-search", searchRouter);
 
   const schema = await buildSchema({

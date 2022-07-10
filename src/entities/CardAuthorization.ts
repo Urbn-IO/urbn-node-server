@@ -1,11 +1,5 @@
 import { Field, Int, ObjectType } from "type-graphql";
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 
 @ObjectType()
@@ -15,16 +9,13 @@ export class CardAuthorization extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
-  userId!: string;
-
-  @Column()
+  @Column({ nullable: true })
   accountName!: string;
 
   @Column()
   email!: string;
 
-  @Column()
+  @Column({ unique: true })
   authorizationCode!: string;
 
   @Field()
@@ -51,7 +42,7 @@ export class CardAuthorization extends BaseEntity {
   @Column()
   channel!: string;
 
-  @Column()
+  @Column({ unique: true })
   signature!: string;
 
   @Column()
@@ -59,6 +50,10 @@ export class CardAuthorization extends BaseEntity {
 
   @Column()
   countryCode!: string;
+
+  @Field(() => String)
+  @CreateDateColumn({ type: "timestamp" })
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.cards)
   user: User;

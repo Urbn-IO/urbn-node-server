@@ -1,6 +1,16 @@
 import { RequestStatus, RequestType } from "../types";
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Transactions } from "./Transactions";
 
 @ObjectType()
 @Entity()
@@ -35,7 +45,7 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
-  requestAmountInNaira!: string;
+  amount!: string;
 
   @Field()
   @Column()
@@ -43,8 +53,14 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Index()
-  @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PENDING })
+  @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PROCESSING })
   status: RequestStatus;
+
+  @OneToOne(() => Transactions, {
+    nullable: true,
+  })
+  @JoinColumn()
+  transaction?: Transactions;
 
   @Index()
   @Column({ nullable: true })

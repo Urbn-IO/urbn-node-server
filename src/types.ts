@@ -49,7 +49,7 @@ export type RequestInput = {
   recepient: string;
   recepientAlias: string | undefined;
   recepientThumbnail: string;
-  requestAmountInNaira: string;
+  amount: string;
   description: string;
   requestExpires: Date;
 };
@@ -63,6 +63,7 @@ export enum RequestStatus {
   PENDING = "pending",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
+  PROCESSING = "processing",
   FULFILLED = "fulfilled",
   UNFULFILLED = "unfulfilled",
 }

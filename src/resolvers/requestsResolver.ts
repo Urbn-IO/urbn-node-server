@@ -5,9 +5,8 @@ import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-gr
 import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { Payments } from "../services/payments/payments";
 import { Brackets, getConnection } from "typeorm";
-import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, videoUploadData } from "../utils/graphqlTypes";
+import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, VideoUploadData } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
 import { validateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -17,6 +16,10 @@ import { appendCdnLink } from "../utils/cdnHelper";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import { deleteRoom } from "../services/video/videoRoomManager";
+import paymentManager from "../services/payments/payments";
+import { CardAuthorization } from "../entities/CardAuthorization";
+import createhashString from "../utils/createHashString";
+import { Transactions } from "../entities/Transactions";
 
 @Resolver()
 export class RequestsResolver {
@@ -24,6 +27,7 @@ export class RequestsResolver {
   @UseMiddleware(isAuthenticated)
   async createShoutoutRequest(
     @Arg("Input") Input: ShoutoutRequestInput,
+    @Arg("cardId", () => Int) cardId: number,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
@@ -32,40 +36,47 @@ export class RequestsResolver {
         errorMessage: "Invalid description length",
       };
     }
+    const card = await CardAuthorization.findOne(cardId, { select: ["authorizationCode"] });
+    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again" };
     const celebId = Input.celebId;
     const celeb = await Celebrity.findOne(celebId);
     if (!celeb) return { errorMessage: "We cannot find this celebrity" };
-    // if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
+    if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
     const acceptsShoutOut = celeb.acceptShoutOut;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
     const user = await User.findOne({
       where: { userId },
-      select: ["firstName"],
+      select: ["firstName", "email"],
     });
-    const requestorName = user?.firstName;
-    const transactionAmount = celeb.shoutOutRatesInNaira;
-    const paid = new Payments().pay();
-    if (!paid) return { errorMessage: "Payment Error!" };
+    if (!user) return { errorMessage: "An error ocuured while creating this request" };
+    const requestorName = user.firstName;
+    const email = user.email;
+    const transactionAmount = (parseInt(celeb.shoutOutRatesInNaira) * 100).toString();
+    const ref = createhashString([email, userId, celeb.id]);
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref);
+    if (!chargePayment) return { errorMessage: "Payment Error!" };
+    const transaction = Transactions.create({ reference: ref });
     const request = {
       requestor: userId,
       requestorName,
       recepient: celeb.userId,
-      requestAmountInNaira: transactionAmount,
+      amount: transactionAmount,
       description: Input.description,
       requestExpires: Input.requestExpiration,
       recepientAlias: celebAlias,
       recepientThumbnail: celebThumbnail,
+      transaction,
     };
-    const save = await Requests.create(request).save();
-    if (save) {
-      sendInstantNotification(
-        [celeb.userId],
-        "New Request Alert",
-        "You have received a new shoutout request",
-        NotificationRouteCode.RECEIVED_REQUEST
-      );
+    const result = await Requests.create(request).save();
+    if (result) {
+      // sendInstantNotification(
+      //   [celeb.userId],
+      //   "New Request Alert",
+      //   "You have received a new shoutout request",
+      //   NotificationRouteCode.RECEIVED_REQUEST
+      // );
       return { success: "Request Sent!" };
     }
     return { errorMessage: "Failed to create your request at this time. Try again later" };
@@ -103,7 +114,7 @@ export class RequestsResolver {
       };
     }
 
-    const paid = new Payments().pay();
+    const paid = true;
     if (!paid) return { errorMessage: "Payment Error!" };
     const user = await User.findOne({
       where: { userId },
@@ -127,7 +138,7 @@ export class RequestsResolver {
       requestorName: UserfirstName,
       recepient: celeb.userId,
       requestType: callRequestType,
-      requestAmountInNaira: transactionAmount,
+      amount: transactionAmount,
       description: `Video call request from ${UserfirstName} to ${celebAlias}`,
       callScheduleId: availableSlot.id,
       callDurationInSeconds,
@@ -150,12 +161,12 @@ export class RequestsResolver {
     return { errorMessage: "Failed to create your request at this time. Try again later" };
   }
 
-  @Mutation(() => videoUploadData)
+  @Mutation(() => VideoUploadData)
   @UseMiddleware(isAuthenticated)
   async fulfilShoutoutRequest(
     @Arg("requestId", () => Int) requestId: number,
     @Ctx() { req }: AppContext
-  ): Promise<videoUploadData> {
+  ): Promise<VideoUploadData> {
     const userId = req.session.userId as string; //
     const bucketName = process.env.AWS_BUCKET_NAME;
     try {

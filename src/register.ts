@@ -8,6 +8,7 @@ import { Celebrity } from "./entities/Celebrity";
 import { FcmTokens } from "./entities/FcmTokens";
 import { Requests } from "./entities/Requests";
 import { Shoutout } from "./entities/Shoutout";
+import { Transactions } from "./entities/Transactions";
 import { User } from "./entities/User";
 import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
 import { CategoryResolver } from "./resolvers/categoryResolver";
@@ -29,6 +30,7 @@ export const entities = [
   Shoutout,
   CallRoom,
   CallScheduleBase,
+  Transactions,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types

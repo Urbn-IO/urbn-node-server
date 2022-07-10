@@ -1,38 +1,50 @@
-import { chargePayment, initializePayment } from "../api/payments";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../types";
-import { CardResponse } from "../utils/graphqlTypes";
+import { CardResponse, InitializeCardResponse } from "../utils/graphqlTypes";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { User } from "../entities/User";
+import paymentManager from "../services/payments/payments";
 
 @Resolver()
 export class PaymentsResolver {
-  @Mutation(() => String)
+  @Mutation(() => InitializeCardResponse)
   @UseMiddleware(isAuthenticated)
-  async initPayment(@Arg("email") email: string, @Arg("amount") amount: string, @Ctx() { req }: AppContext) {
-    const convertedAmount = parseInt(amount) * 100;
-    const convertedAmountString = convertedAmount.toString();
-    const userId = req.session.userId;
-    if (!userId) {
-      return "User not Logged In";
+  async addCard(@Ctx() { req }: AppContext): Promise<InitializeCardResponse> {
+    const userId = req.session.userId as string;
+    const user = await User.findOne({ where: { userId }, select: ["email"] });
+    if (!user) {
+      return { errorMessage: "User not found" };
     }
-    const data = await initializePayment(email, userId, convertedAmountString);
-    return data;
+    const email = user.email;
+    const amount = 50 * 100;
+    const stringAmount = amount.toString();
+    const result = await paymentManager().initializeCard(email, userId, stringAmount);
+    if (!result) {
+      return { errorMessage: "An error occured while adding this card. Try another card or try again later" };
+    }
+    return result;
   }
 
-  @Mutation(() => String)
+  @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async payWithCard(@Arg("cardId") id: string, @Arg("amount") amount: string) {
-    const card = await CardAuthorization.findOne(id);
-    if (!card) {
-      return "There was an error while processing your payment! Try again with another card";
-    }
-    const email = card.email;
-    const authCode = card.authorizationCode;
-    const response = await chargePayment(email, amount, authCode);
-    return response;
+  async verifyNewCard(@Arg("ref") ref: string) {
+    const result = await paymentManager().verifyPayment(ref, true);
+    return result;
   }
+
+  // @Mutation(() => String)
+  // @UseMiddleware(isAuthenticated)
+  // async payWithCard(@Arg("cardId") id: string, @Arg("amount") amount: string) {
+  //   const card = await CardAuthorization.findOne(id);
+  //   if (!card) {
+  //     return "There was an error while processing your payment! Try again with another card";
+  //   }
+  //   const email = card.email;
+  //   const authCode = card.authorizationCode;
+  //   const response = await chargePayment(email, amount, authCode);
+  //   return response;
+  // }
 
   @Query(() => CardResponse)
   @UseMiddleware(isAuthenticated)

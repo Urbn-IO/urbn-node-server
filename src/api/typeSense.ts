@@ -1,5 +1,5 @@
 import express from "express";
-import { client } from "../services/appSearch/client";
+import { client } from "../services/search/client";
 
 const searchRouter = express.Router();
 
@@ -41,10 +41,7 @@ searchRouter.get("/searchCelebrity", async (req, res) => {
   };
 
   try {
-    const result = await client
-      .collections("celebrity")
-      .documents()
-      .search(searchParameters);
+    const result = await client.collections("celebrity").documents().search(searchParameters);
     res.send(result);
   } catch (err) {
     res.send(err);
@@ -54,10 +51,7 @@ searchRouter.get("/searchCelebrity", async (req, res) => {
 searchRouter.post("/addCelebrity", async (req, res) => {
   const celebs = req.body;
   try {
-    const result = await client
-      .collections("celebrity")
-      .documents()
-      .import(celebs, { action: "upsert" });
+    const result = await client.collections("celebrity").documents().import(celebs, { action: "upsert" });
     res.send(result);
   } catch (err) {
     res.send(err);
@@ -67,10 +61,7 @@ searchRouter.post("/addCelebrity", async (req, res) => {
 searchRouter.post("/addCategory", async (req, res) => {
   const category = req.body.data;
   try {
-    const result = await client
-      .collections("category")
-      .documents()
-      .import(category, { action: "upsert" });
+    const result = await client.collections("category").documents().import(category, { action: "upsert" });
     res.send(result);
   } catch (err) {
     res.send(err);
