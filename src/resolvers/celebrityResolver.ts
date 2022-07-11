@@ -30,9 +30,9 @@ export class CelebrityResolver {
     const maxRate = 50000000;
 
     if (
-      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data.shoutOutRatesInNaira) > maxRate
+      parseInt(data.callRatesA) > maxRate ||
+      parseInt(data.callRatesB) > maxRate ||
+      parseInt(data.shoutoutRates) > maxRate
     ) {
       return { errorMessage: "Maximum price rate for any request exceeded" };
     }
@@ -70,9 +70,9 @@ export class CelebrityResolver {
     }
 
     if (
-      parseInt(data._3minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data._5minsCallRequestRatesInNaira) > maxRate ||
-      parseInt(data.shoutOutRatesInNaira) > maxRate
+      parseInt(data.callRatesA) > maxRate ||
+      parseInt(data.callRatesB) > maxRate ||
+      parseInt(data.shoutoutRates) > maxRate
     ) {
       return { errorMessage: "Maximum price rate for any request exceeded" };
     }

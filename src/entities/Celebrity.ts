@@ -59,15 +59,15 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  shoutOutRatesInNaira: string;
+  shoutoutRates: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  callTypeARatesInNaira: string;
+  callRatesA: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  callTypeBRatesInNaira: string;
+  callRatesB: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

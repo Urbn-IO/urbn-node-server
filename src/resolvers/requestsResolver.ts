@@ -52,7 +52,7 @@ export class RequestsResolver {
     if (!user) return { errorMessage: "An error ocuured while creating this request" };
     const requestorName = user.firstName;
     const email = user.email;
-    const transactionAmount = (parseInt(celeb.shoutOutRatesInNaira) * 100).toString();
+    const transactionAmount = (parseInt(celeb.shoutoutRates) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {
       userId,
@@ -119,8 +119,8 @@ export class RequestsResolver {
     const email = user.email;
     const transactionAmount =
       callRequestType === RequestType.CALL_TYPE_A
-        ? (parseInt(celeb.callTypeARatesInNaira) * 100).toString()
-        : (parseInt(celeb.callTypeBRatesInNaira) * 100).toString();
+        ? (parseInt(celeb.callRatesA) * 100).toString()
+        : (parseInt(celeb.callRatesB) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
 
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {

@@ -37,11 +37,11 @@ export class RegisterCelebrityInputs {
   @Field()
   acceptsCallTypeB: boolean;
   @Field()
-  shoutOutRatesInNaira: string;
+  shoutoutRates: string;
   @Field()
-  _3minsCallRequestRatesInNaira: string;
+  callRatesA: string;
   @Field()
-  _5minsCallRequestRatesInNaira: string;
+  callRatesB: string;
   @Field()
   description: string;
   profileHash: string;
@@ -58,13 +58,13 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   acceptsCallTypeB: boolean;
   @Field({ nullable: true })
-  shoutOutRatesInNaira: string;
+  shoutoutRates: string;
   @Field({ nullable: true })
   thumbnail: string;
   @Field({ nullable: true })
-  _3minsCallRequestRatesInNaira: string;
+  callRatesA: string;
   @Field({ nullable: true })
-  _5minsCallRequestRatesInNaira: string;
+  callRatesB: string;
   @Field({ nullable: true })
   description: string;
   @Field({ nullable: true })
