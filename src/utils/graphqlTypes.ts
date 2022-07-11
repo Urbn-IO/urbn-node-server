@@ -84,6 +84,21 @@ export class UserInputsLogin {
 }
 
 @InputType()
+export class deviceInfo {
+  @Field()
+  id: string;
+
+  @Field()
+  platform: string;
+
+  @Field()
+  notificationToken: string;
+
+  @Field({ nullable: true })
+  pushkitToken?: string;
+}
+
+@InputType()
 export class ShoutoutRequestInput {
   @Field(() => Int)
   celebId: number;

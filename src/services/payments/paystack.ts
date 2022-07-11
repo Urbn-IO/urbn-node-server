@@ -1,3 +1,4 @@
+import { TransactionsMetadata } from "../../types";
 import { saveCardPaystack } from "./saveCard";
 import { saveTransaction } from "./transactions";
 
@@ -44,7 +45,13 @@ const initializeTransaction = (apiUrl: string, secretKey: string) => {
 
 const chargeAuthorization = (apiUrl: string, secretKey: string) => {
   return {
-    newPayment: async (email: string, amount: string, authCode: string, reference: string) => {
+    newPayment: async (
+      email: string,
+      amount: string,
+      authCode: string,
+      reference: string,
+      metadata?: TransactionsMetadata
+    ) => {
       const endpoint = `${apiUrl}/transaction/charge_authorization`;
       const params = JSON.stringify({
         email,
@@ -52,6 +59,7 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
         reference,
         channels: ["card"],
         authorization_code: authCode,
+        metadata,
       });
       try {
         const response = await fetch(endpoint, {

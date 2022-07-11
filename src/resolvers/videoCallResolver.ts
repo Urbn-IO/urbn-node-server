@@ -31,7 +31,7 @@ export class VideoCallResolver {
     const userId = req.session.userId as string;
     const request = await validateRequestor(userId, requestId);
     if (request) {
-      await sendCallNotification(request.recepient, requestId, request.requestorName);
+      await sendCallNotification(request.recipient, requestId, request.requestorName);
       return true;
     }
     return false;
@@ -45,13 +45,13 @@ export class VideoCallResolver {
     @Ctx() { req }: AppContext
   ): Promise<CallTokenResponse> {
     const userId = req.session.userId;
-    const recepient = userId as string;
-    const request = await validateRecipient(recepient, requestId);
+    const recipient = userId as string;
+    const request = await validateRecipient(recipient, requestId);
     if (request) {
       const requestor = request.requestor;
       const callRoomName = await createVideoCallRoom(request.callDurationInSeconds);
       if (callRoomName) {
-        const [callToken, requestorCallToken] = getVideoCallToken([recepient, requestor], callRoomName);
+        const [callToken, requestorCallToken] = getVideoCallToken([recipient, requestor], callRoomName);
         publish({ token: requestorCallToken, roomName: callRoomName, requestor });
         return { token: callToken, roomName: callRoomName };
       }
@@ -88,8 +88,8 @@ export class VideoCallResolver {
   //     const AccessToken = jwt.AccessToken;
   //     const VideoGrant = AccessToken.VideoGrant;
   //     let token, roomName;
-  //     const isValidRequestRecepient = await ValidateRequestor(identity, requestId);
-  //     if (isValidRequestRecepient) {
+  //     const isValidRequestrecipient = await ValidateRequestor(identity, requestId);
+  //     if (isValidRequestrecipient) {
   //       const room = await CallRoom.findOne({
   //         where: { requestId },
   //         select: ["roomName"],

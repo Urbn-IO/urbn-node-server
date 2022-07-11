@@ -1,4 +1,4 @@
-import { addFcmToken, deleteFcmTokens, getFcmTokens } from "./fcmTokenManager";
+import { addFcmToken, deleteFcmTokens, getFcmCallTokens, getFcmTokens } from "./fcmTokenManager";
 
 // export default class TokensManager {
 //   addNotificationToken(userId: string, deviceId: string, token: string) {
@@ -16,8 +16,14 @@ import { addFcmToken, deleteFcmTokens, getFcmTokens } from "./fcmTokenManager";
 
 const saveNotificationToken = () => {
   return {
-    addNotificationToken: (userId: string, deviceId: string, token: string) => {
-      const status = addFcmToken(userId, deviceId, token);
+    addNotificationToken: (
+      userId: string,
+      deviceId: string,
+      platform: string,
+      notificationToken: string,
+      pushKitToken?: string
+    ) => {
+      const status = addFcmToken(userId, deviceId, platform, notificationToken, pushKitToken);
       return status;
     },
   };
@@ -26,6 +32,14 @@ const retrieveNotificationTokens = () => {
   return {
     getNotificationTokens: async (userIds: string[]) => {
       const result = await getFcmTokens(userIds);
+      return result;
+    },
+  };
+};
+const retrieveCallTokens = () => {
+  return {
+    getCallTokens: async (userIds: string[]) => {
+      const result = await getFcmCallTokens(userIds);
       return result;
     },
   };
@@ -43,6 +57,7 @@ const tokensManager = () => {
     ...saveNotificationToken(),
     ...retrieveNotificationTokens(),
     ...deleteNotificationTokens(),
+    ...retrieveCallTokens(),
   };
 };
 

@@ -19,7 +19,6 @@ import { deleteRoom } from "../services/video/videoRoomManager";
 import paymentManager from "../services/payments/payments";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import createhashString from "../utils/createHashString";
-import { Transactions } from "../entities/Transactions";
 
 @Resolver()
 export class RequestsResolver {
@@ -37,10 +36,10 @@ export class RequestsResolver {
       };
     }
     const card = await CardAuthorization.findOne(cardId, { select: ["authorizationCode"] });
-    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again" };
+    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
     const celebId = Input.celebId;
     const celeb = await Celebrity.findOne(celebId);
-    if (!celeb) return { errorMessage: "We cannot find this celebrity" };
+    if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
     const acceptsShoutOut = celeb.acceptShoutOut;
@@ -55,28 +54,24 @@ export class RequestsResolver {
     const email = user.email;
     const transactionAmount = (parseInt(celeb.shoutOutRatesInNaira) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref);
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {
+      userId,
+      recipient: celeb.userId,
+    });
     if (!chargePayment) return { errorMessage: "Payment Error!" };
-    const transaction = Transactions.create({ reference: ref });
     const request = {
       requestor: userId,
       requestorName,
-      recepient: celeb.userId,
+      recipient: celeb.userId,
       amount: transactionAmount,
       description: Input.description,
       requestExpires: Input.requestExpiration,
-      recepientAlias: celebAlias,
-      recepientThumbnail: celebThumbnail,
-      transaction,
+      recipientAlias: celebAlias,
+      recipientThumbnail: celebThumbnail,
+      paymentRef: ref,
     };
     const result = await Requests.create(request).save();
     if (result) {
-      // sendInstantNotification(
-      //   [celeb.userId],
-      //   "New Request Alert",
-      //   "You have received a new shoutout request",
-      //   NotificationRouteCode.RECEIVED_REQUEST
-      // );
       return { success: "Request Sent!" };
     }
     return { errorMessage: "Failed to create your request at this time. Try again later" };
@@ -86,12 +81,15 @@ export class RequestsResolver {
   @UseMiddleware(isAuthenticated)
   async createVideoCallRequest(
     @Arg("Input") Input: VideoCallRequestInputs,
+    @Arg("cardId", () => Int) cardId: number,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
+    const card = await CardAuthorization.findOne(cardId, { select: ["authorizationCode"] });
+    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
     const celeb = await Celebrity.findOne(celebId);
-    if (!celeb) return { errorMessage: "We cannot find this celebrity" };
+    if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
@@ -113,15 +111,27 @@ export class RequestsResolver {
         errorMessage: "The selected time slot is no longer available, please select another time for this call",
       };
     }
-
-    const paid = true;
-    if (!paid) return { errorMessage: "Payment Error!" };
     const user = await User.findOne({
       where: { userId },
-      select: ["firstName"],
+      select: ["firstName", "email"],
     });
-    const UserfirstName = user?.firstName;
-    const transactionAmount = celeb.shoutOutRatesInNaira;
+    if (!user) return { errorMessage: "An error ocuured while creating this request" };
+    const email = user.email;
+    const transactionAmount =
+      callRequestType === RequestType.CALL_TYPE_A
+        ? (parseInt(celeb.callTypeARatesInNaira) * 100).toString()
+        : (parseInt(celeb.callTypeBRatesInNaira) * 100).toString();
+    const ref = createhashString([email, userId, celeb.id]);
+
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {
+      userId,
+      recipient: celeb.userId,
+      availableSlotId: availableSlot.id,
+    });
+
+    if (!chargePayment) return { errorMessage: "Payment Error!" };
+
+    const UserfirstName = user.firstName;
     const availabeDate = getNextAvailableDate(availableSlot.day as number);
     const startTime = availableSlot.startTime as unknown as string;
     const startTimeSplit = startTime.split(":");
@@ -136,7 +146,7 @@ export class RequestsResolver {
     const request = {
       requestor: userId,
       requestorName: UserfirstName,
-      recepient: celeb.userId,
+      recipient: celeb.userId,
       requestType: callRequestType,
       amount: transactionAmount,
       description: `Video call request from ${UserfirstName} to ${celebAlias}`,
@@ -144,18 +154,11 @@ export class RequestsResolver {
       callDurationInSeconds,
       callRequestBegins,
       requestExpires,
-      recepientAlias: celebAlias,
-      recepientThumbnail: celebThumbnail,
+      recipientAlias: celebAlias,
+      recipientThumbnail: celebThumbnail,
     };
-    const save = await Requests.create(request).save();
-    if (save) {
-      CallScheduleRepo.update(availableSlot.id, { available: false });
-      sendInstantNotification(
-        [celeb.userId],
-        "New Request Alert",
-        "You have received a new video call request",
-        NotificationRouteCode.RECEIVED_REQUEST
-      );
+    const result = await Requests.create(request).save();
+    if (result) {
       return { success: "Request Sent!" };
     }
     return { errorMessage: "Failed to create your request at this time. Try again later" };
@@ -173,7 +176,7 @@ export class RequestsResolver {
       const request = await validateRecipient(userId, requestId);
       if (request) {
         const owner = request.requestor;
-        const celebAlias = request.recepientAlias;
+        const celebAlias = request.recipientAlias;
         const time = Math.floor(new Date().getTime() / 1000);
         const randomNumber = Math.random().toString();
         const id = crypto
@@ -247,11 +250,11 @@ export class RequestsResolver {
           await Requests.createQueryBuilder()
             .update({ status })
             .where({ id: requestId })
-            .returning('requestor, "requestType", "recepientAlias"')
+            .returning('requestor, "requestType", "recipientAlias"')
             .execute()
         ).raw[0];
         const requestType = request.requestType === "shoutout" ? "shoutout" : "video call";
-        const celebAlias = request.recepientAlias;
+        const celebAlias = request.recipientAlias;
         sendInstantNotification(
           [request.requestor],
           "Response Alert",
@@ -306,7 +309,7 @@ export class RequestsResolver {
     const queryBuilder = getConnection()
       .getRepository(Requests)
       .createQueryBuilder("requests")
-      .where("requests.recepient = :userId", { userId })
+      .where("requests.recipient = :userId", { userId })
       .andWhere("requests.status = :status", { status })
       .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
@@ -336,7 +339,7 @@ export class RequestsResolver {
       .createQueryBuilder("requests")
       .where(
         new Brackets((qb) => {
-          qb.where("requests.recepient = :userId", { userId }).orWhere("requests.requestor = :userId", { userId });
+          qb.where("requests.recipient = :userId", { userId }).orWhere("requests.requestor = :userId", { userId });
         })
       )
       .andWhere("requests.status = :status", { status })

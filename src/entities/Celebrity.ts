@@ -19,7 +19,7 @@ export class Celebrity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: "uuid" })
   userId!: string;
 
   @Field()
@@ -63,11 +63,11 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  _3minsCallRequestRatesInNaira: string;
+  callTypeARatesInNaira: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  _5minsCallRequestRatesInNaira: string;
+  callTypeBRatesInNaira: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

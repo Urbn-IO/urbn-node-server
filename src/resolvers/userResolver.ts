@@ -3,22 +3,19 @@ import { User } from "../entities/User";
 import { AppContext } from "../types";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
+import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
 import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { validateInput } from "../utils/validateInput";
-import { Celebrity } from "../entities/Celebrity";
-import { In } from "typeorm";
 @Resolver()
 export class UserResolver {
   //create User resolver
   @Mutation(() => GenericResponse)
   async createUser(
     @Arg("userInput") userInput: UserInputs,
-    @Arg("notificationToken") token: string,
-    @Arg("deviceId") deviceId: string,
+    @Arg("deviceInfo") device: deviceInfo,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const invalidInput = validateInput(userInput);
@@ -43,7 +40,7 @@ export class UserResolver {
         return { errorMessage: "An error occured" };
       }
     }
-    tokensManager().addNotificationToken(id, deviceId, token);
+    tokensManager().addNotificationToken(id, device.id, device.platform, device.notificationToken, device.pushkitToken);
     req.session.userId = id; //keep a new user logged in
     return { success: "Account created successfully" };
   }
@@ -52,8 +49,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
-    @Arg("notificationToken") token: string,
-    @Arg("deviceId") deviceId: string,
+    @Arg("deviceInfo") device: deviceInfo,
     @Ctx() { req }: AppContext
   ): Promise<UserResponse> {
     const user = await User.findOne({
@@ -69,7 +65,13 @@ export class UserResolver {
     if (!verifiedPassword) {
       return { errorMessage: "Wrong Email or Password" };
     }
-    tokensManager().addNotificationToken(user.userId, deviceId, token);
+    tokensManager().addNotificationToken(
+      user.userId,
+      device.id,
+      device.platform,
+      device.notificationToken,
+      device.pushkitToken
+    );
     req.session.userId = user.userId;
     return { user };
   }
@@ -176,23 +178,23 @@ export class UserResolver {
     if (!user) {
       return { errorMessage: "User not found" };
     }
-    if (user.shoutouts.length > 0) {
-      const ids = [];
-      for (const shoutout of user.shoutouts) {
-        ids.push(shoutout.celebId);
-      }
-      const alias = await Celebrity.find({
-        select: ["alias", "userId"],
-        where: { userId: In(ids) },
-      });
-      alias.forEach((x) => {
-        for (const shoutout of user.shoutouts) {
-          if (x.userId === shoutout.celebId) {
-            shoutout.celebAlias = x.alias as string;
-          }
-        }
-      });
-    }
+    // if (user.shoutouts.length > 0) {
+    //   const ids = [];
+    //   for (const shoutout of user.shoutouts) {
+    //     ids.push(shoutout.celebId);
+    //   }
+    //   const alias = await Celebrity.find({
+    //     select: ["alias", "userId"],
+    //     where: { userId: In(ids) },
+    //   });
+    //   alias.forEach((x) => {
+    //     for (const shoutout of user.shoutouts) {
+    //       if (x.userId === shoutout.celebId) {
+    //         shoutout.celebAlias = x.alias as string;
+    //       }
+    //     }
+    //   });
+    // }
 
     return { user };
   }

@@ -1,20 +1,32 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
+@Index(["customer", "recipient"])
 export class Transactions extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Index()
+  @Column({ type: "uuid" })
+  customer: string;
+
+  @Index()
+  @Column({ type: "uuid" })
+  recipient: string;
+
   @Column({ unique: true })
   reference: string;
 
-  @Column({ nullable: true })
+  @Column()
+  amount: string;
+
+  @Column()
+  currency: string;
+
+  @Column()
   channel: string;
 
-  @Column({ nullable: true })
-  paid: boolean;
-
-  @Column({ nullable: true })
+  @Column()
   status: string;
 
   @Column({ type: "timestamp", nullable: true })

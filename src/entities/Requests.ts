@@ -1,16 +1,6 @@
 import { RequestStatus, RequestType } from "../types";
 import { Field, ObjectType } from "type-graphql";
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { Transactions } from "./Transactions";
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
 @ObjectType()
 @Entity()
@@ -29,15 +19,15 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
-  recepient!: string;
+  recipient!: string;
 
   @Field()
   @Column()
-  recepientAlias!: string;
+  recipientAlias!: string;
 
   @Field()
   @Column({ nullable: true })
-  recepientThumbnail!: string;
+  recipientThumbnail!: string;
 
   @Field()
   @Column({ type: "enum", enum: RequestType, default: RequestType.SHOUTOUT })
@@ -56,11 +46,9 @@ export class Requests extends BaseEntity {
   @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PROCESSING })
   status: RequestStatus;
 
-  @OneToOne(() => Transactions, {
-    nullable: true,
-  })
-  @JoinColumn()
-  transaction?: Transactions;
+  @Index()
+  @Column()
+  paymentRef: string;
 
   @Index()
   @Column({ nullable: true })

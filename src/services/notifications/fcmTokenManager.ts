@@ -1,9 +1,21 @@
 import { getConnection, In } from "typeorm";
-import { FcmTokens } from "../../entities/FcmTokens";
+import { NotificationToken } from "../../entities/NotificationToken";
 
-export const addFcmToken = async (userId: string, deviceId: string, fcmToken: string): Promise<string> => {
+export const addFcmToken = async (
+  userId: string,
+  deviceId: string,
+  platform: string,
+  notificationToken: string,
+  pushKitToken?: string
+): Promise<string> => {
   try {
-    const fcmTokens = FcmTokens.create({ userId, deviceId, token: fcmToken });
+    const fcmTokens = NotificationToken.create({
+      userId,
+      deviceId,
+      devicePlatform: platform,
+      notificationToken,
+      pushKitToken,
+    });
     await fcmTokens.save();
   } catch (err) {
     if (err.code === "23505") {
@@ -16,24 +28,43 @@ export const addFcmToken = async (userId: string, deviceId: string, fcmToken: st
 };
 
 export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
-  const tokenObj = await FcmTokens.find({
+  const tokenObj = await NotificationToken.find({
     where: { userId: In(userId) },
-    select: ["token"],
+    select: ["notificationToken"],
   });
   if (tokenObj) {
-    const tokens = tokenObj.map((x) => x.token);
+    const tokens = tokenObj.map((x) => x.notificationToken);
+    return tokens;
+  }
+  return [];
+};
+
+export const getFcmCallTokens = async (userId: string[]): Promise<string[]> => {
+  const tokenObj = await NotificationToken.find({
+    where: { userId: In(userId) },
+    select: ["notificationToken", "pushKitToken", "devicePlatform"],
+  });
+  if (tokenObj) {
+    const tokens: string[] = [];
+    tokenObj.forEach(async (x) => {
+      if (x.devicePlatform === "ios") {
+        tokens.push(x.pushKitToken as string);
+      } else {
+        tokens.push(x.notificationToken);
+      }
+    });
     return tokens;
   }
   return [];
 };
 
 export const deleteFcmTokens = async (userId?: string, tokens?: string[]) => {
-  const queryBuilder = getConnection().createQueryBuilder().delete().from(FcmTokens);
+  const queryBuilder = getConnection().createQueryBuilder().delete().from(NotificationToken);
 
   if (userId) {
     queryBuilder.where("userId = :userId", { userId });
   } else if (tokens) {
-    queryBuilder.where("token In (:...tokens)", { tokens });
+    queryBuilder.where("notificationToken In (:...tokens)", { tokens });
   } else {
     throw new Error("User token to be deleted not supplied");
   }

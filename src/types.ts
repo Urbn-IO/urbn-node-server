@@ -43,15 +43,10 @@ export interface VideoOutput {
   contentType: number | undefined;
 }
 
-export type RequestInput = {
-  requestor: string;
-  requestorName: string | undefined;
-  recepient: string;
-  recepientAlias: string | undefined;
-  recepientThumbnail: string;
-  amount: string;
-  description: string;
-  requestExpires: Date;
+export type TransactionsMetadata = {
+  userId: string;
+  recipient: string;
+  availableSlotId?: number;
 };
 
 export enum NotificationPriority {
@@ -64,6 +59,7 @@ export enum RequestStatus {
   ACCEPTED = "accepted",
   REJECTED = "rejected",
   PROCESSING = "processing",
+  FAILED = "failed",
   FULFILLED = "fulfilled",
   UNFULFILLED = "unfulfilled",
 }

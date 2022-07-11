@@ -3,22 +3,30 @@ import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedCo
 
 @ObjectType()
 @Entity()
-export class FcmTokens extends BaseEntity {
+export class NotificationToken extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field()
   @Column({ type: "uuid" })
   @Index()
-  userId!: string;
-
-  @Field()
-  @Column()
-  deviceId!: string;
+  userId: string;
 
   @Field()
   @Column({ unique: true })
-  token!: string;
+  deviceId: string;
+
+  @Field()
+  @Column()
+  devicePlatform: string;
+
+  @Field({ nullable: true })
+  @Column({ unique: true, nullable: true })
+  pushKitToken?: string;
+
+  @Field()
+  @Column({ unique: true })
+  notificationToken: string;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;

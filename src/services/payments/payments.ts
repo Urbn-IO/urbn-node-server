@@ -1,3 +1,4 @@
+import { TransactionsMetadata } from "../../types";
 import paystack from "./paystack";
 
 const initialize = () => {
@@ -20,8 +21,14 @@ const verify = () => {
 
 const pay = () => {
   return {
-    chargeCard: async (email: string, amount: string, authCode: string, ref: string) => {
-      const result = await paystack().newPayment(email, amount, authCode, ref);
+    chargeCard: async (
+      email: string,
+      amount: string,
+      authCode: string,
+      ref: string,
+      metadata?: TransactionsMetadata
+    ) => {
+      const result = await paystack().newPayment(email, amount, authCode, ref, metadata);
       return result;
     },
   };

@@ -23,7 +23,7 @@ export async function sendInstantNotification(
 }
 
 export async function sendCallNotification(userId: string, requestId: number, callerName: string) {
-  const tokens = await tokensManager().getNotificationTokens([userId]);
+  const tokens = await tokensManager().getCallTokens([userId]);
   const message: NotificationsPayload = {
     data: {
       requestId: requestId.toString(),

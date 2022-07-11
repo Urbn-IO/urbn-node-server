@@ -5,7 +5,7 @@ import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
 import { CelebCategories } from "./entities/CelebCategories";
 import { Celebrity } from "./entities/Celebrity";
-import { FcmTokens } from "./entities/FcmTokens";
+import { NotificationToken } from "./entities/NotificationToken";
 import { Requests } from "./entities/Requests";
 import { Shoutout } from "./entities/Shoutout";
 import { Transactions } from "./entities/Transactions";
@@ -25,7 +25,7 @@ export const entities = [
   CelebCategories,
   Celebrity,
   Requests,
-  FcmTokens,
+  NotificationToken,
   CardAuthorization,
   Shoutout,
   CallRoom,
