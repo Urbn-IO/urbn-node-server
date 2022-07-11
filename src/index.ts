@@ -23,8 +23,7 @@ import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getUserId } from "./utils/helpers";
-
-// import { initializeSearch } from "./services/appSearch/collections";
+import { initializeSearch } from "./services/search/collections";
 
 const app = express();
 const httpServer = createServer(app);
@@ -44,7 +43,7 @@ const main = async () => {
   await connection.runMigrations();
 
   initializeApp(firebaseConfig);
-  // initializeSearch();
+  initializeSearch();
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
@@ -79,7 +78,7 @@ const main = async () => {
   );
 
   app.use("/paystack", router);
-  app.use("/text-search", searchRouter);
+  app.use("/search", searchRouter);
 
   const schema = await buildSchema({
     resolvers,

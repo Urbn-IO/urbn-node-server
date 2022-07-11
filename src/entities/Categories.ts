@@ -17,19 +17,19 @@ import { CelebCategories } from "./CelebCategories";
 export class Categories extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field()
   @Column({ unique: true })
-  name!: string;
+  name: string;
 
   @Field(() => Boolean)
   @Column({ default: false })
-  recommendable!: boolean;
+  recommendable: boolean;
 
   @Field(() => Boolean)
   @Column({ default: false })
-  primary!: boolean;
+  primary: boolean;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
