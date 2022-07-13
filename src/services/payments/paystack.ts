@@ -106,8 +106,8 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
         if (transactionStatus === "success") {
           if (newCard) {
             saveCardPaystack(data);
-            saveTransaction(data);
           }
+          saveTransaction(data);
           return true;
         }
         return false;

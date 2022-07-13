@@ -48,6 +48,9 @@ services:
     restart: 'unless-stopped'
     ports:
       - '6379:${REDIS_PORT}'
+    # command: redis-server /usr/local/etc/redis/redis.conf
+    # volumes:
+    #     - ./data/redis/:/usr/local/etc/redis
 
 volumes:
   data:

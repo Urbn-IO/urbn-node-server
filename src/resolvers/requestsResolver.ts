@@ -156,6 +156,7 @@ export class RequestsResolver {
       requestExpires,
       recipientAlias: celebAlias,
       recipientThumbnail: celebThumbnail,
+      paymentRef: ref,
     };
     const result = await Requests.create(request).save();
     if (result) {
