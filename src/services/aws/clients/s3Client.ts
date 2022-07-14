@@ -1,7 +1,7 @@
 import { S3Client, S3ClientConfig } from "@aws-sdk/client-s3";
 
 const primaryRegion = process.env.AWS_PRIMARY_REGION;
-const secondaryRegion = process.env.AWS_SECONDRY_REGION;
+const secondaryRegion = process.env.AWS_SECONDARY_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
