@@ -39,9 +39,8 @@ export const sendPushKitNotification = (tokens: string[], requestId: number, cal
       const body = {
         aps: { alert: "Urbn Video Call" },
         id: uuid,
-        requestId,
         nameCaller: callerName,
-        handle: "0123456789",
+        handle: requestId.toString(),
         isVideo: true,
       };
       const headers = {
