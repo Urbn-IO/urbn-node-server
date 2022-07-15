@@ -1,6 +1,7 @@
 import {
   Arg,
   Ctx,
+  Int,
   Mutation,
   Publisher,
   PubSub,
@@ -27,7 +28,7 @@ export class VideoCallResolver {
   // }
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async initiateVideoCall(@Arg("requestId") requestId: number, @Ctx() { req }: AppContext) {
+  async initiateVideoCall(@Arg("requestId", () => Int) requestId: number, @Ctx() { req }: AppContext) {
     const userId = req.session.userId as string;
     const request = await validateRequestor(userId, requestId);
     if (request) {
@@ -40,7 +41,7 @@ export class VideoCallResolver {
   @Mutation(() => CallTokenResponse)
   @UseMiddleware(isAuthenticated)
   async acceptVideoCall(
-    @Arg("requestId") requestId: number,
+    @Arg("requestId", () => Int) requestId: number,
     @PubSub(SubscriptionTopics.VIDEO_CALL) publish: Publisher<CallTokenResponse>,
     @Ctx() { req }: AppContext
   ): Promise<CallTokenResponse> {
