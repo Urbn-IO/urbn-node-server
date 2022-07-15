@@ -2,7 +2,7 @@ import { User } from "../entities/User";
 import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
-import { CallType, ContentType, DayOfTheWeek } from "../types";
+import { CallType, ContentType, DayOfTheWeek, PlatformOptions } from "../types";
 
 registerEnumType(CallType, {
   name: "CallType",
@@ -12,6 +12,11 @@ registerEnumType(CallType, {
 registerEnumType(DayOfTheWeek, {
   name: "DayOfTheWeek",
   description: "Enum representing each day of the week",
+});
+
+registerEnumType(PlatformOptions, {
+  name: "platformOptions",
+  description: "Enum representing possible device platforms",
 });
 
 @InputType()
@@ -88,8 +93,8 @@ export class deviceInfo {
   @Field()
   id: string;
 
-  @Field()
-  platform: string;
+  @Field(() => PlatformOptions)
+  platform: PlatformOptions;
 
   @Field()
   notificationToken: string;

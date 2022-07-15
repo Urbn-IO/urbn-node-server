@@ -1,5 +1,6 @@
 import { Field, ObjectType } from "type-graphql";
 import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { PlatformOptions } from "../types";
 
 @ObjectType()
 @Entity()
@@ -17,15 +18,15 @@ export class NotificationToken extends BaseEntity {
   deviceId: string;
 
   @Field()
-  @Column()
+  @Column({ type: "enum", enum: PlatformOptions })
   devicePlatform: string;
 
   @Field({ nullable: true })
-  @Column({ unique: true, nullable: true })
+  @Column({ nullable: true })
   pushKitToken?: string;
 
   @Field()
-  @Column({ unique: true })
+  @Column()
   notificationToken: string;
 
   @CreateDateColumn({ type: "timestamp" })

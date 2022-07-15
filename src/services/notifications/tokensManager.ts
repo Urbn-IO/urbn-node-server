@@ -1,4 +1,4 @@
-import { addFcmToken, deleteFcmTokens, getFcmCallTokens, getFcmTokens } from "./fcmTokenManager";
+import { addFcmToken, deleteFcmTokens, getFcmTokens, getServiceCallTokens } from "./fcmTokenManager";
 
 // export default class TokensManager {
 //   addNotificationToken(userId: string, deviceId: string, token: string) {
@@ -39,7 +39,7 @@ const retrieveNotificationTokens = () => {
 const retrieveCallTokens = () => {
   return {
     getCallTokens: async (userIds: string[]) => {
-      const result = await getFcmCallTokens(userIds);
+      const result = await getServiceCallTokens(userIds);
       return result;
     },
   };

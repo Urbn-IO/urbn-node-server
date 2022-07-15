@@ -13,6 +13,7 @@ declare global {
       AWS_CLOUD_FRONT_KEY_PAIR_ID: string;
       AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN: string;
       AWS_SQS_VOD_QUEUE_URL: string;
+      DEFUALT_CURRENCY: string;
       DATABASE_URL: string;
       REDIS_URL: string;
       REDIS_HOST: string;
@@ -28,6 +29,11 @@ declare global {
       TWILIO_AUTH_TOKEN: string;
       TWILIO_API_KEY: string;
       TWILIO_API_SECRET: string;
+      APPLE_TEAM_ID: string;
+      APNS_KEY_ID: string;
+      APNS_DEV_URL: string;
+      APNS_PROD_URL: string;
+      APNS_DEVICE_ENDPOINT: string;
     }
   }
 }

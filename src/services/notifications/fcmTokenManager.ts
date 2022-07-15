@@ -39,23 +39,24 @@ export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
   return [];
 };
 
-export const getFcmCallTokens = async (userId: string[]): Promise<string[]> => {
+export const getServiceCallTokens = async (userId: string[]) => {
   const tokenObj = await NotificationToken.find({
     where: { userId: In(userId) },
     select: ["notificationToken", "pushKitToken", "devicePlatform"],
   });
   if (tokenObj) {
     const tokens: string[] = [];
+    const pushKitTokens: string[] = [];
     tokenObj.forEach(async (x) => {
       if (x.devicePlatform === "ios") {
-        tokens.push(x.pushKitToken as string);
+        pushKitTokens.push(x.pushKitToken as string);
       } else {
         tokens.push(x.notificationToken);
       }
     });
-    return tokens;
+    return { tokens, pushKitTokens };
   }
-  return [];
+  return {};
 };
 
 export const deleteFcmTokens = async (userId?: string, tokens?: string[]) => {

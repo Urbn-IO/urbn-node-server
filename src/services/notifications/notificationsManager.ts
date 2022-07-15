@@ -22,7 +22,7 @@ const sendMessage = () => {
           "apns-priority": priorityProp.apns,
         },
       };
-      propagateMessage(tokens, notification, android, apns, data);
+      propagateMessage(tokens, notification, data, android, apns);
     },
   };
 };
@@ -30,19 +30,19 @@ const sendMessage = () => {
 const calls = () => {
   return {
     sendCallNotification: ({ data, tokens }: NotificationsPayload) => {
-      const apns: ApnsConfig = {
-        headers: {
-          "apns-priority": "10",
-          "apns-push-type": "voip",
-          "apns-topic": `${process.env.APP_BUNDLE_NAME}.voip`,
-          "apns-expiration": "0",
-        },
-      };
+      // const apns: ApnsConfig = {
+      //   headers: {
+      //     "apns-priority": "10",
+      //     "apns-push-type": "voip",
+      //     "apns-topic": `${process.env.APP_BUNDLE_NAME}.voip`,
+      //     "apns-expiration": "0",
+      //   },
+      // };
       const android: AndroidConfig = {
         priority: "high",
         ttl: 0,
       };
-      propagateMessage(tokens, undefined, android, apns, data);
+      propagateMessage(tokens, undefined, data, android);
     },
   };
 };

@@ -4,11 +4,11 @@ import tokensManager from "./tokensManager";
 export const propagateMessage = async (
   tokens: string[],
   notification?: Notification,
-  android?: AndroidConfig,
-  apns?: ApnsConfig,
   data?: {
     [key: string]: string;
-  }
+  },
+  android?: AndroidConfig,
+  apns?: ApnsConfig
 ) => {
   try {
     const message: MulticastMessage = {
@@ -22,6 +22,9 @@ export const propagateMessage = async (
     await getMessaging()
       .sendMulticast(message)
       .then((response) => {
+        if (response.successCount > 0) {
+          console.log("Notification sent!");
+        }
         if (response.failureCount > 0) {
           const failedTokens: string[] = [];
           response.responses.forEach((resp, idx) => {

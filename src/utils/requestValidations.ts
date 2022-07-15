@@ -1,9 +1,7 @@
 import { Requests } from "../entities/Requests";
 
 export const validateRequestor = async (userId: string, id: number) => {
-  const request = await Requests.findOne(id, {
-    select: ["requestor", "recipient", "requestType", "requestorName", "callDurationInSeconds"],
-  });
+  const request = await Requests.findOne(id);
   if (request?.requestor === userId && request.requestType !== "shoutout") {
     return request;
   }
@@ -11,9 +9,7 @@ export const validateRequestor = async (userId: string, id: number) => {
 };
 
 export const validateRecipient = async (userId: string, id: number) => {
-  const request = await Requests.findOne(id, {
-    select: ["recipient", "recipientAlias", "requestor", "callDurationInSeconds"],
-  });
+  const request = await Requests.findOne(id);
   if (request?.recipient === userId) {
     return request;
   }

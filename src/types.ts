@@ -101,3 +101,9 @@ export enum DayOfTheWeek {
   FRIDAY,
   SATURDAY,
 }
+
+export enum PlatformOptions {
+  IOS = "ios",
+  ANDROID = "android",
+  WEB = "web",
+}

@@ -1,4 +1,5 @@
 import { NotificationPriority, NotificationRouteCode, NotificationsPayload } from "../../types";
+import { sendPushKitNotification } from "./applePushNotifications";
 import { notificationsManager } from "./notificationsManager";
 import tokensManager from "./tokensManager";
 
@@ -23,13 +24,18 @@ export async function sendInstantNotification(
 }
 
 export async function sendCallNotification(userId: string, requestId: number, callerName: string) {
-  const tokens = await tokensManager().getCallTokens([userId]);
-  const message: NotificationsPayload = {
-    data: {
-      requestId: requestId.toString(),
-      callerName,
-    },
-    tokens,
-  };
-  notificationsManager().sendCallNotification(message);
+  const tokensObj = await tokensManager().getCallTokens([userId]);
+  if (tokensObj.pushKitTokens !== undefined && tokensObj.pushKitTokens.length > 0) {
+    sendPushKitNotification(tokensObj.pushKitTokens, requestId, callerName);
+  }
+  if (tokensObj.tokens !== undefined && tokensObj.tokens.length > 0) {
+    const message: NotificationsPayload = {
+      data: {
+        requestId: requestId.toString(),
+        callerName,
+      },
+      tokens: tokensObj.tokens,
+    };
+    notificationsManager().sendCallNotification(message);
+  }
 }
