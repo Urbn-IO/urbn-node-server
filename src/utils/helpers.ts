@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import { COOKIE_NAME } from "../constants";
 import connectRedis from "connect-redis";
 import { Requests } from "../entities/Requests";
-import { NotificationRouteCode, RequestStatus, RequestType } from "../types";
+import { NotificationPriority, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { sendInstantNotification } from "../services/notifications/handler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getConnection } from "typeorm";
@@ -61,7 +61,7 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
       route = NotificationRouteCode.RESPONSE;
     }
 
-    sendInstantNotification([userId], messageTitle, messageBody, route);
+    sendInstantNotification([userId], messageTitle, messageBody, route, NotificationPriority.HIGH);
   } catch (err) {
     console.error(err);
   }

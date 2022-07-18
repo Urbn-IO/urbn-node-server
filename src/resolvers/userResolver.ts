@@ -138,7 +138,7 @@ export class UserResolver {
       await tokensManager().removeNotificationTokens(userId);
     }
     return new Promise((resolve) =>
-      req.session.destroy((err: any) => {
+      req.session.destroy((err: unknown) => {
         res.clearCookie(COOKIE_NAME);
         if (err) {
           console.log(err);

@@ -4,7 +4,8 @@ import paystack from "./paystack/paystack";
 const initialize = () => {
   return {
     initializeCard: async (email: string, userId: string, amount: string) => {
-      const result = await paystack().initializePayment(email, userId, amount);
+      const metadata = { userId: userId, email: email, newCard: true };
+      const result = await paystack().initializePayment(email, amount, metadata);
       return result;
     },
   };

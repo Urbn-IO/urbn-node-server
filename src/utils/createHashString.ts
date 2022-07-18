@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
-const createhashString = (data: any[]) => {
-  const date = new Date().toISOString();
+const createhashString = <T extends string | number | boolean>(data: T[]) => {
+  const date = new Date().toISOString() as T;
   data.push(date);
 
   const hashString = data.join("");

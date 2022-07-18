@@ -4,13 +4,13 @@ import { saveTransaction } from "../transactions";
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {
-    initializePayment: async (email: string, userId: string, amount: string) => {
+    initializePayment: async <T>(email: string, amount: string, metadata: T) => {
       const endpoint = `${apiUrl}/transaction/initialize`;
       const params = JSON.stringify({
         email,
         amount,
         channels: ["card"],
-        metadata: { userId: userId, email: email },
+        metadata,
       });
       try {
         const response = await fetch(endpoint, {

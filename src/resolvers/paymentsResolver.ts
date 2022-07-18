@@ -1,5 +1,5 @@
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../types";
 import { CardResponse, InitializeCardResponse } from "../utils/graphqlTypes";
 import { CardAuthorization } from "../entities/CardAuthorization";
@@ -26,12 +26,12 @@ export class PaymentsResolver {
     return result;
   }
 
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
-  async verifyNewCard(@Arg("ref") ref: string) {
-    const result = await paymentManager().verifyPayment(ref, true);
-    return result;
-  }
+  // @Mutation(() => Boolean)
+  // @UseMiddleware(isAuthenticated)
+  // async verifyNewCard(@Arg("ref") ref: string) {
+  //   const result = await paymentManager().verifyPayment(ref, true);
+  //   return result;
+  // }
 
   // @Mutation(() => String)
   // @UseMiddleware(isAuthenticated)
