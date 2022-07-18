@@ -4,6 +4,7 @@ import { jwt } from "twilio";
 
 export const createVideoCallRoom = async (callDurationInSeconds: number) => {
   try {
+    console.log("max participant duration: ", callDurationInSeconds);
     const currentTime = new Date().valueOf().toString();
     const randomNumber = Math.random().toString();
     const serial = crypto
@@ -18,7 +19,7 @@ export const createVideoCallRoom = async (callDurationInSeconds: number) => {
       statusCallback: "",
       emptyRoomTimeout: 1,
       unusedRoomTimeout: 1,
-      maxParticipantDuration: callDurationInSeconds,
+      // maxParticipantDuration: callDurationInSeconds,
     });
     return result.uniqueName;
   } catch (err) {

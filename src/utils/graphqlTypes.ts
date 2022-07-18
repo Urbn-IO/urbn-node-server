@@ -15,7 +15,7 @@ registerEnumType(DayOfTheWeek, {
 });
 
 registerEnumType(PlatformOptions, {
-  name: "platformOptions",
+  name: "PlatformOptions",
   description: "Enum representing possible device platforms",
 });
 

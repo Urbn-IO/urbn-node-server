@@ -14,7 +14,7 @@ export class NotificationToken extends BaseEntity {
   userId: string;
 
   @Field()
-  @Column()
+  @Column({ unique: true })
   deviceId: string;
 
   @Field()

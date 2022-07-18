@@ -6,7 +6,7 @@ const createhashString = (data: any[]) => {
 
   const hashString = data.join("");
 
-  const hash = crypto.createHash("sha256").update(hashString).digest("hex");
+  const hash = crypto.createHash("shake256", { outputLength: 10 }).update(hashString).digest("hex");
   return hash;
 };
 export default createhashString;

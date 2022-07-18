@@ -37,7 +37,7 @@ export const sendPushKitNotification = (tokens: string[], requestId: number, cal
 
       client.on("error", (err) => console.error(err));
       const body = {
-        aps: { alert: "Urbn Video Call" },
+        aps: { alert: "Urbn Call" },
         id: uuid,
         nameCaller: callerName,
         handle: requestId.toString(),

@@ -1,4 +1,4 @@
-import { addFcmToken, deleteFcmTokens, getFcmTokens, getServiceCallTokens } from "./fcmTokenManager";
+import { addToken, deleteTokens, getTokens, getServiceCallTokens } from "./ notificationTokenManager";
 
 // export default class TokensManager {
 //   addNotificationToken(userId: string, deviceId: string, token: string) {
@@ -23,7 +23,7 @@ const saveNotificationToken = () => {
       notificationToken: string,
       pushKitToken?: string
     ) => {
-      const status = addFcmToken(userId, deviceId, platform, notificationToken, pushKitToken);
+      const status = addToken(userId, deviceId, platform, notificationToken, pushKitToken);
       return status;
     },
   };
@@ -31,7 +31,7 @@ const saveNotificationToken = () => {
 const retrieveNotificationTokens = () => {
   return {
     getNotificationTokens: async (userIds: string[]) => {
-      const result = await getFcmTokens(userIds);
+      const result = await getTokens(userIds);
       return result;
     },
   };
@@ -47,7 +47,7 @@ const retrieveCallTokens = () => {
 const deleteNotificationTokens = () => {
   return {
     removeNotificationTokens: async (userId?: string, tokens?: string[]) => {
-      await deleteFcmTokens(userId, tokens);
+      await deleteTokens(userId, tokens);
     },
   };
 };

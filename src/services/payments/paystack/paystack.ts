@@ -1,6 +1,6 @@
-import { TransactionsMetadata } from "../../types";
-import { saveCardPaystack } from "./saveCard";
-import { saveTransaction } from "./transactions";
+import { TransactionsMetadata } from "../../../types";
+import { saveCardPaystack } from "../saveCard";
+import { saveTransaction } from "../transactions";
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {

@@ -1,5 +1,5 @@
 import { TransactionsMetadata } from "../../types";
-import paystack from "./paystack";
+import paystack from "./paystack/paystack";
 
 const initialize = () => {
   return {

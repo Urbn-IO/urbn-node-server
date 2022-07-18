@@ -17,7 +17,6 @@ import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import { deleteRoom } from "../services/video/videoRoomManager";
 import paymentManager from "../services/payments/payments";
-import { CardAuthorization } from "../entities/CardAuthorization";
 import createhashString from "../utils/createHashString";
 
 @Resolver()
@@ -35,9 +34,22 @@ export class RequestsResolver {
         errorMessage: "Invalid description length",
       };
     }
-    const card = await CardAuthorization.findOne(cardId, { select: ["authorizationCode"] });
-    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
     const celebId = Input.celebId;
+    const user = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder("user")
+      .select(["user.firstName", "user.email"])
+      .leftJoin("user.cards", "cards")
+      .where("cards.id = :cardId", { cardId })
+      .addSelect(['cards."authorizationCode"'])
+      .getRawOne();
+
+    if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
+
+    const email = user.user_email;
+    const requestorName = user.user_firstName;
+    const cardAuth = user.authorizationCode;
+
     const celeb = await Celebrity.findOne(celebId);
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
@@ -45,16 +57,12 @@ export class RequestsResolver {
     const acceptsShoutOut = celeb.acceptShoutOut;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
-    const user = await User.findOne({
-      where: { userId },
-      select: ["firstName", "email"],
-    });
+
     if (!user) return { errorMessage: "An error ocuured while creating this request" };
-    const requestorName = user.firstName;
-    const email = user.email;
+
     const transactionAmount = (parseInt(celeb.shoutoutRates) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
       userId,
       recipient: celeb.userId,
     });
@@ -84,10 +92,24 @@ export class RequestsResolver {
     @Arg("cardId", () => Int) cardId: number,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
+    let callRequestType;
+    let callDurationInSeconds;
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
-    const card = await CardAuthorization.findOne(cardId, { select: ["authorizationCode"] });
-    if (!card) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
+    const user = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder("user")
+      .select(["user.firstName", "user.email"])
+      .leftJoin("user.cards", "cards")
+      .where("cards.id = :cardId", { cardId })
+      .addSelect(['cards."authorizationCode"'])
+      .getRawOne();
+
+    if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
+
+    const email = user.user_email;
+    const requestorName = user.user_firstName;
+    const cardAuth = user.authorizationCode;
     const celeb = await Celebrity.findOne(celebId);
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
@@ -95,8 +117,6 @@ export class RequestsResolver {
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
-    let callRequestType;
-    let callDurationInSeconds;
     if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
       callRequestType = RequestType.CALL_TYPE_A;
       callDurationInSeconds = 190;
@@ -111,19 +131,14 @@ export class RequestsResolver {
         errorMessage: "The selected time slot is no longer available, please select another time for this call",
       };
     }
-    const user = await User.findOne({
-      where: { userId },
-      select: ["firstName", "email"],
-    });
-    if (!user) return { errorMessage: "An error ocuured while creating this request" };
-    const email = user.email;
+
     const transactionAmount =
       callRequestType === RequestType.CALL_TYPE_A
         ? (parseInt(celeb.callRatesA) * 100).toString()
         : (parseInt(celeb.callRatesB) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
 
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, card.authorizationCode, ref, {
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
       userId,
       recipient: celeb.userId,
       availableSlotId: availableSlot.id,
@@ -131,7 +146,6 @@ export class RequestsResolver {
 
     if (!chargePayment) return { errorMessage: "Payment Error!" };
 
-    const UserfirstName = user.firstName;
     const availabeDate = getNextAvailableDate(availableSlot.day as number);
     const startTime = availableSlot.startTime as unknown as string;
     const startTimeSplit = startTime.split(":");
@@ -145,11 +159,11 @@ export class RequestsResolver {
 
     const request = {
       requestor: userId,
-      requestorName: UserfirstName,
+      requestorName: requestorName,
       recipient: celeb.userId,
       requestType: callRequestType,
       amount: transactionAmount,
-      description: `Video call request from ${UserfirstName} to ${celebAlias}`,
+      description: `Video call request from ${requestorName} to ${celebAlias}`,
       callScheduleId: availableSlot.id,
       callDurationInSeconds,
       callRequestBegins,

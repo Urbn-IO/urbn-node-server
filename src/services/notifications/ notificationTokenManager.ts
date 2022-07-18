@@ -1,25 +1,26 @@
 import { getConnection, In } from "typeorm";
 import { NotificationToken } from "../../entities/NotificationToken";
 
-export const addFcmToken = async (
+export const addToken = async (
   userId: string,
   deviceId: string,
   platform: string,
   notificationToken: string,
   pushKitToken?: string
 ): Promise<string> => {
+  const tokens = NotificationToken.create({
+    userId,
+    deviceId,
+    devicePlatform: platform,
+    notificationToken,
+    pushKitToken,
+  });
   try {
-    const fcmTokens = NotificationToken.create({
-      userId,
-      deviceId,
-      devicePlatform: platform,
-      notificationToken,
-      pushKitToken,
-    });
-    await fcmTokens.save();
+    await tokens.save();
   } catch (err) {
     if (err.code === "23505") {
-      return "Error! Token already exists on the database";
+      await NotificationToken.update({ deviceId }, tokens);
+      console.log("Token Updated");
     }
     return "An Error occured while storing token";
   }
@@ -27,7 +28,7 @@ export const addFcmToken = async (
   return "sucessfully added token";
 };
 
-export const getFcmTokens = async (userId: string[]): Promise<string[]> => {
+export const getTokens = async (userId: string[]): Promise<string[]> => {
   const tokenObj = await NotificationToken.find({
     where: { userId: In(userId) },
     select: ["notificationToken"],
@@ -59,7 +60,7 @@ export const getServiceCallTokens = async (userId: string[]) => {
   return {};
 };
 
-export const deleteFcmTokens = async (userId?: string, tokens?: string[]) => {
+export const deleteTokens = async (userId?: string, tokens?: string[]) => {
   const queryBuilder = getConnection().createQueryBuilder().delete().from(NotificationToken);
 
   if (userId) {
