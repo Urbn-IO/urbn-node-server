@@ -205,6 +205,16 @@ export class CallTokenResponse {
   @Field({ nullable: true })
   errorMessage?: string;
 }
+@ObjectType()
+export class NewCardVerificationResponse {
+  @Field(() => Boolean)
+  status: boolean;
+
+  @Field()
+  ref: string;
+
+  userId: string;
+}
 
 @ObjectType()
 class CustomVideoMetadata {

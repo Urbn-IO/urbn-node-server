@@ -3,6 +3,8 @@ import express from "express";
 import { saveTransaction } from "../../transactions";
 import { reserveVideoCallScheduleTimeSlot, updateRequestAndNotify } from "../../../../utils/helpers";
 import { saveCardPaystack } from "../../saveCard";
+import { SubscriptionTopics } from "../../../../types";
+import pubsub from "../../../../pubsub";
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 
@@ -24,17 +26,21 @@ router.post("/", async (req, res) => {
       const status = payload.event === "charge.success" ? true : false;
       res.sendStatus(200);
 
-      if (status && payload.data.metadata.newCard) {
-        const { data } = payload;
+      const { data } = payload;
+
+      if (status && data.metadata.newCard) {
         saveCardPaystack(data);
+        const userId = data.metadata.userId;
+        const ref = data.reference;
+        pubsub.publish(SubscriptionTopics.NEW_CARD, { userId, status, ref });
         return;
       }
 
-      updateRequestAndNotify(payload.data.reference, status);
-      if (payload.data.metadata.availableSlotId) {
-        reserveVideoCallScheduleTimeSlot(payload.data.metadata.availableSlotId);
+      updateRequestAndNotify(data.reference, status);
+      if (data.metadata.availableSlotId) {
+        reserveVideoCallScheduleTimeSlot(data.metadata.availableSlotId);
       }
-      saveTransaction(payload.data);
+      saveTransaction(data);
     }
   } catch (err) {
     console.log(err);

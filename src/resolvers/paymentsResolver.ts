@@ -1,7 +1,7 @@
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext } from "../types";
-import { CardResponse, InitializeCardResponse } from "../utils/graphqlTypes";
+import { Ctx, Mutation, Query, Resolver, ResolverFilterData, Root, Subscription, UseMiddleware } from "type-graphql";
+import { AppContext, SubscriptionTopics } from "../types";
+import { CardResponse, InitializeCardResponse, NewCardVerificationResponse } from "../utils/graphqlTypes";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { User } from "../entities/User";
 import paymentManager from "../services/payments/payments";
@@ -24,6 +24,16 @@ export class PaymentsResolver {
       return { errorMessage: "An error occured while adding this card. Try another card or try again later" };
     }
     return result;
+  }
+
+  @Subscription({
+    topics: SubscriptionTopics.NEW_CARD,
+    filter: ({ payload, context }: ResolverFilterData<NewCardVerificationResponse, any, any>) => {
+      return context.userId === payload.userId;
+    },
+  })
+  newCardVerification(@Root() verification: NewCardVerificationResponse): NewCardVerificationResponse {
+    return verification;
   }
 
   // @Mutation(() => Boolean)

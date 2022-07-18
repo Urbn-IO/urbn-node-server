@@ -77,6 +77,7 @@ export enum CallType {
 
 export enum SubscriptionTopics {
   VIDEO_CALL = "video_call",
+  NEW_CARD = "new_card",
   TEST_TOPIC = "test",
 }
 
