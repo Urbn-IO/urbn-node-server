@@ -26,9 +26,11 @@ export class CardAuthorization extends BaseEntity {
   @Column()
   last4!: string;
 
+  @Field()
   @Column()
   expMonth!: string;
 
+  @Field()
   @Column()
   expYear!: string;
 

@@ -213,6 +213,9 @@ export class NewCardVerificationResponse {
   @Field()
   ref: string;
 
+  @Field()
+  message?: string;
+
   userId: string;
 }
 

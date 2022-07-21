@@ -1,9 +1,9 @@
 import express from "express";
 import { client } from "../services/search/client";
 
-const searchRouter = express.Router();
+const router = express.Router();
 
-searchRouter.get("/getCollection", async (req, res) => {
+router.get("/getCollection", async (req, res) => {
   const { q } = req.query;
   try {
     const result = await client.collections(q as string).retrieve();
@@ -13,7 +13,7 @@ searchRouter.get("/getCollection", async (req, res) => {
   }
 });
 
-searchRouter.get("/getAllCollections", async (_, res) => {
+router.get("/getAllCollections", async (_, res) => {
   try {
     const result = await client.collections().retrieve();
     res.send(result);
@@ -22,7 +22,7 @@ searchRouter.get("/getAllCollections", async (_, res) => {
   }
 });
 
-searchRouter.get("/dropCollection", async (req, res) => {
+router.get("/dropCollection", async (req, res) => {
   const { q } = req.query;
   try {
     const result = await client.collections(q as string).delete();
@@ -32,7 +32,7 @@ searchRouter.get("/dropCollection", async (req, res) => {
   }
 });
 
-searchRouter.get("/searchCelebrity", async (req, res) => {
+router.get("/searchCelebrity", async (req, res) => {
   const { q } = req.query;
 
   const searchParameters = {
@@ -48,7 +48,7 @@ searchRouter.get("/searchCelebrity", async (req, res) => {
   }
 });
 
-searchRouter.post("/addCelebrity", async (req, res) => {
+router.post("/addCelebrity", async (req, res) => {
   const celebs = req.body;
   try {
     const result = await client.collections("celebrity").documents().import(celebs, { action: "upsert" });
@@ -58,7 +58,7 @@ searchRouter.post("/addCelebrity", async (req, res) => {
   }
 });
 
-searchRouter.post("/addCategory", async (req, res) => {
+router.post("/addCategory", async (req, res) => {
   const category = req.body.data;
   try {
     const result = await client.collections("category").documents().import(category, { action: "upsert" });
@@ -68,4 +68,4 @@ searchRouter.post("/addCategory", async (req, res) => {
   }
 });
 
-export default searchRouter;
+export default router;

@@ -5,8 +5,9 @@ import cors from "cors";
 import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-import router from "./services/payments/paystack/webhook";
-import searchRouter from "./api/typeSense";
+import payment from "./services/payments/paystack/webhook";
+import video from "./services/video/twilio/webhook";
+import search from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
 import pubsub from "./pubsub";
@@ -77,8 +78,9 @@ const main = async () => {
     })
   );
 
-  app.use("/paystack", router);
-  app.use("/search", searchRouter);
+  app.use("/twilio", video);
+  app.use("/paystack", payment);
+  app.use("/search", search);
 
   const schema = await buildSchema({
     resolvers,

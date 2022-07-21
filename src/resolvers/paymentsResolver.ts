@@ -33,6 +33,9 @@ export class PaymentsResolver {
     },
   })
   newCardVerification(@Root() verification: NewCardVerificationResponse): NewCardVerificationResponse {
+    const status = verification.status;
+    if (status) verification.message = "Card successfully verified";
+    else verification.message = "Unable to verify this card. Please try again or try another card";
     return verification;
   }
 

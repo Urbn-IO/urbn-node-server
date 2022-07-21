@@ -29,6 +29,7 @@ declare global {
       TWILIO_AUTH_TOKEN: string;
       TWILIO_API_KEY: string;
       TWILIO_API_SECRET: string;
+      TWILIO_WEBHOOK: string;
       APPLE_TEAM_ID: string;
       APNS_KEY_ID: string;
       APNS_DEV_URL: string;

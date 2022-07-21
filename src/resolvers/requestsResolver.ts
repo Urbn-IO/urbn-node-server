@@ -58,8 +58,6 @@ export class RequestsResolver {
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
 
-    if (!user) return { errorMessage: "An error ocuured while creating this request" };
-
     const transactionAmount = (parseInt(celeb.shoutoutRates) * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
