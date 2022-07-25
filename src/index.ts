@@ -2,7 +2,6 @@ import "dotenv-safe/config.js";
 import path from "path";
 import express from "express";
 import cors from "cors";
-import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import payment from "./services/payments/paystack/webhook";
@@ -24,7 +23,7 @@ import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getUserId } from "./utils/helpers";
-import { initializeSearch } from "./services/search/collections";
+import redisClient from "./redis/client";
 
 const app = express();
 const httpServer = createServer(app);
@@ -44,10 +43,11 @@ const main = async () => {
   await connection.runMigrations();
 
   initializeApp(firebaseConfig);
-  initializeSearch();
+  // initializeSearch();
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
-  const redis = new Redis(process.env.REDIS_URL);
+  const redis = await redisClient();
+
   const store = new RedisStore({ client: redis, disableTouch: true });
   app.use(
     session({

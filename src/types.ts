@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { RedisPubSub } from "graphql-redis-subscriptions";
+import { VideoCallEvent } from "./utils/graphqlTypes";
 
 export type AppContext = {
   req: Request;
@@ -27,6 +28,14 @@ export interface NotificationsPayload {
   priority?: NotificationPriority;
   ttl?: number;
 }
+export interface NotificationsPayloadTest {
+  messageTitle?: string;
+  messageBody?: string;
+  tokens: string[];
+  data?: any;
+  priority?: NotificationPriority;
+  ttl?: number;
+}
 
 export interface VideoOutput {
   workFlowId: string | undefined;
@@ -48,6 +57,24 @@ export type TransactionsMetadata = {
   recipient: string;
   availableSlotId?: number;
 };
+export type CachedCallEventPayload = {
+  roomName: string;
+  roomSid: string;
+  roomStatus: string;
+  participantA: string;
+  participantB?: string;
+  time?: Date;
+};
+
+export type CallTimerOptions = {
+  start?: boolean;
+  end?: boolean;
+  payload?: CachedCallEventPayload;
+  event?: VideoCallEvent;
+  roomName?: string;
+};
+
+export type CallbackFunction = (...args: any[]) => any;
 
 export enum NotificationPriority {
   HIGH,
@@ -77,6 +104,7 @@ export enum CallType {
 
 export enum SubscriptionTopics {
   VIDEO_CALL = "video_call",
+  CALL_STATUS = "call_status",
   NEW_CARD = "new_card",
   TEST_TOPIC = "test",
 }

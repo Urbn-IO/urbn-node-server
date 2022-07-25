@@ -12,11 +12,12 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { CallTokenResponse } from "../utils/graphqlTypes";
+import { CallTokenResponse, NotificationsPayloadTest, VideoCallEvent } from "../utils/graphqlTypes";
 import { AppContext, SubscriptionTopics } from "../types";
 import { validateRecipient, validateRequestor } from "../utils/requestValidations";
 import { createVideoCallRoom, getVideoCallToken } from "../services/video/calls";
 import { sendCallNotification } from "../services/notifications/handler";
+import { notificationsManager } from "../services/notifications/notificationsManager";
 
 @Resolver()
 export class VideoCallResolver {
@@ -71,46 +72,19 @@ export class VideoCallResolver {
     return call;
   }
 
-  // @Subscription(() => Notification, {
-  //   topics: "NOTIFICATIONS",
-  //   filter: ({ payload, args }: ResolverFilterData<CallTokenResponse, NewNotificationArgs>) => {
-  //     return payload. === args.userId;
-  //   },
-  // })
-  // newNotification(@Root() notification: Notification, @Args() { userId }: NewRequestArgs): Notification {
-  //   return notification;
-  // }
+  @Subscription({
+    topics: SubscriptionTopics.CALL_STATUS,
+    filter: ({ payload, context }: ResolverFilterData<VideoCallEvent, any, any>) => {
+      return context.userId === payload.ParticipantIdentity;
+    },
+  })
+  callStatus(@Root() status: VideoCallEvent): VideoCallEvent {
+    return status;
+  }
 
-  //   @Query(() => CallTokenResponse, { nullable: true })
-  //   @UseMiddleware(isAuthenticated)
-  //   async joinVideoCall(@Arg("requestId") requestId: number, @Ctx() { req }: AppContext): Promise<CallTokenResponse> {
-  //     const userId = req.session.userId;
-  //     const identity = userId as string;
-  //     const AccessToken = jwt.AccessToken;
-  //     const VideoGrant = AccessToken.VideoGrant;
-  //     let token, roomName;
-  //     const isValidRequestrecipient = await ValidateRequestor(identity, requestId);
-  //     if (isValidRequestrecipient) {
-  //       const room = await CallRoom.findOne({
-  //         where: { requestId },
-  //         select: ["roomName"],
-  //       });
-  //       if (room) {
-  //         roomName = room.roomName;
-  //         const videoGrant = new VideoGrant({
-  //           room: roomName,
-  //         });
-  //         // token = new AccessToken(this.twilioAccountSid, this.twilioApiKey, this.twilioApiSecret, {
-  //         //   identity,
-  //         //   ttl: 900,
-  //         // });
-  //         token.addGrant(videoGrant);
-  //         token = token.toJwt();
-  //       } else {
-  //         return { errorMessage: "An error occured" };
-  //       }
-  //       return { token, roomName };
-  //     }
-  //     return { errorMessage: "You aren't authorized to join this call" };
-  //   }
+  @Mutation(() => Boolean)
+  testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
+    notificationsManager().sendInstantTestMessage(payload);
+    return true;
+  }
 }

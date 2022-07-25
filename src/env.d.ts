@@ -15,14 +15,13 @@ declare global {
       AWS_SQS_VOD_QUEUE_URL: string;
       DEFUALT_CURRENCY: string;
       DATABASE_URL: string;
-      REDIS_URL: string;
       REDIS_HOST: string;
       REDIS_PORT: string;
-      PORT: string;
       SESSION_SECRET: string;
       PAYSTACK_API: string;
       PAYSTACK_PUBLIC_KEY: string;
       PAYSTACK_SECRET_KEY: string;
+      PORT: string;
       TYPESENSE_API_KEY: string;
       TYPESENSE_NODE_CLUSTER: string;
       TWILIO_ACCOUNT_SID: string;
@@ -39,4 +38,4 @@ declare global {
   }
 }
 
-export {};
+export {}

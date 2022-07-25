@@ -8,7 +8,7 @@ export const createVideoCallRoom = async (callDurationInSeconds: number) => {
     const currentTime = new Date().valueOf().toString();
     const randomNumber = Math.random().toString();
     const serial = crypto
-      .createHash("md5")
+      .createHash("sha1")
       .update(currentTime + randomNumber)
       .digest("hex");
     const roomName = `urbn_video_room:${serial}`;
@@ -16,7 +16,7 @@ export const createVideoCallRoom = async (callDurationInSeconds: number) => {
       uniqueName: roomName,
       type: "go",
       statusCallbackMethod: "POST",
-      statusCallback: "",
+      statusCallback: process.env.TWILIO_WEBHOOK,
       emptyRoomTimeout: 1,
       unusedRoomTimeout: 1,
       // maxParticipantDuration: callDurationInSeconds,

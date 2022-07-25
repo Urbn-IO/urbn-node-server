@@ -4,7 +4,8 @@ import { saveTransaction } from "../../transactions";
 import { reserveVideoCallScheduleTimeSlot, updateRequestAndNotify } from "../../../../utils/helpers";
 import { saveCardPaystack } from "../../saveCard";
 import { SubscriptionTopics } from "../../../../types";
-import pubsub from "../../../../pubsub";
+import publish from "../../../../utils/publish";
+import { NewCardVerificationResponse } from "../../../../utils/graphqlTypes";
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 
@@ -22,7 +23,7 @@ router.post("/", async (req, res) => {
         saveCardPaystack(data);
         const userId = data.metadata.userId;
         const ref = data.reference;
-        pubsub.publish(SubscriptionTopics.NEW_CARD, { userId, status, ref });
+        publish<NewCardVerificationResponse>(SubscriptionTopics.NEW_CARD, { userId, status, ref });
         return;
       }
 

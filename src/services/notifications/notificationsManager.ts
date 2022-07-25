@@ -1,11 +1,36 @@
 import { AndroidConfig, ApnsConfig, Notification } from "firebase-admin/messaging";
-import { NotificationPriority, NotificationsPayload } from "../../types";
+import { NotificationPriority, NotificationsPayload, NotificationsPayloadTest } from "../../types";
 import { propagateMessage } from "./firebaseCloudMessaging";
 
 const sendMessage = () => {
   return {
     sendInstantMessage: ({ messageTitle, messageBody, tokens, data, priority }: NotificationsPayload) => {
       const priorityProp: { android: "normal" | "high"; apns: string } = { android: "normal", apns: "5" };
+      if (priority === NotificationPriority.HIGH) {
+        priorityProp.android = "high";
+        priorityProp.apns = "10";
+      }
+      const notification: Notification = {
+        title: messageTitle,
+        body: messageBody,
+      };
+      const android: AndroidConfig = {
+        priority: priorityProp.android,
+      };
+      const apns: ApnsConfig = {
+        headers: {
+          "apns-priority": priorityProp.apns,
+        },
+      };
+      propagateMessage(tokens, notification, data, android, apns);
+    },
+  };
+};
+
+const sendTestMessage = () => {
+  return {
+    sendInstantTestMessage: ({ messageTitle, messageBody, tokens, data, priority }: NotificationsPayloadTest) => {
+      const priorityProp: { android: "normal" | "high"; apns: string } = { android: "high", apns: "10" };
       if (priority === NotificationPriority.HIGH) {
         priorityProp.android = "high";
         priorityProp.apns = "10";
@@ -55,5 +80,6 @@ export function notificationsManager() {
   return {
     ...sendMessage(),
     ...calls(),
+    ...sendTestMessage(),
   };
 }

@@ -2,7 +2,7 @@ import { User } from "../entities/User";
 import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
-import { CallType, ContentType, DayOfTheWeek, PlatformOptions } from "../types";
+import { CallType, ContentType, DayOfTheWeek, NotificationRouteCode, PlatformOptions } from "../types";
 
 registerEnumType(CallType, {
   name: "CallType",
@@ -17,6 +17,12 @@ registerEnumType(DayOfTheWeek, {
 registerEnumType(PlatformOptions, {
   name: "PlatformOptions",
   description: "Enum representing possible device platforms",
+});
+
+//remove this, its for testing
+registerEnumType(NotificationRouteCode, {
+  name: "NotificationRouteCode",
+  description: "Enum representing possible NotificationRouteCode",
 });
 
 @InputType()
@@ -220,6 +226,31 @@ export class NewCardVerificationResponse {
 }
 
 @ObjectType()
+export class VideoCallEvent {
+  @Field()
+  RoomSid: string;
+
+  @Field()
+  RoomName: string;
+
+  @Field()
+  RoomStatus: string;
+
+  @Field({ nullable: true })
+  ParticipantStatus?: string;
+
+  @Field({ nullable: true })
+  ParticipantIdentity?: string;
+
+  @Field(() => Int)
+  CallDuration?: number;
+
+  ParticipantDuration?: string;
+
+  StatusCallbackEvent: string;
+}
+
+@ObjectType()
 class CustomVideoMetadata {
   @Field()
   userId: string;
@@ -301,4 +332,23 @@ export class SubPayload {
   newPerson: Person;
   @Field()
   userId: string;
+}
+
+///remove below after
+@InputType()
+export class TestData {
+  @Field(() => NotificationRouteCode)
+  routeCode: NotificationRouteCode;
+}
+
+@InputType()
+export class NotificationsPayloadTest {
+  @Field({ nullable: true })
+  messageTitle?: string;
+  @Field({ nullable: true })
+  messageBody?: string;
+  @Field(() => [String])
+  tokens: string[];
+  @Field({ nullable: true })
+  data?: TestData;
 }
