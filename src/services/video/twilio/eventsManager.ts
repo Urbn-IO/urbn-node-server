@@ -1,51 +1,83 @@
-import IORedis from "ioredis";
-import { addJob, createQueue } from "../../../jobs/producer";
-import updateClientCallDuration from "../../../jobs/updateClientCallDurationJob";
-import executeJob from "../../../jobs/worker";
-
+import { addJob, createQueue, destroyJob } from "../../../queues/jobQueue/producer";
 import { CachedCallEventPayload, CallTimerOptions, SubscriptionTopics } from "../../../types";
 import { VideoCallEvent } from "../../../utils/graphqlTypes";
 import publish from "../../../utils/publish";
+import createWorker from "../../../queues/jobQueue/worker";
+import { currentCallDuration } from "../../../utils/helpers";
 
-const timer = async (options: CallTimerOptions, redis: IORedis.Redis) => {
+import redisClient from "../../../redis/client";
+import { RepeatOptions } from "bullmq";
+import config from "../../../config";
+
+const redis = redisClient;
+const callStatusQueue = createQueue("callStatus", redis);
+
+const timer = async (options: CallTimerOptions) => {
   //if start, start timer by storing the current time into redis
   if (options.start && options.payload) {
     const { payload } = options;
-    payload.time = new Date();
-    await redis.set(payload.roomSid, JSON.stringify(payload));
+    payload.startTime = new Date();
     //queue for processing call duration updates to clients after a certain interval
-    const queueName = `callStatus:${payload.roomSid}`;
-    const queue = createQueue(queueName, redis);
-    const job = await addJob(queue, payload.roomName, payload.roomSid, updateClientCallDuration, {
-      repeat: {
-        every: 30000,
-        limit: 6,
-      },
+
+    const queueName = "callStatus";
+    const limit = payload.callLength / 30 + 1;
+    const queue = callStatusQueue;
+    // const queueString = JSON.stringify(queue);
+    /// payload.queue = queueString;
+    await redis.set(payload.roomSid, JSON.stringify(payload));
+
+    const repeat: RepeatOptions = {
+      every: 30000,
+      limit,
+      immediately: true,
+    };
+
+    const jobRepeatKey = await addJob(queue, payload.roomName, payload.roomSid, {
+      repeat,
+      jobId: payload.roomSid,
+      removeOnComplete: true,
     });
-    if (job) {
-      executeJob(queueName, redis);
+
+    if (jobRepeatKey) {
+      const pathToProcessor = `${config.APP_ROOT}/services/video/jobs/updateClientCallDurationJob`;
+      const worker = createWorker(queueName, pathToProcessor, redis);
+      worker.on("active", (job) => console.log(`job with ${job.id} is active`));
+      worker.on("completed", async (job) => {
+        console.log(`Completed job ${job.id} successfully`);
+      });
+      worker.on("failed", (job, err) => console.log(`Failed job ${job.id} with ${err}`));
     }
-    return 1;
+
+    const duration = currentCallDuration(payload.callLength, payload.startTime, payload.startTime);
+    const countDown = duration.countDownDuration;
+
+    return { countDown, participantA: undefined, participantB: undefined };
   }
 
   //get current call duration by getting the stored time from redis and calculating the difference between it and the current time
   const { event } = options;
   if (event) {
     const cachedEvent = await redis.get(event.RoomSid);
-    if (!cachedEvent) return 0;
+    if (!cachedEvent) return { duration: 0, participantA: undefined, participantB: undefined };
     const payload: CachedCallEventPayload = JSON.parse(cachedEvent);
-    if (!payload.time) return 0;
-    const date = new Date();
-    const duration = (date.getTime() - payload.time.getTime()) / 1000;
-    payload.time = date;
-    await redis.set(payload.roomSid, JSON.stringify(payload));
-    console.log("call duration updated");
-    return duration;
+    const startTimeRaw = payload.startTime;
+    if (!startTimeRaw) return { duration: 0, participantA: undefined, participantB: undefined };
+    const startTimestring = startTimeRaw as unknown as string;
+    const startTime = new Date(startTimestring);
+    const currentTime = new Date();
+    const duration = currentCallDuration(payload.callLength, startTime, currentTime);
+    console.log("call duration updated!");
+    const participantA = payload.participantA;
+    const participantB = payload.participantB;
+    return { duration, participantA, participantB };
   }
 
-  return 0;
+  return { duration: 0, participantA: undefined, participantB: undefined };
 };
-const checkParticipant = async (event: VideoCallEvent, redis: IORedis.Redis) => {
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const checkParticipant = async (event: VideoCallEvent) => {
   try {
     const cachedEvent = await redis.get(event.RoomSid);
     //if room exists in redis with a participant
@@ -53,9 +85,11 @@ const checkParticipant = async (event: VideoCallEvent, redis: IORedis.Redis) => 
       const payload: CachedCallEventPayload = JSON.parse(cachedEvent);
       //if current event participant hasn't been cached, means its a new participant, start timer
       if (event.ParticipantIdentity !== payload.participantA) {
-        payload.participantB = event.ParticipantIdentity;
-        const duration = await timer({ start: true, payload }, redis);
-        event.CallDuration = duration;
+        const participant = event.ParticipantIdentity as string;
+        payload.participantB = participant;
+        const time = await timer({ start: true, payload });
+        event.CallDuration = time.countDown;
+        event.participantB = participant;
         console.log("both participants joined");
         return event;
       }
@@ -63,17 +97,22 @@ const checkParticipant = async (event: VideoCallEvent, redis: IORedis.Redis) => 
       return event;
     }
     //create participant in redis with room name
+    const participant = event.ParticipantIdentity as string;
+    const regexCallLength = event.RoomName.match(/:::([\s\S]*)$/);
+    const callLength = regexCallLength ? parseInt(regexCallLength[1]) : 0;
     const payload: CachedCallEventPayload = {
       roomSid: event.RoomSid,
       roomName: event.RoomName,
       roomStatus: event.RoomStatus,
-      participantA: event.ParticipantIdentity as string,
+      participantA: participant,
       participantB: undefined,
-      time: undefined,
+      callLength,
+      startTime: undefined,
     };
     redis.set(payload.roomSid, JSON.stringify(payload));
     console.log("first participant joined");
     event.CallDuration = 0;
+    event.participantA = participant;
     return event;
   } catch (err) {
     console.error(err);
@@ -85,39 +124,53 @@ const publishEventTodevice = () => {
   return {
     publishVideoCallEvent: (event: VideoCallEvent) => {
       publish<VideoCallEvent>(SubscriptionTopics.CALL_STATUS, event);
-      return true;
     },
   };
 };
 
-const processCallEvent = (redis: IORedis.Redis) => {
+const processCallEvent = () => {
   return {
     processCall: async (event: VideoCallEvent) => {
       console.log(`procesing call event with statusCallBack: ${event.StatusCallbackEvent}`);
       if (event.StatusCallbackEvent === "participant-connected") {
-        const storedEvent = await checkParticipant(event, redis);
+        const storedEvent = await checkParticipant(event);
         return storedEvent;
       }
       if (event.StatusCallbackEvent === "participant-disconnected") {
-        const duration = await timer({ event }, redis);
-        event.CallDuration = duration;
+        const time = await timer({ event });
+        event.CallDuration = time.countDown;
+        event.participantA = time.participantA;
+        event.participantB = time.participantB;
         return event;
       }
       if (event.StatusCallbackEvent === "room-ended") {
-        // change room status to completed (to end room)
+        const time = await timer({ event });
+        event.CallDuration = time.countDown;
+        event.participantA = time.participantA;
+        event.participantB = time.participantB;
 
-        const duration = await timer({ event }, redis);
-        event.CallDuration = duration;
-        return event;
+        /// change room status to completed (to end room)
+        // await endVideoCallRoom(event.RoomSid);
+        // const cachedEvent = await redis.get(event.RoomSid);
+        // if (cachedEvent) {
+        //   const payload: CachedCallEventPayload = JSON.parse(cachedEvent);
+        //   if (payload.queue) queue = JSON.parse(payload.queue) as Queue<any, any, string>;
+        // }
+        // if (queue)
+        await destroyJob(callStatusQueue, event.RoomSid, true);
+
+        await redis.del(event.RoomSid);
+
+        console.log("deleted queue and deleted room data from redis and closed connection");
       }
       return null;
     },
   };
 };
 
-const eventManager = (redis: IORedis.Redis) => {
+const eventManager = () => {
   return {
-    ...processCallEvent(redis),
+    ...processCallEvent(),
     ...publishEventTodevice(),
   };
 };

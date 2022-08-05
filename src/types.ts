@@ -63,7 +63,9 @@ export type CachedCallEventPayload = {
   roomStatus: string;
   participantA: string;
   participantB?: string;
-  time?: Date;
+  callLength: number;
+  startTime?: Date;
+  queue?: string;
 };
 
 export type CallTimerOptions = {
@@ -74,7 +76,9 @@ export type CallTimerOptions = {
   roomName?: string;
 };
 
-export type CallbackFunction = (...args: any[]) => any;
+export type UpdateCallDurationArgs = {
+  roomSid: string;
+};
 
 export enum NotificationPriority {
   HIGH,

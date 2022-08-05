@@ -27,6 +27,7 @@ import redisClient from "./redis/client";
 
 const app = express();
 const httpServer = createServer(app);
+const redis = redisClient;
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
@@ -46,7 +47,6 @@ const main = async () => {
   // initializeSearch();
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
-  const redis = await redisClient();
 
   const store = new RedisStore({ client: redis, disableTouch: true });
   app.use(

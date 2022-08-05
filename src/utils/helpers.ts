@@ -71,3 +71,10 @@ export const reserveVideoCallScheduleTimeSlot = (slotId: number) => {
   const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
   CallScheduleRepo.update(slotId, { available: false });
 };
+
+export const currentCallDuration = (callLength: number, startTime: Date, currentTime: Date) => {
+  const normalisedDuration = (currentTime.getTime() - startTime.getTime()) / 1000;
+  const countDown = callLength - normalisedDuration;
+  const countDownDuration = countDown > 0 ? countDown : 0;
+  return { normalisedDuration, countDownDuration };
+};

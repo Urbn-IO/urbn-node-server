@@ -15,9 +15,9 @@ import { sendInstantNotification } from "../services/notifications/handler";
 import { appendCdnLink } from "../utils/cdnHelper";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
-import { deleteRoom } from "../services/video/videoRoomManager";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
+import config from "../config";
 
 @Resolver()
 export class RequestsResolver {
@@ -117,10 +117,10 @@ export class RequestsResolver {
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
     if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
       callRequestType = RequestType.CALL_TYPE_A;
-      callDurationInSeconds = 190;
+      callDurationInSeconds = config.VIDEO_CALL_TYPE_A_DURATION;
     } else if (acceptsCallTypeB === true && Input.callType === CallType.CALL_TYPE_B) {
       callRequestType = RequestType.CALL_TYPE_B;
-      callDurationInSeconds = 310;
+      callDurationInSeconds = config.VIDEO_CALL_TYPE_B_DURATION;
     } else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
     const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
     const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
@@ -163,7 +163,7 @@ export class RequestsResolver {
       amount: transactionAmount,
       description: `Video call request from ${requestorName} to ${celebAlias}`,
       callScheduleId: availableSlot.id,
-      callDurationInSeconds,
+      callDurationInSeconds: callDurationInSeconds.toString(),
       callRequestBegins,
       requestExpires,
       recipientAlias: celebAlias,
@@ -238,7 +238,6 @@ export class RequestsResolver {
   @UseMiddleware(isAuthenticated)
   async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
     try {
-      deleteRoom(requestId);
       const request = await (
         await Requests.createQueryBuilder()
           .update({ status: RequestStatus.FULFILLED })

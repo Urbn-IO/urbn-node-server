@@ -242,11 +242,16 @@ export class VideoCallEvent {
   @Field({ nullable: true })
   ParticipantIdentity?: string;
 
-  @Field(() => Int)
+  @Field()
   CallDuration?: number;
+
+  participantA?: string;
+
+  participantB?: string;
 
   ParticipantDuration?: string;
 
+  @Field()
   StatusCallbackEvent: string;
 }
 

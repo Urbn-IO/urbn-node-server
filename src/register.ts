@@ -1,5 +1,4 @@
 import { NonEmptyArray } from "type-graphql";
-import { CallRoom } from "./entities/CallRoom";
 import { CallScheduleBase } from "./entities/CallScheduleBase";
 import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
@@ -28,7 +27,6 @@ export const entities = [
   NotificationToken,
   CardAuthorization,
   Shoutout,
-  CallRoom,
   CallScheduleBase,
   Transactions,
 ];

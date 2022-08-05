@@ -75,7 +75,8 @@ export class VideoCallResolver {
   @Subscription({
     topics: SubscriptionTopics.CALL_STATUS,
     filter: ({ payload, context }: ResolverFilterData<VideoCallEvent, any, any>) => {
-      return context.userId === payload.ParticipantIdentity;
+      const res = context.userId === payload.participantA || context.userId === payload.participantB;
+      return res;
     },
   })
   callStatus(@Root() status: VideoCallEvent): VideoCallEvent {
