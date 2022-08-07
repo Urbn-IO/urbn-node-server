@@ -35,7 +35,6 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^16.11.7",
     "@types/nodemailer": "^6.4.4",
-    "@types/redis": "^2.8.32",
     "@types/shelljs": "^0.8.9",
     "@types/uuid": "^8.3.1",
     "@types/validator": "^13.7.1",
@@ -49,6 +48,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.41.0",
+    "@aws-sdk/client-ses": "^3.142.0",
     "@aws-sdk/client-sqs": "^3.95.0",
     "@aws-sdk/s3-request-presigner": "^3.41.0",
     "@babel/runtime": "^7.17.2",

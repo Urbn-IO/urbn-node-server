@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { s3SecondaryClient } from "../services/aws/clients/s3Client";
+import { s3SecondaryClient } from "../services/aws/clients/s3/client";
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
@@ -17,7 +17,7 @@ import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
-import config from "../config";
+import { config } from "../constants";
 
 @Resolver()
 export class RequestsResolver {

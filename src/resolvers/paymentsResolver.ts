@@ -1,10 +1,12 @@
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Ctx, Mutation, Query, Resolver, ResolverFilterData, Root, Subscription, UseMiddleware } from "type-graphql";
-import { AppContext, SubscriptionTopics } from "../types";
+import { AppContext, EmailBaseInput, EmailTemplates, SubscriptionTopics } from "../types";
 import { CardResponse, InitializeCardResponse, NewCardVerificationResponse } from "../utils/graphqlTypes";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { User } from "../entities/User";
 import paymentManager from "../services/payments/payments";
+
+import sendMail from "../services/mail/sendMail";
 
 @Resolver()
 export class PaymentsResolver {
@@ -73,5 +75,21 @@ export class PaymentsResolver {
       return { errorMessage: "User has no cards" };
     }
     return { cards };
+  }
+
+  @Query(() => Boolean)
+  async sendEmailTest() {
+    // const testAccount = await nodemailer.createTestAccount();
+    // console.log("testAccount", testAccount);
+    const year = new Date().getFullYear().toString();
+    const data: EmailBaseInput = {
+      name: "Nnamdi",
+      logo: "https://d3p19n9yrlubzc.cloudfront.net/Assets/Urbn.png",
+      year,
+      link: "https://google.com",
+      contact: "mailto:nnamdi@geturbn.io",
+    };
+    sendMail("nnamdi@geturbn.io", EmailTemplates.ConfirmEmailTemplate, ["ogbunnamdi@gmail.com"], data);
+    return true;
   }
 }

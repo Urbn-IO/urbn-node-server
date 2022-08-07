@@ -52,6 +52,14 @@ export interface VideoOutput {
   contentType: number | undefined;
 }
 
+export interface EmailBaseInput {
+  logo: string;
+  year: string;
+  contact: string;
+  name: string;
+  link: string;
+}
+
 export type TransactionsMetadata = {
   userId: string;
   recipient: string;
@@ -139,4 +147,9 @@ export enum PlatformOptions {
   IOS = "ios",
   ANDROID = "android",
   WEB = "web",
+}
+
+export enum EmailTemplates {
+  ConfirmEmailTemplate = "ConfirmEmailTemplate",
+  ResetPasswordTemplate = "ResetPasswordTemplate",
 }

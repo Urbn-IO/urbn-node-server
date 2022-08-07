@@ -1,7 +1,7 @@
 import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
 import { saveShoutout } from "../../../shoutout/saveShoutout";
 import { ContentType, VideoOutput } from "../../../types";
-import client from "../clients/sqsClient";
+import client from "../clients/sqs/client";
 
 const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
 

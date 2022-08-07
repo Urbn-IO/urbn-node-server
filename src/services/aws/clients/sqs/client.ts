@@ -4,7 +4,7 @@ const region = process.env.AWS_SECONDARY_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
-const sqsConfig: SQSClientConfig = {
+const config: SQSClientConfig = {
   region,
   credentials: {
     accessKeyId: accessKey,
@@ -12,5 +12,5 @@ const sqsConfig: SQSClientConfig = {
   },
 };
 
-const client = new SQSClient(sqsConfig);
+const client = new SQSClient(config);
 export default client;

@@ -1,16 +1,15 @@
-import { addJob, createQueue, destroyJob } from "../../../queues/jobQueue/producer";
-import { CachedCallEventPayload, CallTimerOptions, SubscriptionTopics } from "../../../types";
-import { VideoCallEvent } from "../../../utils/graphqlTypes";
 import publish from "../../../utils/publish";
 import createWorker from "../../../queues/jobQueue/worker";
-import { currentCallDuration } from "../../../utils/helpers";
-
 import redisClient from "../../../redis/client";
+import { addJob, createQueue, destroyJob } from "../../../queues/jobQueue/producer";
+import { CachedCallEventPayload, CallTimerOptions, SubscriptionTopics, UpdateCallDurationArgs } from "../../../types";
+import { VideoCallEvent } from "../../../utils/graphqlTypes";
+import { currentCallDuration } from "../../../utils/helpers";
 import { RepeatOptions } from "bullmq";
-import config from "../../../config";
+import { config } from "../../../constants";
 
 const redis = redisClient;
-const callStatusQueue = createQueue("callStatus", redis);
+const callStatusQueue = createQueue("callStatus", redis, false);
 
 const timer = async (options: CallTimerOptions) => {
   //if start, start timer by storing the current time into redis
@@ -32,19 +31,18 @@ const timer = async (options: CallTimerOptions) => {
       immediately: true,
     };
 
-    const jobRepeatKey = await addJob(queue, payload.roomName, payload.roomSid, {
+    const data: UpdateCallDurationArgs = { roomSid: payload.roomSid };
+    const job = await addJob(queue, payload.roomName, data, {
       repeat,
       jobId: payload.roomSid,
       removeOnComplete: true,
     });
 
-    if (jobRepeatKey) {
+    if (job) {
       const pathToProcessor = `${config.APP_ROOT}/services/video/jobs/updateClientCallDurationJob`;
       const worker = createWorker(queueName, pathToProcessor, redis);
       worker.on("active", (job) => console.log(`job with ${job.id} is active`));
-      worker.on("completed", async (job) => {
-        console.log(`Completed job ${job.id} successfully`);
-      });
+      worker.on("completed", async (job) => console.log(`Completed job ${job.id} successfully`));
       worker.on("failed", (job, err) => console.log(`Failed job ${job.id} with ${err}`));
     }
 

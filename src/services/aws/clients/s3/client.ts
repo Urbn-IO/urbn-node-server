@@ -5,19 +5,19 @@ const secondaryRegion = process.env.AWS_SECONDARY_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
-const s3PrimaryClientConfig: S3ClientConfig = {
+const primaryConfig: S3ClientConfig = {
   region: primaryRegion,
   credentials: {
     accessKeyId: accessKey,
     secretAccessKey,
   },
 };
-const s3SecondaryClientConfig: S3ClientConfig = {
+const secondaryConfig: S3ClientConfig = {
   region: secondaryRegion,
   credentials: {
     accessKeyId: accessKey,
     secretAccessKey,
   },
 };
-export const s3primaryClient = new S3Client(s3PrimaryClientConfig);
-export const s3SecondaryClient = new S3Client(s3SecondaryClientConfig);
+export const s3primaryClient = new S3Client(primaryConfig);
+export const s3SecondaryClient = new S3Client(secondaryConfig);

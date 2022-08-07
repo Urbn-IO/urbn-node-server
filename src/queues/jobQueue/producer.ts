@@ -1,11 +1,18 @@
 import { JobsOptions, Queue, QueueScheduler } from "bullmq";
 import IORedis from "ioredis";
-import { UpdateCallDurationArgs } from "../../types";
 
-export const createQueue = (queueName: string, redis: IORedis.Redis) => {
+export const createQueue = (queueName: string, redis: IORedis.Redis, defaultOptions = true) => {
+  let defaultJobOptions: JobsOptions | undefined;
+  if (defaultOptions) {
+    defaultJobOptions = {
+      attempts: 10,
+      backoff: { type: "exponential", delay: 60000 },
+    };
+  }
   new QueueScheduler(queueName, { connection: redis });
   const queue = new Queue(queueName, {
     connection: redis,
+    defaultJobOptions,
   });
   console.log(`${queueName} queue created `);
   return queue;
@@ -22,8 +29,7 @@ export const destroyJob = async (queue: Queue<any, any, string>, jobId: string, 
   }
 };
 
-export const addJob = async (queue: Queue<any, any, string>, jobName: string, id: string, jobOptions?: JobsOptions) => {
-  const data: UpdateCallDurationArgs = { roomSid: id };
+export const addJob = async <T>(queue: Queue<any, any, string>, jobName: string, data: T, jobOptions?: JobsOptions) => {
   await queue.add(jobName, data, jobOptions);
   console.log(`${jobName} was added`);
   return true;

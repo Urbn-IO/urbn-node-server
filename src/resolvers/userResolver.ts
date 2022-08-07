@@ -6,7 +6,7 @@ import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
 import { sendEmail } from "../utils/sendMail";
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
+import { COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { validateInput } from "../utils/validateInput";
 @Resolver()
@@ -73,18 +73,18 @@ export class UserResolver {
       device.pushkitToken
     );
     req.session.userId = user.userId;
+    console.log(req.session.id);
     return { user };
   }
 
   @Mutation(() => Boolean)
-  async forgotPassword(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<boolean> {
+  async resetPassword(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<boolean> {
     const user = await User.findOne({ where: { email: email.toLowerCase() } });
     if (!user) {
-      //user doesn't exist
       return false;
     }
     const token = v4();
-    redis.set(FORGET_PASSWORD_PREFIX + token, email, "ex", 1000 * 60 * 60 * 24); //one day to use forget password token
+    await redis.set(RESET_PASSWORD_PREFIX + token, email, "EX", 3600); //one hour to use forget password token
     await sendEmail(email, `Hello there it works ${token}`);
 
     return true;
@@ -92,7 +92,6 @@ export class UserResolver {
 
   //change password
   @Mutation(() => UserResponse)
-  @UseMiddleware(isAuthenticated)
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
@@ -102,7 +101,7 @@ export class UserResolver {
       return { errorMessage: "Password must contain at least 8 characters" };
     }
 
-    const key = FORGET_PASSWORD_PREFIX + token;
+    const key = RESET_PASSWORD_PREFIX + token;
     const userEmail = await redis.get(key);
     if (!userEmail) {
       return { errorMessage: "token expired" };

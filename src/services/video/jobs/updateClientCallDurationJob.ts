@@ -34,4 +34,4 @@ const updateClientCallDuration = async ({ roomSid }: UpdateCallDurationArgs) => 
   return;
 };
 
-export default (job: Job<UpdateCallDurationArgs>) => updateClientCallDuration(job.data);
+export default async (job: Job<UpdateCallDurationArgs>) => await updateClientCallDuration(job.data);
