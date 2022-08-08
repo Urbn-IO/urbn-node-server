@@ -44,6 +44,7 @@ const timer = async (options: CallTimerOptions) => {
       worker.on("active", (job) => console.log(`job with ${job.id} is active`));
       worker.on("completed", async (job) => console.log(`Completed job ${job.id} successfully`));
       worker.on("failed", (job, err) => console.log(`Failed job ${job.id} with ${err}`));
+      worker.on("error", (err) => console.error(err));
     }
 
     const duration = currentCallDuration(payload.callLength, payload.startTime, payload.startTime);

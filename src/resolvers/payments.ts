@@ -86,7 +86,7 @@ export class PaymentsResolver {
       name: "Nnamdi",
       logo: "https://d3p19n9yrlubzc.cloudfront.net/Assets/Urbn.png",
       year,
-      link: "https://google.com",
+      url: "https://google.com",
       contact: "mailto:nnamdi@geturbn.io",
     };
     sendMail("nnamdi@geturbn.io", EmailTemplates.ConfirmEmailTemplate, ["ogbunnamdi@gmail.com"], data);

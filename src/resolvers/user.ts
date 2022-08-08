@@ -1,14 +1,14 @@
 import tokensManager from "../services/notifications/tokensManager";
 import { User } from "../entities/User";
-import { AppContext } from "../types";
+import { AppContext, EmailSubject } from "../types";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
-import { sendEmail } from "../utils/sendMail";
 import { COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { validateInput } from "../utils/validateInput";
+import { sendMail } from "../services/mail/manager";
 @Resolver()
 export class UserResolver {
   //create User resolver
@@ -84,8 +84,10 @@ export class UserResolver {
       return false;
     }
     const token = v4();
-    await redis.set(RESET_PASSWORD_PREFIX + token, email, "EX", 3600); //one hour to use forget password token
-    await sendEmail(email, `Hello there it works ${token}`);
+    const name = user.firstName;
+    const url = `${process.env.APP_BASE_URL}/reset-password/${token}`;
+    await redis.set(RESET_PASSWORD_PREFIX + token, email, "EX", 3600); //link expires in one hour
+    await sendMail({ email: [email], name, url, subject: EmailSubject.RESET });
 
     return true;
   }
@@ -102,17 +104,22 @@ export class UserResolver {
     }
 
     const key = RESET_PASSWORD_PREFIX + token;
-    const userEmail = await redis.get(key);
-    if (!userEmail) {
+    const email = await redis.get(key);
+    if (!email) {
       return { errorMessage: "token expired" };
     }
 
     const user = await User.findOne({
-      where: { email: userEmail.toLowerCase() },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {
       return { errorMessage: "user no longer exists" };
+    }
+
+    const isOldPassword = await argon2.verify(user.password, newPassword);
+    if (isOldPassword) {
+      return { errorMessage: "You cannot reuse your old password, you must provide a new password" };
     }
 
     await User.update(
@@ -162,7 +169,6 @@ export class UserResolver {
   //   return true;
   // }
 
-  //QUERIES
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
   @UseMiddleware(isAuthenticated)
@@ -197,18 +203,4 @@ export class UserResolver {
 
     return { user };
   }
-
-  //fetch all users, with optional parameter to fetch a single user by userId
-
-  // @Query(() => [User], { nullable: true })
-  // @UseMiddleware(isAuthenticated)
-  // async users(@Arg("userId", { nullable: true }) userId: string) {
-  //   if (userId) {
-  //     const user = await User.find({
-  //       where: { userId },
-  //     });
-  //     return user;
-  //   }
-  //   return await User.find();
-  // }
 }

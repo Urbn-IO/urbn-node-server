@@ -33,6 +33,7 @@
   ],
   "include": [
     "./src/**/*.tsx",
-    "./src/**/*.ts"
-, "firebaseConfig.ts"  ]
+    "./src/**/*.ts",
+    "./src/env.d.ts",
+    "firebaseConfig.ts"  ]
 }

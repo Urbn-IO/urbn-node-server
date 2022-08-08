@@ -2,6 +2,8 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       APP_NAME: string;
+      APP_BASE_URL: string;
+      APP_LOGO_URL: string;
       APP_BUNDLE_NAME: string;
       AWS_BUCKET_NAME: string;
       AWS_PUBLIC_BUCKET_NAME: string;
@@ -34,6 +36,8 @@ declare global {
       APNS_DEV_URL: string;
       APNS_PROD_URL: string;
       APNS_DEVICE_ENDPOINT: string;
+      URBN_CONTACT_MAIL: string;
+      URBN_SECURITY_MAIL: string;
     }
   }
 }

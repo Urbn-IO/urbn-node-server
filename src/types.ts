@@ -57,7 +57,7 @@ export interface EmailBaseInput {
   year: string;
   contact: string;
   name: string;
-  link: string;
+  url: string;
 }
 
 export type TransactionsMetadata = {
@@ -84,6 +84,13 @@ export type CallTimerOptions = {
   roomName?: string;
 };
 
+export type SendEmailType = {
+  name: string;
+  email: string[];
+  ccTo?: string[];
+  subject: EmailSubject;
+  url: string;
+};
 export type UpdateCallDurationArgs = {
   roomSid: string;
 };
@@ -152,4 +159,9 @@ export enum PlatformOptions {
 export enum EmailTemplates {
   ConfirmEmailTemplate = "ConfirmEmailTemplate",
   ResetPasswordTemplate = "ResetPasswordTemplate",
+}
+
+export enum EmailSubject {
+  CONFIRM,
+  RESET,
 }

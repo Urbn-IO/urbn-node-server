@@ -9,14 +9,14 @@ import { Requests } from "./entities/Requests";
 import { Shoutout } from "./entities/Shoutout";
 import { Transactions } from "./entities/Transactions";
 import { User } from "./entities/User";
-import { PublicMediaResolver } from "./resolvers/aws/publicMediaResolver";
-import { CategoryResolver } from "./resolvers/categoryResolver";
-import { UserCategoriesResolver } from "./resolvers/celebCategoriesResolver";
-import { CelebrityResolver } from "./resolvers/celebrityResolver";
-import { PaymentsResolver } from "./resolvers/paymentsResolver";
-import { RequestsResolver } from "./resolvers/requestsResolver";
-import { UserResolver } from "./resolvers/userResolver";
-import { VideoCallResolver } from "./resolvers/videoCallResolver";
+import { PublicMediaResolver } from "./resolvers/aws/publicMedia";
+import { CategoryResolver } from "./resolvers/category";
+import { UserCategoriesResolver } from "./resolvers/celebCategories";
+import { CelebrityResolver } from "./resolvers/celebrity";
+import { PaymentsResolver } from "./resolvers/payments";
+import { RequestsResolver } from "./resolvers/requests";
+import { UserResolver } from "./resolvers/user";
+import { VideoCallResolver } from "./resolvers/videoCalls";
 
 export const entities = [
   User,
