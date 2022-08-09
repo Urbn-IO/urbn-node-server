@@ -9,11 +9,12 @@ import video from "./services/video/twilio/webhook";
 import search from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
+import redisClient from "./redis/client";
 import pubsub from "./pubsub";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { COOKIE_NAME, __prod__ } from "./constants";
+import { APP_SESSION_PREFIX, COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
@@ -23,7 +24,6 @@ import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getUserId } from "./utils/helpers";
-import redisClient from "./redis/client";
 
 const app = express();
 const httpServer = createServer(app);
@@ -48,7 +48,7 @@ const main = async () => {
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
 
-  const store = new RedisStore({ client: redis, disableTouch: true });
+  const store = new RedisStore({ client: redis, disableTouch: true, prefix: APP_SESSION_PREFIX });
   app.use(
     session({
       name: COOKIE_NAME,

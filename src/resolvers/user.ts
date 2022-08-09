@@ -5,7 +5,7 @@ import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
-import { CONFIRM_EMAIL_PREFIX, COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
+import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { validateEmail, validatePassword } from "../utils/validateInput";
 import { sendMail } from "../services/mail/manager";
@@ -22,13 +22,13 @@ export class UserResolver {
     const validationMessage = validatePassword(userInput);
     if (validationMessage.errorMessage !== undefined) return validationMessage;
     const key = CONFIRM_EMAIL_PREFIX + token;
-    const email = "await redis.get(key);";
-    if (!email) return { errorMessage: "token expired" };
+    const email = await redis.get(key);
+    if (!email) return { errorMessage: "This link has expired" };
     const date = new Date();
     const age = date.getFullYear() - userInput.dateOfBirth.getFullYear();
     if (isNaN(age)) return { errorMessage: "Invalid date of birth" };
     if (age < 13) return { errorMessage: "You're a little too young for Urbn, ask your parents to create an account" };
-    if (age < 120) return { errorMessage: "Have your kids open an account" };
+    if (age > 130) return { errorMessage: "Are you immortal?" };
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
     await redis.del(key);
@@ -39,6 +39,7 @@ export class UserResolver {
         email,
         password: hashedPassword,
         userId: id,
+        sessionKey: APP_SESSION_PREFIX + req.session.id,
       }).save();
     } catch (err) {
       if (err.code === "23505") {
@@ -57,48 +58,89 @@ export class UserResolver {
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
     @Arg("deviceInfo") device: deviceInfo,
-    @Ctx() { req }: AppContext
+    @Ctx() { req, redis }: AppContext
   ): Promise<UserResponse> {
-    const user = await User.findOne({
-      where: {
-        email: userInput.email.toLowerCase(),
-      },
-      relations: ["celebrity"],
-    });
-    if (!user) {
-      return { errorMessage: "Wrong Email or Password" };
+    const session = APP_SESSION_PREFIX + req.session.id;
+    const key = await redis.exists(session);
+    if (key === 0) {
+      const user = await User.findOne({
+        where: {
+          email: userInput.email.toLowerCase(),
+        },
+        relations: ["celebrity", "cards"],
+      });
+      if (!user) {
+        return { errorMessage: "Wrong Email or Password" };
+      }
+      const verifiedPassword = await argon2.verify(user.password, userInput.password);
+      if (!verifiedPassword) return { errorMessage: "Wrong Email or Password" };
+      await redis.del(user.sessionKey);
+      await User.update(user.id, {
+        sessionKey: session,
+      });
+      await tokensManager().addNotificationToken(
+        user.userId,
+        device.id,
+        device.platform,
+        device.notificationToken,
+        device.pushkitToken
+      );
+      req.session.userId = user.userId; //log user in
+      const token = v4();
+      const url = `${process.env.APP_BASE_URL}/reset-password/${token}`;
+      await redis.set(RESET_PASSWORD_PREFIX + token, user.email, "EX", 3600 * 24); //link expires in one day
+      await sendMail({
+        email: [user.email],
+        name: user.firstName,
+        url,
+        subject: EmailSubject.SECURITY,
+        sourcePlatform: device.platform,
+      });
+      return { user };
     }
-    const verifiedPassword = await argon2.verify(user.password, userInput.password);
-    if (!verifiedPassword) {
-      return { errorMessage: "Wrong Email or Password" };
-    }
-    tokensManager().addNotificationToken(
-      user.userId,
-      device.id,
-      device.platform,
-      device.notificationToken,
-      device.pushkitToken
-    );
-    req.session.userId = user.userId;
-    console.log(req.session.id);
-    return { user };
+    return { errorMessage: "You're already logged in" };
   }
 
   @Mutation(() => GenericResponse)
-  async confirmEmail(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<GenericResponse> {
+  async confirmEmail(
+    @Arg("email") email: string,
+    @Arg("existingUser", { defaultValue: false }) existingUser: boolean,
+    @Ctx() { redis }: AppContext
+  ): Promise<GenericResponse> {
     const valid = validateEmail(email);
-    if (!valid) {
-      return { errorMessage: "Invalid email address format, you might have a typo" };
-    }
+    if (!valid) return { errorMessage: "Invalid email address format, you might have a typo" };
+    let route;
+    if (existingUser) route = "update-email";
+    else route = "create-account";
     email = email.toLowerCase();
     const token = v4();
-    const url = `${process.env.APP_BASE_URL}/email-confirmation/${token}`;
+    const url = `${process.env.APP_BASE_URL}/${route}/${token}`;
     await redis.set(CONFIRM_EMAIL_PREFIX + token, email, "EX", 3600 * 24); //link expires in one day
-    await sendMail({ email: [email], name: "", url, subject: EmailSubject.CONFIRM });
+    await sendMail({ email: [email], url, subject: EmailSubject.CONFIRM });
 
     return {
       success: `Verify your email. Check the inbox of ${email}, we've sent you an email on the next steps to take`,
     };
+  }
+
+  @Mutation(() => GenericResponse)
+  @UseMiddleware(isAuthenticated)
+  async updateEmail(@Arg("token") token: string, @Ctx() { req, redis }: AppContext): Promise<GenericResponse> {
+    const userId = req.session.userId;
+    const key = CONFIRM_EMAIL_PREFIX + token;
+    const email = await redis.get(key);
+    if (!email) return { errorMessage: "This link has expired" };
+    try {
+      const user = await User.findOne({ where: { userId }, select: ["id", "userId"] });
+      if (!user) return { errorMessage: "An error occured" };
+      if (user.userId !== userId) return { errorMessage: "Unauthorized Action" };
+      await User.update(user.id, { email });
+      await redis.del(key);
+      return { success: "Email succesfully updated" };
+    } catch (err) {
+      console.log(err);
+      return { errorMessage: "An error occured" };
+    }
   }
 
   @Mutation(() => GenericResponse)
@@ -131,7 +173,7 @@ export class UserResolver {
     const key = RESET_PASSWORD_PREFIX + token;
     const email = await redis.get(key);
     if (!email) {
-      return { errorMessage: "token expired" };
+      return { errorMessage: "This link has expired" };
     }
 
     const user = await User.findOne({
@@ -163,17 +205,18 @@ export class UserResolver {
   }
   //logout user
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuthenticated)
   async logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
     const userId = req.session.userId;
     if (userId) {
       await tokensManager().removeNotificationTokens(userId);
     }
-    return new Promise((resolve) =>
+    return new Promise((resolve, reject) =>
       req.session.destroy((err: unknown) => {
         res.clearCookie(COOKIE_NAME);
         if (err) {
           console.log(err);
-          resolve(false);
+          reject(err);
           return;
         }
 
@@ -182,17 +225,16 @@ export class UserResolver {
     );
   }
 
-  //delete user
-  // @Mutation(() => Boolean)
-  // async deleteUser(@Arg("id") id: number): Promise<boolean> {
-  //   const user = await User.findOne({ id });
-  //   try {
-  //     await User.delete({ id: user?.id });
-  //   } catch {
-  //     return false;
-  //   }
-  //   return true;
-  // }
+  //validate user by password
+  @Query(() => Boolean)
+  @UseMiddleware(isAuthenticated)
+  async validateUser(@Arg("password") password: string, @Ctx() { req }: AppContext) {
+    const userId = req.session.userId;
+    const user = await User.findOne({ where: { userId }, select: ["password"] });
+    if (!user) return false;
+    const verifiedPassword = await argon2.verify(user.password, password);
+    return verifiedPassword;
+  }
 
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })

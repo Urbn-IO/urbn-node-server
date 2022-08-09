@@ -51,6 +51,9 @@ export class User extends BaseEntity {
   @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date;
 
+  @Column()
+  sessionKey: string;
+
   @Field({ nullable: true })
   @OneToOne(() => Celebrity, {
     nullable: true,

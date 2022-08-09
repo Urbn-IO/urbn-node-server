@@ -8,7 +8,7 @@ export const addToken = async (
   notificationToken: string,
   pushKitToken?: string
 ): Promise<string> => {
-  const tokens = NotificationToken.create({
+  const token = NotificationToken.create({
     userId,
     deviceId,
     devicePlatform: platform,
@@ -16,10 +16,10 @@ export const addToken = async (
     pushKitToken,
   });
   try {
-    await tokens.save();
+    await token.save();
   } catch (err) {
     if (err.code === "23505") {
-      await NotificationToken.update({ deviceId }, tokens);
+      await NotificationToken.update({ userId }, token);
       console.log("Token Updated");
     }
     return "An Error occured while storing token";

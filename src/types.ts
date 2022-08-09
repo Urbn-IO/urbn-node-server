@@ -58,6 +58,8 @@ export interface EmailBaseInput {
   contact: string;
   name?: string;
   url: string;
+  sourcePlatform?: string;
+  time?: string;
 }
 
 export type TransactionsMetadata = {
@@ -84,12 +86,13 @@ export type CallTimerOptions = {
   roomName?: string;
 };
 
-export type SendEmailType = {
-  name: string;
+export type SendEmailInputType = {
+  name?: string;
   email: string[];
   ccTo?: string[];
   subject: EmailSubject;
   url: string;
+  sourcePlatform?: PlatformOptions;
 };
 export type UpdateCallDurationArgs = {
   roomSid: string;
@@ -151,17 +154,19 @@ export enum DayOfTheWeek {
 }
 
 export enum PlatformOptions {
-  IOS = "ios",
-  ANDROID = "android",
-  WEB = "web",
+  IOS = "IOS",
+  ANDROID = "ANDROID",
+  WEB = "WEB BROWSER",
 }
 
 export enum EmailTemplates {
   ConfirmEmailTemplate = "ConfirmEmailTemplate",
   ResetPasswordTemplate = "ResetPasswordTemplate",
+  SecurityAlertTemplate = "SecurityAlertTemplate",
 }
 
 export enum EmailSubject {
   CONFIRM,
   RESET,
+  SECURITY,
 }

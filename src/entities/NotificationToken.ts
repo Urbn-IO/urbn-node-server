@@ -9,12 +9,12 @@ export class NotificationToken extends BaseEntity {
   id: number;
 
   @Field()
-  @Column({ type: "uuid" })
+  @Column({ type: "uuid", unique: true })
   @Index()
   userId: string;
 
   @Field()
-  @Column({ unique: true })
+  @Column()
   deviceId: string;
 
   @Field()

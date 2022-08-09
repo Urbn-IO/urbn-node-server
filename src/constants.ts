@@ -1,7 +1,8 @@
 export const __prod__ = process.env.Node_ENV === "production";
 export const COOKIE_NAME = "urbanauth";
+export const APP_SESSION_PREFIX = "session:";
 export const RESET_PASSWORD_PREFIX = "reset-password:";
-export const CONFIRM_EMAIL_PREFIX = "confirm:email:";
+export const CONFIRM_EMAIL_PREFIX = "confirm-email:";
 export const config = {
   APP_ROOT: __dirname,
   VIDEO_CALL_TYPE_A_DURATION: 180,
