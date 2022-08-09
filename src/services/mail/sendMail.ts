@@ -8,7 +8,6 @@ import { EmailBaseInput, EmailTemplates } from "../../types";
 const redis = redisClient;
 const pathToProcessor = `${config.APP_ROOT}/services/mail/transport`;
 const queue = createQueue(config.MAIL_QUEUE_NAME, redis);
-const worker = createWorker(config.MAIL_QUEUE_NAME, pathToProcessor, redis);
 
 //'"Foo Ifeanyi 👻" <Ifyfoo@example.com>'
 const sendTemplatedMail = async (
@@ -31,13 +30,14 @@ const sendTemplatedMail = async (
     removeOnComplete: true,
   });
   if (job) {
+    const worker = createWorker(config.MAIL_QUEUE_NAME, pathToProcessor, redis);
     worker.on("active", (job) => console.log(`job with ${job.id} is active`));
     worker.on("completed", async (job) => {
       console.log(`Completed job ${job.id} successfully`);
-      // worker.close();
+      worker.close();
     });
-    worker.on("failed", (job, err) => console.log(`Failed job ${job.id} with ${err}`));
-    worker.on("error", (err) => console.error(err));
+    worker.on("failed", (job, err) => console.log(`Failed job ${job.id} with ${err.message}`));
+    worker.on("error", (err) => console.error(err.message));
   }
 };
 

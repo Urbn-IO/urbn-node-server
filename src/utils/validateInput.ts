@@ -1,18 +1,15 @@
-import { UserInputs, UserResponse } from "./graphqlTypes";
+import { GenericResponse, UserInputs } from "./graphqlTypes";
 
-export const validateInput = (input: UserInputs): UserResponse | null => {
-  const regexp = new RegExp(
-    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-  );
-  const validEmail = regexp.test(input.email);
-
-  if (!validEmail) {
-    return { errorMessage: "Invalid email format" };
-  }
-
+export const validatePassword = (input: UserInputs): GenericResponse => {
   if (input.password.length < 8) {
     return { errorMessage: "Password must be at least 8 characters long!" };
   }
+  return { success: "success" };
+};
 
-  return null;
+export const validateEmail = (input: string) => {
+  const regexp = new RegExp(
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+  );
+  return regexp.test(input);
 };

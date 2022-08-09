@@ -32,9 +32,9 @@ export class UserInputs {
   @Field()
   lastName: string;
   @Field()
-  email!: string;
-  @Field()
   password!: string;
+  @Field()
+  dateOfBirth: Date;
 }
 
 @InputType()

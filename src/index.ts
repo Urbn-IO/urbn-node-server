@@ -84,7 +84,7 @@ const main = async () => {
 
   const schema = await buildSchema({
     resolvers,
-    validate: false,
+    validate: true,
     dateScalarMode: "isoDate",
     pubSub: pubsub,
   });

@@ -56,7 +56,7 @@ export interface EmailBaseInput {
   logo: string;
   year: string;
   contact: string;
-  name: string;
+  name?: string;
   url: string;
 }
 

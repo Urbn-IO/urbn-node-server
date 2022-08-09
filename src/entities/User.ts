@@ -18,26 +18,30 @@ import { Shoutout } from "./Shoutout";
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field()
   @Column({ unique: true, type: "uuid" })
-  userId!: string;
+  userId: string;
 
   @Field()
   @Column()
-  firstName!: string;
+  firstName: string;
 
   @Field()
   @Column()
-  lastName!: string;
+  lastName: string;
 
   @Field()
   @Column({ unique: true })
-  email!: string;
+  email: string;
+
+  @Field()
+  @Column({ type: "timestamp", nullable: true })
+  dateOfBirth: string;
 
   @Column()
-  password!: string;
+  password: string;
 
   @Field(() => String)
   @CreateDateColumn({ type: "timestamp" })

@@ -7,6 +7,7 @@ export const createQueue = (queueName: string, redis: IORedis.Redis, defaultOpti
     defaultJobOptions = {
       attempts: 10,
       backoff: { type: "exponential", delay: 60000 },
+      removeOnFail: true,
     };
   }
   new QueueScheduler(queueName, { connection: redis });

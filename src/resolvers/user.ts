@@ -5,26 +5,33 @@ import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
-import { COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
+import { CONFIRM_EMAIL_PREFIX, COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { validateInput } from "../utils/validateInput";
+import { validateEmail, validatePassword } from "../utils/validateInput";
 import { sendMail } from "../services/mail/manager";
 @Resolver()
 export class UserResolver {
   //create User resolver
   @Mutation(() => GenericResponse)
   async createUser(
+    @Arg("token") token: string,
     @Arg("userInput") userInput: UserInputs,
     @Arg("deviceInfo") device: deviceInfo,
-    @Ctx() { req }: AppContext
+    @Ctx() { req, redis }: AppContext
   ): Promise<GenericResponse> {
-    const invalidInput = validateInput(userInput);
-    if (invalidInput) {
-      return invalidInput;
-    }
-    const email = userInput.email.toLowerCase();
+    const validationMessage = validatePassword(userInput);
+    if (validationMessage.errorMessage !== undefined) return validationMessage;
+    const key = CONFIRM_EMAIL_PREFIX + token;
+    const email = "await redis.get(key);";
+    if (!email) return { errorMessage: "token expired" };
+    const date = new Date();
+    const age = date.getFullYear() - userInput.dateOfBirth.getFullYear();
+    if (isNaN(age)) return { errorMessage: "Invalid date of birth" };
+    if (age < 13) return { errorMessage: "You're a little too young for Urbn, ask your parents to create an account" };
+    if (age < 120) return { errorMessage: "Have your kids open an account" };
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
+    await redis.del(key);
     try {
       await User.create({
         firstName: userInput.firstName,
@@ -77,11 +84,29 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => Boolean)
-  async resetPassword(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<boolean> {
-    const user = await User.findOne({ where: { email: email.toLowerCase() } });
+  @Mutation(() => GenericResponse)
+  async confirmEmail(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<GenericResponse> {
+    const valid = validateEmail(email);
+    if (!valid) {
+      return { errorMessage: "Invalid email address format, you might have a typo" };
+    }
+    email = email.toLowerCase();
+    const token = v4();
+    const url = `${process.env.APP_BASE_URL}/email-confirmation/${token}`;
+    await redis.set(CONFIRM_EMAIL_PREFIX + token, email, "EX", 3600 * 24); //link expires in one day
+    await sendMail({ email: [email], name: "", url, subject: EmailSubject.CONFIRM });
+
+    return {
+      success: `Verify your email. Check the inbox of ${email}, we've sent you an email on the next steps to take`,
+    };
+  }
+
+  @Mutation(() => GenericResponse)
+  async resetPassword(@Arg("email") email: string, @Ctx() { redis }: AppContext): Promise<GenericResponse> {
+    email = email.toLowerCase();
+    const user = await User.findOne({ where: { email: email } });
     if (!user) {
-      return false;
+      return { errorMessage: "This email isn’t registered yet" };
     }
     const token = v4();
     const name = user.firstName;
@@ -89,7 +114,7 @@ export class UserResolver {
     await redis.set(RESET_PASSWORD_PREFIX + token, email, "EX", 3600); //link expires in one hour
     await sendMail({ email: [email], name, url, subject: EmailSubject.RESET });
 
-    return true;
+    return { success: `Check the inbox of ${email}. We've sent you an email on the next steps to take` };
   }
 
   //change password
