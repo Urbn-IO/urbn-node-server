@@ -4,10 +4,12 @@ import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
 import { upsertCategorySearchItem } from "../services/search/addSearchItem";
-
+import { CacheControl } from "../cache/cacheControl";
+import { CacheScope } from "apollo-server-types";
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
+  @CacheControl({ maxAge: 300, scope: CacheScope.Public })
   async getCategories(
     @Arg("categoryId", () => Int, { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,

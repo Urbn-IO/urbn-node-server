@@ -15,6 +15,8 @@ import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/search/addSearchItem";
 import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallScheduler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
+import { CacheControl } from "../cache/cacheControl";
+import { CacheScope } from "apollo-server-types";
 
 @Resolver()
 export class CelebrityResolver {
@@ -168,6 +170,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity], { nullable: true })
+  @CacheControl({ maxAge: 300, scope: CacheScope.Public })
   async celebrities(
     @Arg("celebId", () => Int, { nullable: true }) celebId: number,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
@@ -205,6 +208,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity])
+  @CacheControl({ maxAge: 3600, scope: CacheScope.Public })
   async similarToCelebrity(@Arg("celebId") celebId: number, @Arg("limit", () => Int) limit: number) {
     const maxLimit = Math.min(8, limit);
     try {

@@ -1,7 +1,7 @@
 import publish from "../../../utils/publish";
-import createWorker from "../../../queues/jobQueue/worker";
+import createWorker from "../../../queues/job_queue/worker";
 import redisClient from "../../../redis/client";
-import { addJob, createQueue, destroyJob } from "../../../queues/jobQueue/producer";
+import { addJob, createQueue, destroyJob } from "../../../queues/job_queue/producer";
 import { CachedCallEventPayload, CallTimerOptions, SubscriptionTopics, UpdateCallDurationArgs } from "../../../types";
 import { VideoCallEvent } from "../../../utils/graphqlTypes";
 import { currentCallDuration } from "../../../utils/helpers";

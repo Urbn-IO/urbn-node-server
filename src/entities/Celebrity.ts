@@ -11,9 +11,12 @@ import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
 import { AppContext } from "../types";
 import { Categories } from "./Categories";
+import { CacheControl } from "../cache/cacheControl";
+import { CacheScope } from "apollo-server-types";
 
 @ObjectType()
 @Entity()
+@CacheControl({ maxAge: 0, scope: CacheScope.Public })
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()

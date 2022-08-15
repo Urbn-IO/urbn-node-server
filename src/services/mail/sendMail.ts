@@ -1,7 +1,7 @@
 import { config } from "../../constants";
 import redisClient from "../../redis/client";
-import { addJob, createQueue } from "../../queues/jobQueue/producer";
-import createWorker from "../../queues/jobQueue/worker";
+import { addJob, createQueue } from "../../queues/job_queue/producer";
+import createWorker from "../../queues/job_queue/worker";
 import { SendTemplatedEmailCommandInput } from "@aws-sdk/client-ses";
 import { EmailBaseInput, EmailTemplates } from "../../types";
 

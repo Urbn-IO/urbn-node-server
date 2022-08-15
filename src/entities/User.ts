@@ -10,9 +10,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { CacheControl } from "../cache/cacheControl";
 import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 import { Shoutout } from "./Shoutout";
+import { CacheScope } from "apollo-server-types";
 
 @ObjectType()
 @Entity()
@@ -37,8 +39,8 @@ export class User extends BaseEntity {
   email: string;
 
   @Field()
-  @Column({ type: "timestamp", nullable: true })
-  dateOfBirth: string;
+  @Column({ type: "timestamp" })
+  dateOfBirth: Date;
 
   @Column()
   password: string;
@@ -55,6 +57,7 @@ export class User extends BaseEntity {
   sessionKey: string;
 
   @Field({ nullable: true })
+  @CacheControl({ maxAge: 60, scope: CacheScope.Private })
   @OneToOne(() => Celebrity, {
     nullable: true,
     cascade: true,

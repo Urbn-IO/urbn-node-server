@@ -71,9 +71,9 @@ export type CachedCallEventPayload = {
   roomName: string;
   roomSid: string;
   roomStatus: string;
+  callLength: number;
   participantA: string;
   participantB?: string;
-  callLength: number;
   startTime?: Date;
   queue?: string;
 };

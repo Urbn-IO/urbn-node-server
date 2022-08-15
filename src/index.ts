@@ -11,6 +11,7 @@ import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
 import redisClient from "./redis/client";
 import pubsub from "./pubsub";
+import responseCachePlugin from "apollo-server-plugin-response-cache";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -23,7 +24,7 @@ import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import { getUserId } from "./utils/helpers";
+import { getSessionContext } from "./utils/helpers";
 
 const app = express();
 const httpServer = createServer(app);
@@ -84,7 +85,7 @@ const main = async () => {
 
   const schema = await buildSchema({
     resolvers,
-    validate: true,
+    validate: { stopAtFirstError: true, validationError: { target: false } },
     dateScalarMode: "isoDate",
     pubSub: pubsub,
   });
@@ -100,11 +101,11 @@ const main = async () => {
     {
       schema,
       context: async ({ extra }) => {
-        const userId = await getUserId(extra.request.headers.cookie as string, store);
-        if (!userId) {
-          throw new Error("User not logged in");
+        const sess = await getSessionContext(extra.request.headers.cookie as string, store);
+        if (!sess?.userId) {
+          throw new Error("Userss not logged in");
         }
-        return userId;
+        return sess.userId;
       },
       onDisconnect: () => {
         console.log("disconnected from websocket 🔌");
@@ -118,6 +119,20 @@ const main = async () => {
     cache: "bounded",
     csrfPrevention: true,
     plugins: [
+      //response caching
+      responseCachePlugin({
+        sessionId: async (requestContext) => {
+          const cookie = requestContext?.request?.http?.headers.get("cookie") || null;
+          if (cookie) {
+            const sess = await getSessionContext(cookie, store);
+            if (!sess) {
+              throw new Error("An error occured");
+            }
+            return sess.sessionId;
+          }
+          return null;
+        },
+      }),
       // Proper shutdown for the HTTP server.
       ApolloServerPluginDrainHttpServer({ httpServer }),
 

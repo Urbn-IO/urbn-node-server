@@ -1,3 +1,4 @@
+import { IsDate, Length } from "class-validator";
 import { User } from "../entities/User";
 import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
@@ -27,12 +28,22 @@ registerEnumType(NotificationRouteCode, {
 
 @InputType()
 export class UserInputs {
+  @Length(2, 10, {
+    message: "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   firstName: string;
+  @Length(2, 10, {
+    message: "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   lastName: string;
+  @Length(8, 16, {
+    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   password!: string;
+  @IsDate()
   @Field()
   dateOfBirth: Date;
 }

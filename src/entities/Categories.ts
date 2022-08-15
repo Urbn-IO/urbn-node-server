@@ -11,9 +11,11 @@ import {
 } from "typeorm";
 import { Celebrity } from "./Celebrity";
 import { CelebCategories } from "./CelebCategories";
-
+import { CacheControl } from "../cache/cacheControl";
+import { CacheScope } from "apollo-server-types";
 @ObjectType()
 @Entity()
+@CacheControl({ maxAge: 300, scope: CacheScope.Public })
 export class Categories extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()

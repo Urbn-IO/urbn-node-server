@@ -18,6 +18,7 @@ import { validateRecipient, validateRequestor } from "../utils/requestValidation
 import { createVideoCallRoom, getVideoCallToken } from "../services/video/calls";
 import { sendCallNotification } from "../services/notifications/handler";
 import { notificationsManager } from "../services/notifications/notificationsManager";
+import { createDeepLink } from "../services/deep_links/dynamicLinks";
 
 @Resolver()
 export class VideoCallResolver {
@@ -83,9 +84,17 @@ export class VideoCallResolver {
     return status;
   }
 
+  ///////////////////Test stuff
+
   @Mutation(() => Boolean)
   testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
     notificationsManager().sendInstantTestMessage(payload);
     return true;
+  }
+  @Mutation(() => String)
+  async testDeepLink(@Arg("url") url: string) {
+    const link = await createDeepLink(url);
+    if (link) return link;
+    return "An error occured";
   }
 }

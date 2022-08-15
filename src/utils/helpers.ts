@@ -16,20 +16,17 @@ export const getNextAvailableDate = (day: number) => {
   else return dayjs().add(1, "week").set("day", day);
 };
 
-export const getUserId = async (cookieString: string, store: connectRedis.RedisStore) => {
+export const getSessionContext = async (cookieString: string, store: connectRedis.RedisStore) => {
   const cookies = cookie.parse(cookieString);
   const sid = cookieParser.signedCookie(cookies[COOKIE_NAME], process.env.SESSION_SECRET);
-  return new Promise((resolve, reject) => {
+  if (!sid) return null;
+  return new Promise((resolve) => {
     store.get(sid as string, (_, session) => {
-      if (!session) {
-        console.error("");
-        reject("User not logged In");
-      }
       resolve(session?.userId);
     });
   })
     .then((res) => {
-      return { userId: res };
+      return { userId: res, sessionId: sid };
     })
     .catch((err) => {
       console.error(err);
