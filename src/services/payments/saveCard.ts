@@ -3,6 +3,7 @@ import { User } from "../../entities/User";
 
 export const saveCardPaystack = async (payload: any) => {
   const userId = payload.metadata.userId;
+  const defaultCard = payload.metadata.defaultCard;
   const email = payload.metadata.email;
   const {
     authorization_code,
@@ -36,6 +37,7 @@ export const saveCardPaystack = async (payload: any) => {
       reusable,
       countryCode: country_code,
       user,
+      defaultCard,
     } as CardAuthorization).save();
   } catch (err) {
     console.error(err);

@@ -9,6 +9,10 @@ export class CardAuthorization extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Field(() => Boolean)
+  @Column({ default: false })
+  defaultCard: boolean;
+
   @Column({ nullable: true })
   accountName!: string;
 

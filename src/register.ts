@@ -13,7 +13,7 @@ import { PublicMediaResolver } from "./resolvers/aws/publicMedia";
 import { CategoryResolver } from "./resolvers/category";
 import { UserCategoriesResolver } from "./resolvers/celebCategories";
 import { CelebrityResolver } from "./resolvers/celebrity";
-import { PaymentsResolver } from "./resolvers/payments";
+import { CardsResolver } from "./resolvers/cards";
 import { RequestsResolver } from "./resolvers/requests";
 import { UserResolver } from "./resolvers/user";
 import { VideoCallResolver } from "./resolvers/videoCalls";
@@ -39,6 +39,6 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   PublicMediaResolver,
   CelebrityResolver,
   RequestsResolver,
-  PaymentsResolver,
+  CardsResolver,
   VideoCallResolver,
 ];
