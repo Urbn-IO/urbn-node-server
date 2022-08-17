@@ -5,7 +5,7 @@ import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-gr
 import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { Brackets, getConnection } from "typeorm";
+import { Brackets } from "typeorm";
 import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, VideoUploadData } from "../utils/graphqlTypes";
 import { User } from "../entities/User";
 import { validateRecipient } from "../utils/requestValidations";
@@ -18,6 +18,7 @@ import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
 import { config } from "../constants";
+import { AppDataSource } from "../db";
 
 @Resolver()
 export class RequestsResolver {
@@ -35,8 +36,7 @@ export class RequestsResolver {
       };
     }
     const celebId = Input.celebId;
-    const user = await getConnection()
-      .getRepository(User)
+    const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
       .select(["user.firstName", "user.email"])
       .leftJoin("user.cards", "cards")
@@ -50,7 +50,7 @@ export class RequestsResolver {
     const requestorName = user.user_firstName;
     const cardAuth = user.authorizationCode;
 
-    const celeb = await Celebrity.findOne(celebId);
+    const celeb = await Celebrity.findOne({ where: { id: celebId } });
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
@@ -58,7 +58,7 @@ export class RequestsResolver {
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
 
-    const transactionAmount = (parseInt(celeb.shoutoutRates) * 100).toString();
+    const transactionAmount = (celeb.shoutoutRates * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
       userId,
@@ -76,7 +76,7 @@ export class RequestsResolver {
       recipientThumbnail: celebThumbnail,
       paymentRef: ref,
     };
-    const result = await Requests.create(request).save();
+    const result = await Requests.create(request as Requests).save();
     if (result) {
       return { success: "Request Sent!" };
     }
@@ -94,8 +94,7 @@ export class RequestsResolver {
     let callDurationInSeconds;
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
-    const user = await getConnection()
-      .getRepository(User)
+    const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
       .select(["user.firstName", "user.email"])
       .leftJoin("user.cards", "cards")
@@ -108,7 +107,7 @@ export class RequestsResolver {
     const email = user.user_email;
     const requestorName = user.user_firstName;
     const cardAuth = user.authorizationCode;
-    const celeb = await Celebrity.findOne(celebId);
+    const celeb = await Celebrity.findOne({ where: { id: celebId } });
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
@@ -122,8 +121,8 @@ export class RequestsResolver {
       callRequestType = RequestType.CALL_TYPE_B;
       callDurationInSeconds = config.VIDEO_CALL_TYPE_B_DURATION;
     } else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
-    const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
-    const availableSlot = await CallScheduleRepo.findOne(Input.selectedTimeSlotId);
+    const CallScheduleRepo = AppDataSource.getTreeRepository(CallScheduleBase);
+    const availableSlot = await CallScheduleRepo.findOne({ where: { id: Input.selectedTimeSlotId } });
     if (!availableSlot || availableSlot.available === (false || null)) {
       return {
         errorMessage: "The selected time slot is no longer available, please select another time for this call",
@@ -132,8 +131,8 @@ export class RequestsResolver {
 
     const transactionAmount =
       callRequestType === RequestType.CALL_TYPE_A
-        ? (parseInt(celeb.callRatesA) * 100).toString()
-        : (parseInt(celeb.callRatesB) * 100).toString();
+        ? (celeb.callRatesA * 100).toString()
+        : (celeb.callRatesB * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
 
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
@@ -245,7 +244,7 @@ export class RequestsResolver {
           .returning('"callScheduleId"')
           .execute()
       ).raw[0];
-      const callScheduleTreeRepo = getConnection().getTreeRepository(CallScheduleBase);
+      const callScheduleTreeRepo = AppDataSource.getTreeRepository(CallScheduleBase);
       await callScheduleTreeRepo.update(request.callScheduleId, { available: true });
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
@@ -292,8 +291,7 @@ export class RequestsResolver {
   ) {
     const userId = req.session.userId;
     const maxLimit = Math.min(9, limit);
-    const queryBuilder = getConnection()
-      .getRepository(Requests)
+    const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.requestor = :userId", { userId })
       .orderBy("requests.createdAt", "DESC")
@@ -318,8 +316,7 @@ export class RequestsResolver {
     const userId = req.session.userId;
     const maxLimit = Math.min(9, limit);
     const status = RequestStatus.PENDING;
-    const queryBuilder = getConnection()
-      .getRepository(Requests)
+    const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
       .where("requests.recipient = :userId", { userId })
       .andWhere("requests.status = :status", { status })
@@ -346,8 +343,7 @@ export class RequestsResolver {
     const userId = req.session.userId;
     const maxLimit = Math.min(9, limit);
     const status = RequestStatus.ACCEPTED;
-    const queryBuilder = getConnection()
-      .getRepository(Requests)
+    const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
       .where(
         new Brackets((qb) => {

@@ -7,11 +7,11 @@ import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedCo
 export class Requests extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field()
   @Column()
-  requestor!: string;
+  requestor: string;
 
   @Field()
   @Column()
@@ -19,15 +19,15 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Column()
-  recipient!: string;
+  recipient: string;
 
   @Field()
   @Column()
-  recipientAlias!: string;
+  recipientAlias: string;
 
   @Field()
   @Column({ nullable: true })
-  recipientThumbnail!: string;
+  recipientThumbnail: string;
 
   @Field()
   @Column({ type: "enum", enum: RequestType, default: RequestType.SHOUTOUT })

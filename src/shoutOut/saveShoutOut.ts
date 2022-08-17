@@ -1,9 +1,10 @@
 import { NotificationRouteCode, RequestStatus, VideoOutput } from "../types";
 import { Shoutout } from "../entities/Shoutout";
 import { User } from "../entities/User";
-import { getConnection, In } from "typeorm";
+import { In } from "typeorm";
 import { sendInstantNotification } from "../services/notifications/handler";
 import { Requests } from "../entities/Requests";
+import { AppDataSource } from "../db";
 
 export const saveShoutout = async (data: VideoOutput[]) => {
   const shoutouts: Shoutout[] = [];
@@ -33,8 +34,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
   try {
     await Shoutout.save(shoutouts);
     const requestIds = data.map((x) => x.requestId) as string[];
-    await getConnection()
-      .createQueryBuilder()
+    await AppDataSource.createQueryBuilder()
       .update(Requests)
       .set({ status: RequestStatus.FULFILLED })
       .where("id In (:...requestIds)", { requestIds })

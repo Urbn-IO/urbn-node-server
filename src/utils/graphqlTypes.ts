@@ -1,9 +1,10 @@
-import { IsDate, Length } from "class-validator";
+import { IsDate, IsEmail, Length, Max, Min } from "class-validator";
 import { User } from "../entities/User";
 import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
 import { CallType, ContentType, DayOfTheWeek, NotificationRouteCode, PlatformOptions } from "../types";
+import { config } from "../constants";
 
 registerEnumType(CallType, {
   name: "CallType",
@@ -28,42 +29,54 @@ registerEnumType(NotificationRouteCode, {
 
 @InputType()
 export class UserInputs {
-  @Length(2, 10, {
+  @Length(2, 20, {
     message: "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
   })
   @Field()
-  firstName: string;
-  @Length(2, 10, {
-    message: "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
-  })
-  @Field()
-  lastName: string;
+  displayName: string;
+
   @Length(8, 16, {
     message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
   })
   @Field()
   password!: string;
-  @IsDate()
-  @Field()
-  dateOfBirth: Date;
 }
 
 @InputType()
 export class RegisterCelebrityInputs {
+  @Length(2, 10, {
+    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   alias: string;
+
   @Field()
   acceptShoutOut: boolean;
+
   @Field()
   acceptsCallTypeA: boolean;
+
   @Field()
   acceptsCallTypeB: boolean;
-  @Field()
-  shoutoutRates: string;
-  @Field()
-  callRatesA: string;
-  @Field()
-  callRatesB: string;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
+  @Field(() => Int)
+  shoutoutRates: number;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Field(() => Int)
+  callRatesA: number;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Field(() => Int)
+  callRatesB: number;
+
+  @Length(10, 50, {
+    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   description: string;
   profileHash: string;
@@ -71,26 +84,48 @@ export class RegisterCelebrityInputs {
 }
 @InputType()
 export class UpdateCelebrityInputs {
+  @Length(2, 10, {
+    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field({ nullable: true })
   alias: string;
+
   @Field({ nullable: true })
   acceptShoutOut: boolean;
+
   @Field({ nullable: true })
   acceptsCallTypeA: boolean;
+
   @Field({ nullable: true })
   acceptsCallTypeB: boolean;
-  @Field({ nullable: true })
-  shoutoutRates: string;
+
   @Field({ nullable: true })
   thumbnail: string;
-  @Field({ nullable: true })
-  callRatesA: string;
-  @Field({ nullable: true })
-  callRatesB: string;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
+  @Field(() => Int, { nullable: true })
+  shoutoutRates: number;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Field(() => Int, { nullable: true })
+  callRatesA: number;
+
+  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Field(() => Int, { nullable: true })
+  callRatesB: number;
+
+  @Length(10, 50, {
+    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field({ nullable: true })
   description: string;
+
   @Field({ nullable: true })
   image: string;
+
   imageThumbnail: string;
   imagePlaceholder: string;
   profileHash: string;
@@ -101,6 +136,7 @@ export class UpdateCelebrityInputs {
 export class UserInputsLogin {
   @Field()
   password: string;
+  @IsEmail()
   @Field()
   email: string;
 }
@@ -124,8 +160,12 @@ export class deviceInfo {
 export class ShoutoutRequestInput {
   @Field(() => Int)
   celebId: number;
+  @Length(15, 250, {
+    message: "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
+  })
   @Field()
   description: string;
+  @IsDate()
   @Field()
   requestExpiration: Date;
 }
@@ -146,9 +186,11 @@ export class CallScheduleInput {
   @Field(() => DayOfTheWeek)
   day: DayOfTheWeek;
 
+  @IsDate()
   @Field()
   startTime: Date;
 
+  @IsDate()
   @Field()
   endTime: Date;
 }
@@ -318,38 +360,6 @@ export class S3SignedObject {
   @Field({ nullable: true })
   fileName?: string;
 }
-
-@ObjectType()
-export class Person {
-  @Field()
-  name: string;
-
-  @Field(() => Int)
-  age: number;
-
-  @Field()
-  gender: string;
-}
-@InputType()
-export class PersonInput {
-  @Field()
-  name: string;
-
-  @Field(() => Int)
-  age: number;
-
-  @Field()
-  gender: string;
-}
-
-@ObjectType()
-export class SubPayload {
-  @Field()
-  newPerson: Person;
-  @Field()
-  userId: string;
-}
-
 ///remove below after
 @InputType()
 export class TestData {

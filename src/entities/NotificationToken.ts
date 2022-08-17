@@ -23,7 +23,7 @@ export class NotificationToken extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  pushKitToken?: string;
+  pushkitToken?: string;
 
   @Field()
   @Column()

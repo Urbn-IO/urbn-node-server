@@ -1,5 +1,4 @@
 import "dotenv-safe/config.js";
-import path from "path";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
@@ -12,19 +11,19 @@ import sqsConsumer from "./services/aws/queues/videoOnDemand";
 import redisClient from "./redis/client";
 import pubsub from "./pubsub";
 import responseCachePlugin from "apollo-server-plugin-response-cache";
-import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { APP_SESSION_PREFIX, COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
-import { entities, resolvers } from "./register";
+import { resolvers } from "./register";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getSessionContext } from "./utils/helpers";
+import { AppDataSource } from "./db";
 
 const app = express();
 const httpServer = createServer(app);
@@ -32,19 +31,14 @@ const redis = redisClient;
 
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
-
-  const connection = await createConnection({
-    type: "postgres",
-    url: process.env.DATABASE_URL,
-    logging: true,
-    synchronize: true,
-    migrations: [path.join(__dirname, "./migrations/*")],
-    entities,
-  });
-
-  await connection.runMigrations();
-
   initializeApp(firebaseConfig);
+  AppDataSource.initialize()
+    .then(() => {
+      console.log("Data Source has been initialized!");
+    })
+    .catch((err) => {
+      console.error("Error during Data Source initialization", err);
+    });
   // initializeSearch();
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
@@ -116,6 +110,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
+    introspection: !__prod__,
     cache: "bounded",
     csrfPrevention: true,
     plugins: [

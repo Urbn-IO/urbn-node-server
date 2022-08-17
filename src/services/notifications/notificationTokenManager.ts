@@ -1,4 +1,5 @@
-import { getConnection, In } from "typeorm";
+import { In } from "typeorm";
+import { AppDataSource } from "../../db";
 import { NotificationToken } from "../../entities/NotificationToken";
 
 export const addToken = async (
@@ -6,14 +7,14 @@ export const addToken = async (
   deviceId: string,
   platform: string,
   notificationToken: string,
-  pushKitToken?: string
+  pushkitToken?: string
 ): Promise<string> => {
   const token = NotificationToken.create({
     userId,
     deviceId,
     devicePlatform: platform,
     notificationToken,
-    pushKitToken,
+    pushkitToken: pushkitToken,
   });
   try {
     await token.save();
@@ -43,25 +44,25 @@ export const getTokens = async (userId: string[]): Promise<string[]> => {
 export const getServiceCallTokens = async (userId: string[]) => {
   const tokenObj = await NotificationToken.find({
     where: { userId: In(userId) },
-    select: ["notificationToken", "pushKitToken", "devicePlatform"],
+    select: ["notificationToken", "pushkitToken", "devicePlatform"],
   });
   if (tokenObj) {
     const tokens: string[] = [];
-    const pushKitTokens: string[] = [];
+    const pushkitTokens: string[] = [];
     tokenObj.forEach(async (x) => {
       if (x.devicePlatform === "ios") {
-        pushKitTokens.push(x.pushKitToken as string);
+        pushkitTokens.push(x.pushkitToken as string);
       } else {
         tokens.push(x.notificationToken);
       }
     });
-    return { tokens, pushKitTokens };
+    return { tokens, pushkitTokens };
   }
   return {};
 };
 
 export const deleteTokens = async (userId?: string, tokens?: string[]) => {
-  const queryBuilder = getConnection().createQueryBuilder().delete().from(NotificationToken);
+  const queryBuilder = AppDataSource.createQueryBuilder().delete().from(NotificationToken);
 
   if (userId) {
     queryBuilder.where("userId = :userId", { userId });

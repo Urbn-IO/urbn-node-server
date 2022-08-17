@@ -2,7 +2,7 @@
 // import { CallRoom } from "../../entities/CallRoom";
 
 // export const storeRoomName = async (requestId: number, roomName: string) => {
-//   await getConnection().query(
+//   await AppDataSource.query(
 //     `
 //     INSERT INTO call_room ("requestId", "roomName")
 //     VALUES ($1, $2)

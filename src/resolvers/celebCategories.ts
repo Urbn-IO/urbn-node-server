@@ -2,9 +2,9 @@ import { CelebCategories } from "../entities/CelebCategories";
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext } from "../types";
 import { Celebrity } from "../entities/Celebrity";
-import { getConnection } from "typeorm";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
+import { AppDataSource } from "../db";
 
 @Resolver()
 export class UserCategoriesResolver {
@@ -34,8 +34,7 @@ export class UserCategoriesResolver {
     });
     const celebId = celeb?.id;
     try {
-      await getConnection()
-        .createQueryBuilder()
+      AppDataSource.createQueryBuilder()
         .delete()
         .from(CelebCategories)
         .where("celebId = :celebId", { celebId })

@@ -8,7 +8,7 @@ import { Requests } from "../entities/Requests";
 import { NotificationPriority, NotificationRouteCode, RequestStatus, RequestType } from "../types";
 import { sendInstantNotification } from "../services/notifications/handler";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
-import { getConnection } from "typeorm";
+import { AppDataSource } from "../db";
 export const getNextAvailableDate = (day: number) => {
   dayjs.extend(isoWeek);
   const today = dayjs().isoWeekday();
@@ -65,7 +65,7 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
 };
 
 export const reserveVideoCallScheduleTimeSlot = (slotId: number) => {
-  const CallScheduleRepo = getConnection().getTreeRepository(CallScheduleBase);
+  const CallScheduleRepo = AppDataSource.getTreeRepository(CallScheduleBase);
   CallScheduleRepo.update(slotId, { available: false });
 };
 

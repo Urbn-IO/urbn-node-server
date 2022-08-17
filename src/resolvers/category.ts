@@ -1,53 +1,52 @@
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { getConnection } from "typeorm";
 import { Categories } from "../entities/Categories";
 import { CategoryResponse } from "../utils/graphqlTypes";
 import { upsertCategorySearchItem } from "../services/search/addSearchItem";
-import { CacheControl } from "../cache/cacheControl";
-import { CacheScope } from "apollo-server-types";
+import { AppDataSource } from "../db";
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  @CacheControl({ maxAge: 300, scope: CacheScope.Public })
   async getCategories(
     @Arg("categoryId", () => Int, { nullable: true }) id: number,
     @Arg("name", { nullable: true }) name: string,
     @Arg("withCelebs", { defaultValue: false }) withCelebs: boolean,
     @Arg("isPrimary", { defaultValue: false }) primary: boolean,
-    @Arg("limit", () => Int, { nullable: true }) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string
   ) {
     if (id) {
-      const category = await Categories.findOne({ id });
+      const category = await Categories.findOne({ where: { id } });
+      if (!category) return [];
       return [category];
     }
     if (name) {
       const category = await Categories.findOne({
         where: { name },
       });
+      if (!category) return [];
       return [category];
     }
     const maxLimit = Math.min(18, limit);
-    const queryBuilder = getConnection()
-      .getRepository(Categories)
-      .createQueryBuilder("categories")
-      .leftJoinAndSelect("categories.celebConn", "celebrity")
-      .orderBy("categories.createdAt", "DESC")
-      .take(maxLimit);
+    const queryBuilder = AppDataSource.getRepository(Categories).createQueryBuilder("categories").limit(maxLimit);
 
     if (primary) {
       queryBuilder.where('categories."primary" = :primary', { primary });
     }
 
     if (withCelebs) {
-      queryBuilder.andWhere("celebrity is not null");
+      queryBuilder.leftJoinAndSelect("categories.celebConn", "celebrity").andWhere("celebrity IS NOT NULL");
     }
 
     if (cursor) {
-      queryBuilder.andWhere('categories."createdAt" < :cursor', {
-        cursor: new Date(parseInt(cursor)),
-      });
+      if (cursor !== "0") {
+        queryBuilder.andWhere('categories."createdAt" < :cursor', {
+          cursor: new Date(parseInt(cursor)),
+        });
+      }
+      queryBuilder.orderBy("categories.createdAt", "DESC");
+    } else {
+      queryBuilder.orderBy("RANDOM()");
     }
     return await queryBuilder.getMany();
   }
@@ -75,7 +74,7 @@ export class CategoryResolver {
   @Mutation(() => Categories, { nullable: true })
   @UseMiddleware(isAuthenticated)
   async updateCategory(@Arg("id", () => Int) id: number, @Arg("name") name: string): Promise<Categories | boolean> {
-    const category = await Categories.findOne({ id });
+    const category = await Categories.findOne({ where: { id } });
     if (!category) {
       return false;
     }

@@ -2,7 +2,6 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Ctx, Mutation, Query, Resolver, ResolverFilterData, Root, Subscription, UseMiddleware } from "type-graphql";
 import { AppContext, SubscriptionTopics } from "../types";
 import { CardResponse, InitializeCardResponse, NewCardVerificationResponse } from "../utils/graphqlTypes";
-import { CardAuthorization } from "../entities/CardAuthorization";
 import { User } from "../entities/User";
 import paymentManager from "../services/payments/payments";
 
@@ -63,15 +62,16 @@ export class PaymentsResolver {
   @UseMiddleware(isAuthenticated)
   async getCards(@Ctx() { req }: AppContext): Promise<CardResponse> {
     const userId = req.session.userId;
-    const user = await User.findOne({ where: { userId: userId } });
-    if (!user) {
-      return { errorMessage: "User not found" };
+    try {
+      const user = await User.findOne({ where: { userId }, relations: { cards: true } });
+      if (!user) {
+        return { errorMessage: "User not found" };
+      }
+      const cards = user.cards;
+      return { cards };
+    } catch (err) {
+      console.log(err);
+      return { errorMessage: "An error occured" };
     }
-    const cards = await CardAuthorization.find({ where: { user } });
-
-    if (!cards) {
-      return { errorMessage: "User has no cards" };
-    }
-    return { cards };
   }
 }

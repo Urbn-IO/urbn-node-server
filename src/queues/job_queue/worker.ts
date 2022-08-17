@@ -1,8 +1,8 @@
 import { Worker } from "bullmq";
-import IORedis from "ioredis";
+import Redis from "ioredis";
 import { config } from "../../constants";
 
-const createWorker = (queueName: string, pathToProcessor: string, redis: IORedis.Redis) => {
+const createWorker = (queueName: string, pathToProcessor: string, redis: Redis) => {
   const worker = new Worker(queueName, pathToProcessor, {
     connection: redis,
     sharedConnection: true,

@@ -25,8 +25,8 @@ export async function sendInstantNotification(
 
 export async function sendCallNotification(userId: string, requestId: number, callerName: string) {
   const tokensObj = await tokensManager().getCallTokens([userId]);
-  if (tokensObj.pushKitTokens !== undefined && tokensObj.pushKitTokens.length > 0) {
-    sendPushKitNotification(tokensObj.pushKitTokens, requestId, callerName);
+  if (tokensObj.pushkitTokens !== undefined && tokensObj.pushkitTokens.length > 0) {
+    sendPushKitNotification(tokensObj.pushkitTokens, requestId, callerName);
   }
   if (tokensObj.tokens !== undefined && tokensObj.tokens.length > 0) {
     const message: NotificationsPayload = {

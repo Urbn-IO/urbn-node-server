@@ -1,4 +1,5 @@
-import { addToken, deleteTokens, getTokens, getServiceCallTokens } from "./ notificationTokenManager";
+import { addToken, deleteTokens, getTokens, getServiceCallTokens } from "./notificationTokenManager";
+import { deviceInfo } from "../../utils/graphqlTypes";
 
 // export default class TokensManager {
 //   addNotificationToken(userId: string, deviceId: string, token: string) {
@@ -16,14 +17,9 @@ import { addToken, deleteTokens, getTokens, getServiceCallTokens } from "./ noti
 
 const saveNotificationToken = () => {
   return {
-    addNotificationToken: (
-      userId: string,
-      deviceId: string,
-      platform: string,
-      notificationToken: string,
-      pushKitToken?: string
-    ) => {
-      const status = addToken(userId, deviceId, platform, notificationToken, pushKitToken);
+    addNotificationToken: (userId: string, device: deviceInfo) => {
+      const { id, notificationToken, platform, pushkitToken } = device;
+      const status = addToken(userId, id, platform, notificationToken, pushkitToken);
       return status;
     },
   };

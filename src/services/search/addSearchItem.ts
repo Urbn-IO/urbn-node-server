@@ -3,7 +3,7 @@ import { CelebCategories } from "../../entities/CelebCategories";
 import { User } from "../../entities/User";
 import { client } from "./client";
 
-export const upsertCelebritySearchItem = async (user: User | undefined) => {
+export const upsertCelebritySearchItem = async (user: User | null) => {
   if (user?.celebrity) {
     const celebId = user.celebrity.id;
     const categoriesObj = await CelebCategories.find({
@@ -27,8 +27,7 @@ export const upsertCelebritySearchItem = async (user: User | undefined) => {
     const celebObj = {
       id: user.celebrity.id.toString(),
       user_id: user.userId,
-      first_name: user.firstName,
-      last_name: user.lastName,
+      displayName: user.displayName,
       alias: user.celebrity.alias,
       thumbnail: user.celebrity.thumbnail,
       image_placeholder: user.celebrity.imagePlaceholder,

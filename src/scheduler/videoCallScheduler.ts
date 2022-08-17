@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import _ from "lodash";
-import { getConnection } from "typeorm";
+import { AppDataSource } from "../db";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { DayOfTheWeek } from "../types";
 import { CallScheduleInput } from "../utils/graphqlTypes";
@@ -63,8 +63,8 @@ export const scheduleCallSlot = async (celebId: number, inputArray: CallSchedule
 };
 
 export const updateCallSlot = async (celebId: number, updateItems: CallScheduleInput[]) => {
-  const callScheduleTreerepo = getConnection().getTreeRepository(CallScheduleBase);
-  const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: null } });
+  const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
+  const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: false } });
   if (parent) {
     await callScheduleTreerepo.remove(parent);
   }

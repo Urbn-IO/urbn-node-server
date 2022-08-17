@@ -61,6 +61,10 @@ export interface EmailBaseInput {
   sourcePlatform?: string;
   time?: string;
 }
+export interface OAuth {
+  displayName: string;
+  email: string;
+}
 
 export type TransactionsMetadata = {
   userId: string;
@@ -169,4 +173,9 @@ export enum EmailSubject {
   CONFIRM,
   RESET,
   SECURITY,
+}
+
+export enum SignInMethod {
+  BASIC = "BASIC_AUTH",
+  OAUTH = "OAUTH",
 }

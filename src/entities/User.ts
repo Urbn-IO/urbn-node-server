@@ -15,6 +15,7 @@ import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 import { Shoutout } from "./Shoutout";
 import { CacheScope } from "apollo-server-types";
+import { SignInMethod } from "../types";
 
 @ObjectType()
 @Entity()
@@ -28,21 +29,13 @@ export class User extends BaseEntity {
 
   @Field()
   @Column()
-  firstName: string;
-
-  @Field()
-  @Column()
-  lastName: string;
+  displayName: string;
 
   @Field()
   @Column({ unique: true })
   email: string;
 
-  @Field()
-  @Column({ type: "timestamp" })
-  dateOfBirth: Date;
-
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Field(() => String)
@@ -55,6 +48,10 @@ export class User extends BaseEntity {
 
   @Column()
   sessionKey: string;
+
+  @Field()
+  @Column({ type: "enum", enum: SignInMethod, default: SignInMethod.BASIC })
+  authMethod: SignInMethod;
 
   @Field({ nullable: true })
   @CacheControl({ maxAge: 60, scope: CacheScope.Private })

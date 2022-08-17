@@ -1,14 +1,6 @@
 import { AppContext } from "../types";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Celebrity } from "./Celebrity";
 import { CelebCategories } from "./CelebCategories";
 import { CacheControl } from "../cache/cacheControl";
@@ -40,10 +32,6 @@ export class Categories extends BaseEntity {
   @Field(() => String)
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
-
-  @Field(() => String)
-  @UpdateDateColumn({ type: "timestamp" })
-  updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
   celebConn: Promise<CelebCategories[]>;

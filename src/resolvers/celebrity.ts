@@ -9,7 +9,6 @@ import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { AppContext } from "../types";
-import { getConnection } from "typeorm";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/search/addSearchItem";
@@ -17,6 +16,7 @@ import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallSchedule
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
+import { AppDataSource } from "../db";
 
 @Resolver()
 export class CelebrityResolver {
@@ -29,25 +29,13 @@ export class CelebrityResolver {
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.userId = userId;
-    const maxRate = 50000000;
-
-    if (
-      parseInt(data.callRatesA) > maxRate ||
-      parseInt(data.callRatesB) > maxRate ||
-      parseInt(data.shoutoutRates) > maxRate
-    ) {
-      return { errorMessage: "Maximum price rate for any request exceeded" };
-    }
-
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
-
     const hashString = hashRow(data);
     data.profileHash = hashString;
-
     try {
-      const celeb = Celebrity.create(data);
+      const celeb = Celebrity.create(data as Celebrity);
       const celebrity = await celeb.save();
 
       await User.update({ userId }, { celebrity });
@@ -65,18 +53,8 @@ export class CelebrityResolver {
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
-    const maxRate = 50000000;
-
     if (Object.keys(data).length === 0) {
       return { errorMessage: "Nothing to update" };
-    }
-
-    if (
-      parseInt(data.callRatesA) > maxRate ||
-      parseInt(data.callRatesB) > maxRate ||
-      parseInt(data.shoutoutRates) > maxRate
-    ) {
-      return { errorMessage: "Maximum price rate for any request exceeded" };
     }
 
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
@@ -95,13 +73,11 @@ export class CelebrityResolver {
       const thumbnail = data.thumbnail;
       data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
     }
-
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
-      await Celebrity.update({ userId }, data);
-      const user = await getConnection()
-        .getRepository(User)
+      await Celebrity.update({ userId }, data as Celebrity);
+      const user = await AppDataSource.getRepository(User)
         .createQueryBuilder("user")
         .where("user.userId = :userId", { userId })
         .leftJoinAndSelect("user.celebrity", "celebrity")
@@ -124,8 +100,8 @@ export class CelebrityResolver {
     const userId = req.session.userId;
     const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
     if (celeb && schedule.length > 0) {
-      const callScheduleTreerepo = getConnection().getTreeRepository(CallScheduleBase);
-      const scheduleExists = await callScheduleTreerepo.findOne({ where: { celebId: celeb.id, parent: null } });
+      const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
+      const scheduleExists = await callScheduleTreerepo.findOne({ where: { celebId: celeb.id, parent: false } });
       if (scheduleExists) return false;
       const result = await scheduleCallSlot(celeb.id, schedule);
       return result;
@@ -149,8 +125,8 @@ export class CelebrityResolver {
   @Query(() => CallScheduleBase, { nullable: true })
   @UseMiddleware(isAuthenticated)
   async getAvailableTimeSlots(@Arg("celebId", () => Int) celebId: number) {
-    const callScheduleTreerepo = getConnection().getTreeRepository(CallScheduleBase);
-    const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: null } });
+    const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
+    const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: false } });
     if (parent) {
       const result = await callScheduleTreerepo.findDescendantsTree(parent);
       result.children.forEach((x) => {
@@ -177,7 +153,7 @@ export class CelebrityResolver {
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ) {
     if (celebId) {
-      const celeb = await Celebrity.findOne(celebId);
+      const celeb = await Celebrity.findOne({ where: { id: celebId } });
       if (!celeb) {
         return [];
       }
@@ -185,8 +161,7 @@ export class CelebrityResolver {
     }
     const maxLimit = Math.min(18, limit);
 
-    const queryBuilder = getConnection()
-      .getRepository(Celebrity)
+    const queryBuilder = AppDataSource.getRepository(Celebrity)
       .createQueryBuilder("celeb")
       .where("celeb.Id is not null")
       .orderBy("celeb.updatedAt", "DESC")
@@ -213,8 +188,7 @@ export class CelebrityResolver {
     const maxLimit = Math.min(8, limit);
     try {
       const catIds = [];
-      const categoryObj = await getConnection()
-        .getRepository(CelebCategories)
+      const categoryObj = await AppDataSource.getRepository(CelebCategories)
         .createQueryBuilder("celebCat")
         .select("celebCat.categoryId")
         .where("celebCat.celebId = :celebId", { celebId })
@@ -223,7 +197,7 @@ export class CelebrityResolver {
       for (const item of categoryObj) {
         catIds.push(item.categoryId);
       }
-      const celebs = await getConnection().query(
+      const celebs = await AppDataSource.query(
         `
       SELECT "c".*, RANDOM() AS random
       FROM "celeb_categories"

@@ -36,7 +36,7 @@ export const saveCardPaystack = async (payload: any) => {
       reusable,
       countryCode: country_code,
       user,
-    }).save();
+    } as CardAuthorization).save();
   } catch (err) {
     console.error(err);
   }

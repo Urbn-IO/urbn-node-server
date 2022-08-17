@@ -1,6 +1,6 @@
 import tokensManager from "../services/notifications/tokensManager";
 import { User } from "../entities/User";
-import { AppContext, EmailSubject } from "../types";
+import { AppContext, EmailSubject, SignInMethod } from "../types";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
@@ -10,6 +10,7 @@ import { isAuthenticated } from "../middleware/isAuthenticated";
 import { sendMail } from "../services/mail/manager";
 import { createDeepLink } from "../services/deep_links/dynamicLinks";
 import { isEmail, length } from "class-validator";
+import { getUserOAuth } from "../services/auth/oauth";
 
 @Resolver()
 export class UserResolver {
@@ -25,32 +26,18 @@ export class UserResolver {
     const key = CONFIRM_EMAIL_PREFIX + token;
     const email = await redis.get(key);
     if (!email) return { errorMessage: "Link expired" };
-    const dob = userInput.dateOfBirth;
-    const date = new Date();
-    const age = date.getFullYear() - dob.getFullYear();
-    if (isNaN(age)) return { errorMessage: "Invalid date of birth" };
-    if (age < 13) return { errorMessage: "You're a little too young for Urbn, ask your parents to create an account" };
-    if (age > 125) return { errorMessage: "Are you immortal?" };
     const hashedPassword = await argon2.hash(userInput.password);
     const id = v4();
     await redis.del(key);
     try {
       const user = await User.create({
-        firstName: userInput.firstName,
-        lastName: userInput.lastName,
-        dateOfBirth: dob,
+        displayName: userInput.displayName,
         email,
         password: hashedPassword,
         userId: id,
         sessionKey: APP_SESSION_PREFIX + req.session.id,
       }).save();
-      await tokensManager().addNotificationToken(
-        user.userId,
-        device.id,
-        device.platform,
-        device.notificationToken,
-        device.pushkitToken
-      );
+      await tokensManager().addNotificationToken(user.userId, device);
       req.session.userId = id; //keep a new user logged in
       return { user };
     } catch (err) {
@@ -79,19 +66,14 @@ export class UserResolver {
         relations: ["shoutouts", "celebrity", "cards"],
       });
       if (!user) return { errorMessage: "Wrong Email or Password" };
+      if (!user.password) return { errorMessage: "Wrong login method, login using another method" };
       const verifiedPassword = await argon2.verify(user.password, userInput.password);
       if (!verifiedPassword) return { errorMessage: "Wrong Email or Password" };
       await redis.del(user.sessionKey);
       await User.update(user.id, {
         sessionKey: session,
       });
-      await tokensManager().addNotificationToken(
-        user.userId,
-        device.id,
-        device.platform,
-        device.notificationToken,
-        device.pushkitToken
-      );
+      await tokensManager().addNotificationToken(user.userId, device);
       const token = v4();
       const link = `${this.baseUrl}/reset-password/${token}`;
       const url = await createDeepLink(link);
@@ -99,12 +81,53 @@ export class UserResolver {
       await redis.set(RESET_PASSWORD_PREFIX + token, user.email, "EX", 3600 * 24); //link expires in one day
       await sendMail({
         email: [user.email],
-        name: user.firstName,
+        name: user.displayName,
         url,
         subject: EmailSubject.SECURITY,
         sourcePlatform: device.platform,
       });
       req.session.userId = user.userId; //log user in
+      return { user };
+    }
+    return { errorMessage: "You're already logged in" };
+  }
+
+  @Mutation(() => UserResponse)
+  async loginWithOAuth(
+    @Arg("uid") uid: string,
+    @Arg("deviceInfo") device: deviceInfo,
+    @Ctx() { req, redis }: AppContext
+  ): Promise<UserResponse> {
+    const session = APP_SESSION_PREFIX + req.session.id;
+    const key = await redis.exists(session);
+    if (key === 0) {
+      const auth = await getUserOAuth(uid);
+      if (!auth) return { errorMessage: "Couldn't authenticate your account" };
+      let user = await User.findOne({
+        where: {
+          email: auth.email.toLowerCase(),
+        },
+        relations: ["shoutouts", "celebrity", "cards"],
+      });
+      if (user) {
+        await redis.del(user.sessionKey);
+        await User.update(user.id, {
+          sessionKey: session,
+        });
+        await tokensManager().addNotificationToken(user.userId, device);
+        req.session.userId = user.userId;
+        return { user };
+      }
+      const id = v4();
+      user = await User.create({
+        displayName: auth.displayName,
+        email: auth.email,
+        userId: id,
+        sessionKey: session,
+        authMethod: SignInMethod.OAUTH,
+      }).save();
+      await tokensManager().addNotificationToken(user.userId, device);
+      req.session.userId = id;
       return { user };
     }
     return { errorMessage: "You're already logged in" };
@@ -141,9 +164,11 @@ export class UserResolver {
     const email = await redis.get(key);
     if (!email) return { errorMessage: "Link expired" };
     try {
-      const user = await User.findOne({ where: { userId }, select: ["id", "userId"] });
-      if (!user) return { errorMessage: "An error occured" };
-      if (user.userId !== userId) return { errorMessage: "Unauthorized Action" };
+      const user = await User.findOne({ where: { userId }, select: ["id", "userId", "authMethod"] });
+      if (!user || user.authMethod === SignInMethod.OAUTH || user.userId !== userId) {
+        await redis.del(key);
+        return { errorMessage: "An error occured" };
+      }
       await User.update(user.id, { email });
       await redis.del(key);
       return { success: "Email succesfully updated" };
@@ -159,9 +184,9 @@ export class UserResolver {
     const valid = isEmail(email);
     if (!valid) return { errorMessage: "Invalid email address format, you might have a typo" };
     const user = await User.findOne({ where: { email: email } });
-    if (!user) return { errorMessage: "This email isn’t registered yet" };
+    if (!user || user.authMethod === SignInMethod.OAUTH) return { errorMessage: "This email isn’t registered yet" };
     const token = v4();
-    const name = user.firstName;
+    const name = user.displayName;
     const link = `${this.baseUrl}/reset-password/${token}`;
     const url = await createDeepLink(link);
     if (!url) return { errorMessage: "An unexpected error occured" };
@@ -190,10 +215,13 @@ export class UserResolver {
 
     const user = await User.findOne({
       where: { email: email.toLowerCase() },
+      select: ["id", "authMethod", "password"],
     });
 
-    if (!user) return { errorMessage: "user no longer exists" };
-
+    if (!user || user.authMethod === SignInMethod.OAUTH) {
+      await redis.del(key);
+      return { errorMessage: "An error occured" };
+    }
     const isOldPassword = await argon2.verify(user.password, newPassword);
     if (isOldPassword) return { errorMessage: "You cannot reuse your old password, you must provide a new password" };
     try {
@@ -222,12 +250,14 @@ export class UserResolver {
     const userId = req.session.userId;
     const min = 8;
     const max = 16;
-    const validationMessage = length(newPassword, min, max);
-    if (!validationMessage) {
+    const validation = length(newPassword, min, max);
+    if (!validation) {
       return { errorMessage: `Password should be between ${min} and ${max} characters inclusive in length` };
     }
-    const user = await User.findOne({ where: { userId }, select: ["id", "password"] });
-    if (!user) return { errorMessage: "user no longer exists" };
+    const user = await User.findOne({ where: { userId }, select: ["id", "userId", "authMethod", "password"] });
+    if (!user || user.authMethod === SignInMethod.OAUTH || user.userId !== userId) {
+      return { errorMessage: "An error occured" };
+    }
     const isOldPassword = await argon2.verify(user.password, oldPassword);
     if (!isOldPassword) return { errorMessage: 'Incorrect "old password" ' };
     try {
@@ -268,6 +298,7 @@ export class UserResolver {
     const userId = req.session.userId;
     const user = await User.findOne({ where: { userId }, select: ["password"] });
     if (!user) return false;
+    if (!user.password) return false;
     const verifiedPassword = await argon2.verify(user.password, password);
     return verifiedPassword;
   }

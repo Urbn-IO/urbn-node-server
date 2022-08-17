@@ -16,7 +16,7 @@ import { CacheScope } from "apollo-server-types";
 
 @ObjectType()
 @Entity()
-@CacheControl({ maxAge: 0, scope: CacheScope.Public })
+@CacheControl({ maxAge: 300, scope: CacheScope.Public })
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -60,17 +60,17 @@ export class Celebrity extends BaseEntity {
   @Column({ default: false })
   acceptsCallTypeB: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
-  shoutoutRates: string;
+  shoutoutRates: number;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
-  callRatesA: string;
+  callRatesA: number;
 
-  @Field({ nullable: true })
+  @Field(() => Int, { nullable: true })
   @Column({ nullable: true })
-  callRatesB: string;
+  callRatesB: number;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

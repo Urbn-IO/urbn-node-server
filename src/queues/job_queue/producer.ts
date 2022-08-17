@@ -1,7 +1,7 @@
 import { JobsOptions, Queue, QueueScheduler } from "bullmq";
-import IORedis from "ioredis";
+import Redis from "ioredis";
 
-export const createQueue = (queueName: string, redis: IORedis.Redis, defaultOptions = true) => {
+export const createQueue = (queueName: string, redis: Redis, defaultOptions = true) => {
   let defaultJobOptions: JobsOptions | undefined;
   if (defaultOptions) {
     defaultJobOptions = {

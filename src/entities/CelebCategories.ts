@@ -1,10 +1,4 @@
-import {
-  BaseEntity,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-} from "typeorm";
+import { BaseEntity, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { Categories } from "./Categories";
 import { Celebrity } from "./Celebrity";
 
@@ -16,15 +10,11 @@ export class CelebCategories extends BaseEntity {
   @PrimaryColumn()
   categoryId: number;
 
-  @ManyToOne(() => Celebrity, (celebrity) => celebrity.categoriesConn, {
-    primary: true,
-  })
+  @ManyToOne(() => Celebrity, (celebrity) => celebrity.categoriesConn)
   @JoinColumn({ name: "celebId" })
   celebrity: Promise<Celebrity>;
 
-  @ManyToOne(() => Categories, (categories) => categories.celebConn, {
-    primary: true,
-  })
+  @ManyToOne(() => Categories, (categories) => categories.celebConn)
   @JoinColumn({ name: "categoryId" })
   category: Promise<Categories>;
 }
