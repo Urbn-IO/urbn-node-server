@@ -15,7 +15,6 @@ export class CategoryResolver {
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string
   ) {
-    const maxLimit = Math.min(18, limit);
     if (id) {
       const category = await Categories.findOne({ where: { id } });
       if (!category) return [];
@@ -28,6 +27,7 @@ export class CategoryResolver {
       if (!category) return [];
       return [category];
     }
+    const maxLimit = Math.min(18, limit);
     const queryBuilder = AppDataSource.getRepository(Categories).createQueryBuilder("categories").limit(maxLimit);
     if (primary) {
       queryBuilder.where('categories."primary" = :primary', { primary });
