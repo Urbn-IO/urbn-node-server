@@ -47,6 +47,7 @@ export const saveShoutout = async (data: VideoOutput[]) => {
       NotificationRouteCode.PROFILE_SHOUTOUT
     );
   } catch (err) {
-    throw new Error("An error Occured");
+    console.log(`An error Occured while saving shoutout video. Error: ${err}`);
+    return;
   }
 };

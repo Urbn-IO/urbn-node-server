@@ -4,7 +4,7 @@ import cors from "cors";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import payment from "./services/payments/paystack/webhook";
-import video from "./services/video/twilio/webhook";
+import video from "./services/call/twilio/webhook";
 import search from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
 import sqsConsumer from "./services/aws/queues/videoOnDemand";
@@ -13,7 +13,7 @@ import pubsub from "./pubsub";
 import responseCachePlugin from "apollo-server-plugin-response-cache";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { APP_SESSION_PREFIX, COOKIE_NAME, __prod__ } from "./constants";
+import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from "./constants";
 import { createCategoriesLoader } from "./utils/categoriesLoader";
 import { createCelebsLoader } from "./utils/celebsLoader";
 import { initializeApp } from "firebase-admin/app";
@@ -24,6 +24,7 @@ import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getSessionContext } from "./utils/helpers";
 import { AppDataSource } from "./db";
+// import initializeWorkers from "./queues/job_queue";
 
 const app = express();
 const httpServer = createServer(app);
@@ -32,7 +33,7 @@ const redis = redisClient;
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
   initializeApp(firebaseConfig);
-  AppDataSource.initialize()
+  await AppDataSource.initialize()
     .then(() => {
       console.log("Data Source has been initialized!");
     })
@@ -40,13 +41,15 @@ const main = async () => {
       console.error("Error during Data Source initialization", err);
     });
   // initializeSearch();
+  // initializeWorkers();
+
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
 
   const store = new RedisStore({ client: redis, disableTouch: true, prefix: APP_SESSION_PREFIX });
   app.use(
     session({
-      name: COOKIE_NAME,
+      name: SESSION_COOKIE_NAME,
       store,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 150, //max cookie age of 150 days
@@ -97,9 +100,9 @@ const main = async () => {
       context: async ({ extra }) => {
         const sess = await getSessionContext(extra.request.headers.cookie as string, store);
         if (!sess?.userId) {
-          throw new Error("Userss not logged in");
+          throw new Error("Users not logged in");
         }
-        return sess.userId;
+        return { userId: sess.userId };
       },
       onDisconnect: () => {
         console.log("disconnected from websocket 🔌");
@@ -163,8 +166,8 @@ const main = async () => {
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
   httpServer.listen(Port, () => {
-    console.log(`server running on port ${Port} 🚀🚀`);
     console.log("Production Environment: ", __prod__);
+    console.log(`server running on port ${Port} 🚀🚀`);
   });
 };
 main().catch((err) => {

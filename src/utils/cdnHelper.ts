@@ -1,3 +1,3 @@
-export const appendCdnLink = (file: string) => {
-  return file;
+export const appendCdnLink = (link: string) => {
+  return link;
 };

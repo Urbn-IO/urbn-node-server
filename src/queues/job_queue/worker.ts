@@ -1,14 +1,24 @@
 import { Worker } from "bullmq";
-import Redis from "ioredis";
 import { config } from "../../constants";
+import redisClient from "../../redis/client";
 
-const createWorker = (queueName: string, pathToProcessor: string, redis: Redis) => {
-  const worker = new Worker(queueName, pathToProcessor, {
-    connection: redis,
-    sharedConnection: true,
-    concurrency: config.BULL_QUEUE_CONCURRENCY,
-  });
-  return worker;
-};
+const redis = redisClient;
+const callStatusProcessor = `${config.APP_ROOT}/queues/job_queue/processors/callDuration`;
+const mailProcessor = `${config.APP_ROOT}/queues/job_queue/processors/mailTransport`;
+const requestOperatorProcessor = `${config.APP_ROOT}/queues/job_queue/processors/requestOperator`;
 
-export default createWorker;
+export const callStatusWorker = new Worker(config.CALL_QUEUE_NAME, callStatusProcessor, {
+  connection: redis,
+  sharedConnection: true,
+  concurrency: config.BULL_QUEUE_CONCURRENCY,
+});
+export const mailWorker = new Worker(config.MAIL_QUEUE_NAME, mailProcessor, {
+  connection: redis,
+  sharedConnection: true,
+  concurrency: config.BULL_QUEUE_CONCURRENCY,
+});
+export const operationsWorker = new Worker(config.OPERATIONS_QUEUE_NAME, requestOperatorProcessor, {
+  connection: redis,
+  sharedConnection: true,
+  concurrency: config.BULL_QUEUE_CONCURRENCY,
+});

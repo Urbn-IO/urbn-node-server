@@ -13,9 +13,9 @@ import {
 } from "type-graphql";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { CallTokenResponse, NotificationsPayloadTest, VideoCallEvent } from "../utils/graphqlTypes";
-import { AppContext, SubscriptionTopics } from "../types";
+import { AppContext, RequestStatus, SubscriptionTopics } from "../types";
 import { validateRecipient, validateRequestor } from "../utils/requestValidations";
-import { createVideoCallRoom, getVideoCallToken } from "../services/video/calls";
+import { createVideoCallRoom, getVideoCallToken } from "../services/call/calls";
 import { sendCallNotification } from "../services/notifications/handler";
 import { notificationsManager } from "../services/notifications/notificationsManager";
 import { createDeepLink } from "../services/deep_links/dynamicLinks";
@@ -34,6 +34,7 @@ export class VideoCallResolver {
     const userId = req.session.userId as string;
     const request = await validateRequestor(userId, requestId);
     if (request) {
+      if (request.status !== RequestStatus.ACCEPTED) return false;
       await sendCallNotification(request.recipient, requestId, request.requestorName);
       return true;
     }
@@ -52,7 +53,7 @@ export class VideoCallResolver {
     const request = await validateRecipient(recipient, requestId);
     if (request) {
       const requestor = request.requestor;
-      const callRoomName = await createVideoCallRoom(request.callDurationInSeconds);
+      const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
       if (callRoomName) {
         const [callToken, requestorCallToken] = getVideoCallToken([recipient, requestor], callRoomName);
         publish({ token: requestorCallToken, roomName: callRoomName, requestor });
@@ -88,6 +89,11 @@ export class VideoCallResolver {
 
   @Mutation(() => Boolean)
   testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
+    notificationsManager().sendInstantTestMessage(payload);
+    return true;
+  }
+  @Mutation(() => Boolean)
+  testEmail(@Arg("payload") payload: NotificationsPayloadTest) {
     notificationsManager().sendInstantTestMessage(payload);
     return true;
   }

@@ -1,6 +1,7 @@
 export const __prod__ = process.env.Node_ENV === "production";
-export const COOKIE_NAME = "urbanauth";
+export const SESSION_COOKIE_NAME = "urbn_session";
 export const APP_SESSION_PREFIX = "session:";
+export const VIDE_CALL_PREFIX = "urbn_video_room:";
 export const RESET_PASSWORD_PREFIX = "reset-password:";
 export const CONFIRM_EMAIL_PREFIX = "confirm-email:";
 export const config = {
@@ -13,4 +14,5 @@ export const config = {
   REQUEST_MAX_RATE: 50_000_000,
   CALL_QUEUE_NAME: "call_status",
   MAIL_QUEUE_NAME: "mail",
+  OPERATIONS_QUEUE_NAME: "operations",
 };

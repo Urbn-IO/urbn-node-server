@@ -30,7 +30,7 @@ const sendMessage = () => {
 const sendTestMessage = () => {
   return {
     sendInstantTestMessage: ({ messageTitle, messageBody, tokens, data, priority }: NotificationsPayloadTest) => {
-      const priorityProp: { android: "normal" | "high"; apns: string } = { android: "high", apns: "10" };
+      const priorityProp: { android: "normal" | "high"; apns: "5" | "10" } = { android: "normal", apns: "5" };
       if (priority === NotificationPriority.HIGH) {
         priorityProp.android = "high";
         priorityProp.apns = "10";

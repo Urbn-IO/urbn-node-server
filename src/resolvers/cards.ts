@@ -16,6 +16,7 @@ import { CardResponse, InitializeCardResponse, NewCardVerificationResponse } fro
 import { User } from "../entities/User";
 import paymentManager from "../services/payments/payments";
 import { CardAuthorization } from "../entities/CardAuthorization";
+import { AppDataSource } from "../db";
 
 @Resolver()
 export class CardsResolver {
@@ -24,7 +25,14 @@ export class CardsResolver {
   async addCard(@Ctx() { req }: AppContext): Promise<InitializeCardResponse> {
     let defaultCard = false;
     const userId = req.session.userId as string;
-    const user = await User.findOne({ where: { userId }, select: ["email", "cards"], relations: ["cards"] });
+    const user = await AppDataSource.getRepository(User)
+      .createQueryBuilder("user")
+      .select(["user.email"])
+      .where("user.userId = :userId", { userId })
+      .leftJoinAndSelect("user.cards", "cards")
+      .getOne();
+
+    // const user = await User.findOne({ where: { userId }, select: ["email", "cards"], relations: ["cards"] });
     if (!user) return { errorMessage: "User not found" };
     if (user.cards.length < 1) defaultCard = true;
     const email = user.email;
@@ -49,6 +57,7 @@ export class CardsResolver {
     else verification.message = "Unable to verify this card. Please try again or try another card";
     return verification;
   }
+
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
   async setDefaultCard(@Arg("id", () => Int) id: number, @Ctx() { req }: AppContext): Promise<boolean> {
@@ -61,11 +70,13 @@ export class CardsResolver {
       if (!cardToSet) return false;
       const isDefault = cards.some((x) => {
         if (x.id === id && x.defaultCard === true) return true;
-        x.defaultCard = false;
+        if (x.id === id) x.defaultCard = true;
+        else x.defaultCard = false;
         return false;
       });
       if (isDefault) return true;
-      await CardAuthorization.update(id, { defaultCard: true });
+      console.log(cards);
+      await CardAuthorization.save(cards);
       return true;
     } catch (err) {
       console.log(err);

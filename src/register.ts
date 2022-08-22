@@ -17,6 +17,7 @@ import { CardsResolver } from "./resolvers/cards";
 import { RequestsResolver } from "./resolvers/requests";
 import { UserResolver } from "./resolvers/user";
 import { VideoCallResolver } from "./resolvers/videoCalls";
+import { CallLogs } from "./entities/CallLogs";
 
 export const entities = [
   User,
@@ -29,6 +30,7 @@ export const entities = [
   Shoutout,
   CallScheduleBase,
   Transactions,
+  CallLogs,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types

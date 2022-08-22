@@ -5,9 +5,9 @@ import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
-import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
+import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, SESSION_COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { sendMail } from "../services/mail/manager";
+import sendMail from "../services/mail/manager";
 import { createDeepLink } from "../services/deep_links/dynamicLinks";
 import { isEmail, length } from "class-validator";
 import { getUserOAuth } from "../services/auth/oauth";
@@ -102,10 +102,11 @@ export class UserResolver {
     const key = await redis.exists(session);
     if (key === 0) {
       const auth = await getUserOAuth(uid);
-      if (!auth) return { errorMessage: "Couldn't authenticate your account" };
+      console.log("auth is: ", auth);
+      if (auth === null) return { errorMessage: "Couldn't authenticate your account" };
       let user = await User.findOne({
         where: {
-          email: auth.email.toLowerCase(),
+          email: auth.email?.toLowerCase(),
         },
         relations: ["shoutouts", "celebrity", "cards"],
       });
@@ -259,7 +260,7 @@ export class UserResolver {
       return { errorMessage: "An error occured" };
     }
     const isOldPassword = await argon2.verify(user.password, oldPassword);
-    if (!isOldPassword) return { errorMessage: 'Incorrect "old password" ' };
+    if (!isOldPassword) return { errorMessage: 'Incorrect "Old password" ' };
     try {
       await User.update(user.id, { password: await argon2.hash(newPassword) });
       return { success: "successfully changed password" };
@@ -279,7 +280,7 @@ export class UserResolver {
     }
     return new Promise((resolve, reject) =>
       req.session.destroy((err: unknown) => {
-        res.clearCookie(COOKIE_NAME);
+        res.clearCookie(SESSION_COOKIE_NAME);
         if (err) {
           console.log(err);
           reject(err);

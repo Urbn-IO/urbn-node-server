@@ -187,6 +187,7 @@ export class RequestsResolver {
     try {
       const request = await validateRecipient(userId, requestId);
       if (request) {
+        if (request.status !== RequestStatus.ACCEPTED) throw new Error();
         const owner = request.requestor;
         const celebAlias = request.recipientAlias;
         const time = Math.floor(new Date().getTime() / 1000);
@@ -208,7 +209,7 @@ export class RequestsResolver {
           });
           return signedUrl;
         });
-
+        await Requests.update(request.id, { status: RequestStatus.PROCESSING });
         return {
           videoData: {
             videoUrl: await urls[0],
@@ -239,7 +240,7 @@ export class RequestsResolver {
     try {
       const request = await (
         await Requests.createQueryBuilder()
-          .update({ status: RequestStatus.FULFILLED })
+          .update({ status: RequestStatus.PROCESSING })
           .where({ id: requestId })
           .returning('"callScheduleId"')
           .execute()
@@ -274,10 +275,10 @@ export class RequestsResolver {
         );
       } catch (err) {
         return {
-          errorMessage: "Error changing request state, Try again later",
+          errorMessage: "Error processing request, Try again later",
         };
       }
-      return { success: "Request Accepted" };
+      return { success: "Request reponse saved" };
     }
     return { errorMessage: "Invalid response to request" };
   }

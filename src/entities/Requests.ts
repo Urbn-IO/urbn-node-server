@@ -4,6 +4,7 @@ import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedCo
 
 @ObjectType()
 @Entity()
+@Index(["requestor", "recipient"])
 export class Requests extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
@@ -43,7 +44,7 @@ export class Requests extends BaseEntity {
 
   @Field()
   @Index()
-  @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.PROCESSING })
+  @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.VALIDATING })
   status: RequestStatus;
 
   @Index()

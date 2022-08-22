@@ -1,16 +1,20 @@
 import crypto from "crypto";
 import client from "./twilio/client";
 import { jwt } from "twilio";
+import { VIDE_CALL_PREFIX } from "../../constants";
 
-export const createVideoCallRoom = async (callDurationInSeconds: string) => {
+export const createVideoCallRoom = async (requestId: number, callDurationInSeconds: string) => {
   try {
     const currentTime = new Date().valueOf().toString();
     const randomNumber = Math.random().toString();
+    const id = requestId.toString();
     const serial = crypto
       .createHash("sha1")
       .update(currentTime + randomNumber)
       .digest("hex");
-    const roomName = `urbn_video_room:${serial}:::${callDurationInSeconds}`;
+
+    //Do not change the string format of the room name. If it must be changed, change how the requestId and call duration are retrieved from the webhook handler for calls
+    const roomName = `${VIDE_CALL_PREFIX}${serial}/${id}/:::${callDurationInSeconds}`;
     const result = await client.video.rooms.create({
       uniqueName: roomName,
       type: "go",

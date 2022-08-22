@@ -62,8 +62,8 @@ export interface EmailBaseInput {
   time?: string;
 }
 export interface OAuth {
-  displayName: string;
-  email: string;
+  displayName?: string;
+  email?: string;
 }
 
 export type TransactionsMetadata = {
@@ -72,6 +72,7 @@ export type TransactionsMetadata = {
   availableSlotId?: number;
 };
 export type CachedCallEventPayload = {
+  requestId: number;
   roomName: string;
   roomSid: string;
   roomStatus: string;
@@ -102,6 +103,14 @@ export type UpdateCallDurationArgs = {
   roomSid: string;
 };
 
+export type CallLogInput = {
+  participantA: string;
+  participantB?: string;
+  requestId: number;
+  callDuration: number;
+  elapsedDuration?: number;
+};
+
 export enum NotificationPriority {
   HIGH,
   NORMAL,
@@ -111,6 +120,7 @@ export enum RequestStatus {
   PENDING = "pending",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
+  VALIDATING = "validating",
   PROCESSING = "processing",
   FAILED = "failed",
   FULFILLED = "fulfilled",
