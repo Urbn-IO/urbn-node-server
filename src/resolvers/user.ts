@@ -11,6 +11,7 @@ import sendMail from "../services/mail/manager";
 import { createDeepLink } from "../services/deep_links/dynamicLinks";
 import { isEmail, length } from "class-validator";
 import { getUserOAuth } from "../services/auth/oauth";
+import { AppDataSource } from "../db";
 
 @Resolver()
 export class UserResolver {
@@ -308,33 +309,18 @@ export class UserResolver {
   @Query(() => UserResponse, { nullable: true })
   @UseMiddleware(isAuthenticated)
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
-    if (!req.session.userId) {
-      return { errorMessage: "No session Id" };
-    }
-    const user = await User.findOne({
-      where: { userId: req.session.userId },
-      relations: ["shoutouts", "celebrity", "cards"],
-    });
+    const userId = req.session.userId;
+    const user = await AppDataSource.getRepository(User)
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.shoutouts", "shoutouts")
+      .leftJoinAndSelect("user.celebrity", "celebrity")
+      .leftJoinAndSelect("user.cards", "cards")
+      .where("user.userId = :userId", { userId })
+      .getOne();
+
     if (!user) {
       return { errorMessage: "User not found" };
     }
-    // if (user.shoutouts.length > 0) {
-    //   const ids = [];
-    //   for (const shoutout of user.shoutouts) {
-    //     ids.push(shoutout.celebId);
-    //   }
-    //   const alias = await Celebrity.find({
-    //     select: ["alias", "userId"],
-    //     where: { userId: In(ids) },
-    //   });
-    //   alias.forEach((x) => {
-    //     for (const shoutout of user.shoutouts) {
-    //       if (x.userId === shoutout.celebId) {
-    //         shoutout.celebAlias = x.alias as string;
-    //       }
-    //     }
-    //   });
-    // }
 
     return { user };
   }

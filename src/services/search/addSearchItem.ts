@@ -1,11 +1,11 @@
 import { Categories } from "src/entities/Categories";
 import { CelebCategories } from "../../entities/CelebCategories";
-import { User } from "../../entities/User";
+import { Celebrity } from "../../entities/Celebrity";
 import { client } from "./client";
 
-export const upsertCelebritySearchItem = async (user: User | null) => {
-  if (user?.celebrity) {
-    const celebId = user.celebrity.id;
+export const upsertCelebritySearchItem = async (celebrity: Celebrity | null) => {
+  if (celebrity) {
+    const celebId = celebrity.id;
     const categoriesObj = await CelebCategories.find({
       join: {
         alias: "celebCategory",
@@ -25,16 +25,14 @@ export const upsertCelebritySearchItem = async (user: User | null) => {
     });
 
     const celebObj = {
-      id: user.celebrity.id.toString(),
-      user_id: user.userId,
-      displayName: user.displayName,
-      alias: user.celebrity.alias,
-      thumbnail: user.celebrity.thumbnail,
-      image_placeholder: user.celebrity.imagePlaceholder,
-      image_thumbnail: user.celebrity.imageThumbnail,
-      image: user.celebrity.image,
-      description: user.celebrity.description,
-      profile_hash: user.celebrity.profileHash,
+      id: celebrity.id.toString(),
+      alias: celebrity.alias,
+      thumbnail: celebrity.thumbnail,
+      image_placeholder: celebrity.imagePlaceholder,
+      image_thumbnail: celebrity.imageThumbnail,
+      image: celebrity.image,
+      description: celebrity.description,
+      profile_hash: celebrity.profileHash,
       categories,
     };
     try {

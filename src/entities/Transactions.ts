@@ -1,4 +1,5 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import { Currency, PaymentGateway, PaymentStatus } from "../types";
 
 @Entity()
 @Index(["customer", "recipient"])
@@ -20,14 +21,17 @@ export class Transactions extends BaseEntity {
   @Column()
   amount: string;
 
-  @Column()
-  currency: string;
+  @Column({ type: "enum", enum: Currency, default: Currency.NAIRA })
+  currency: Currency;
 
   @Column()
   channel: string;
 
-  @Column()
-  status: string;
+  @Column({ type: "enum", enum: PaymentStatus })
+  status: PaymentStatus;
+
+  @Column({ type: "enum", enum: PaymentGateway, default: PaymentGateway.PAYSTACK })
+  gateway: PaymentGateway;
 
   @Column({ type: "timestamp", nullable: true })
   paidAt: Date;

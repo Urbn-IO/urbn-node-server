@@ -15,7 +15,6 @@ export class CallScheduleBase extends BaseEntity {
   @Index()
   celebId: number;
 
-  @Field()
   @Column({ nullable: true })
   @Index()
   available: boolean;

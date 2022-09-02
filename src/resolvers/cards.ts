@@ -89,7 +89,13 @@ export class CardsResolver {
   async getCards(@Ctx() { req }: AppContext): Promise<CardResponse> {
     const userId = req.session.userId;
     try {
-      const user = await User.findOne({ where: { userId }, relations: { cards: true } });
+      const user = await AppDataSource.getRepository(User)
+        .createQueryBuilder("user")
+        .select("user.id")
+        .leftJoinAndSelect("user.cards", "cards")
+        .where("user.userId = :userId", { userId })
+        .getOne();
+      // const user = await User.findOne({ where: { userId }, relations: { cards: true } });
       if (!user) {
         return { errorMessage: "User not found" };
       }

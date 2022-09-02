@@ -16,6 +16,7 @@ import { Celebrity } from "./Celebrity";
 import { Shoutout } from "./Shoutout";
 import { CacheScope } from "apollo-server-types";
 import { SignInMethod } from "../types";
+import { Wallet } from "./Wallet";
 
 @ObjectType()
 @Entity()
@@ -54,13 +55,21 @@ export class User extends BaseEntity {
   authMethod: SignInMethod;
 
   @Field({ nullable: true })
-  @CacheControl({ maxAge: 60, scope: CacheScope.Private })
   @OneToOne(() => Celebrity, {
     nullable: true,
     cascade: true,
   })
   @JoinColumn()
   celebrity?: Celebrity;
+
+  @Field({ nullable: true })
+  @CacheControl({ maxAge: 60, scope: CacheScope.Private })
+  @OneToOne(() => Wallet, {
+    nullable: true,
+    cascade: true,
+  })
+  @JoinColumn()
+  wallet?: Wallet;
 
   @Field(() => [Shoutout], { nullable: true })
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user)

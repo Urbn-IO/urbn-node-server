@@ -2,10 +2,11 @@ import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import cookie from "cookie";
 import cookieParser from "cookie-parser";
-import { SESSION_COOKIE_NAME } from "../constants";
+import { INSTANT_SHOUTOUT_MULTIPLIER, SESSION_COOKIE_NAME } from "../constants";
 import connectRedis from "connect-redis";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { AppDataSource } from "../db";
+import { Celebrity } from "../entities/Celebrity";
 
 export const getNextAvailableDate = (day: number) => {
   dayjs.extend(isoWeek);
@@ -41,4 +42,11 @@ export const callDuration = (callLength: number, startTime: Date, currentTime: D
   const countDown = callLength - normalisedDuration;
   const countDownDuration = countDown > 0 ? countDown : 0;
   return countDownDuration;
+};
+
+export const attachInstantShoutoutPrice = (celeb: Celebrity[]) => {
+  celeb.forEach((x) => {
+    if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_MULTIPLIER;
+  });
+  return celeb;
 };

@@ -9,7 +9,7 @@ export const processExpiredRequest = async (request: Requests) => {
   if (request.requestType === RequestType.SHOUTOUT) delay = request.requestExpires.getTime() - Date.now();
   //execute job 5 minutes after initial call time for call requests
   else delay = request.callRequestBegins.getTime() + 300000 - Date.now();
-  await addJob(operationsQueue, "requests-op", request.id, {
+  await addJob(operationsQueue, "requests-op", request, {
     attempts: 6,
     backoff: { type: "fixed", delay: 10000 },
     delay,
@@ -37,10 +37,11 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
       await Requests.createQueryBuilder()
         .update({ status })
         .where({ paymentRef })
-        .returning('id, requestor, recipient, callRequestBegins, requestExpires, "requestType"')
+        .returning('id, requestor, recipient, "recipientAlias", callRequestBegins, requestExpires, "requestType"')
         .execute()
     ).raw[0];
-    const requestType = request.requestType === RequestType.SHOUTOUT ? "shoutout" : "video call";
+    const requestType =
+      request.requestType === RequestType.SHOUTOUT || RequestType.INSTANT_SHOUTOUT ? "shoutout" : "video call";
     if (success) {
       //automagically check and update state of request on expiration
       await processExpiredRequest(request);
@@ -55,7 +56,7 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
       messageBody = `Your request to ${request.recipient} failed due to an issue in processing your payment 😔`;
       route = NotificationRouteCode.RESPONSE;
     }
-    sendInstantNotification([userId], messageTitle, messageBody, route);
+    await sendInstantNotification([userId], messageTitle, messageBody, route);
   } catch (err) {
     console.error(err);
   }

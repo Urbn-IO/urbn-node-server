@@ -5,9 +5,6 @@ export const initializeSearch = async () => {
     name: "celebrity",
     fields: [
       { name: "id", type: "string" },
-      { name: "user_id", type: "string" },
-      { name: "first_name", type: "string" },
-      { name: "last_name", type: "string" },
       { name: "alias", type: "string" },
       { name: "thumbnail", type: "string" },
       { name: "image_placeholder", type: "string" },
@@ -25,12 +22,8 @@ export const initializeSearch = async () => {
       { name: "category_name", type: "string" },
     ],
   };
-  const celebrityCollectionExists = await client
-    .collections("celebrity")
-    .exists();
-  const categoryCollectionExists = await client
-    .collections("category")
-    .exists();
+  const celebrityCollectionExists = await client.collections("celebrity").exists();
+  const categoryCollectionExists = await client.collections("category").exists();
   if (!celebrityCollectionExists) {
     client
       .collections()

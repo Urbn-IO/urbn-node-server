@@ -18,6 +18,10 @@ import { RequestsResolver } from "./resolvers/requests";
 import { UserResolver } from "./resolvers/user";
 import { VideoCallResolver } from "./resolvers/videoCalls";
 import { CallLogs } from "./entities/CallLogs";
+import { WalletTransactions } from "./entities/WalletTransactions";
+import { Wallet } from "./entities/Wallet";
+import { ExtrasResolver } from "./resolvers/extras";
+import { CelebrityRegistration } from "./entities/CelebrityRegistrations";
 
 export const entities = [
   User,
@@ -31,6 +35,9 @@ export const entities = [
   CallScheduleBase,
   Transactions,
   CallLogs,
+  Wallet,
+  WalletTransactions,
+  CelebrityRegistration,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -43,4 +50,5 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   RequestsResolver,
   CardsResolver,
   VideoCallResolver,
+  ExtrasResolver,
 ];

@@ -1,5 +1,6 @@
 import {
   CallScheduleInput,
+  CelebrityPreregistrationInputs,
   GenericResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
@@ -17,10 +18,44 @@ import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 import { AppDataSource } from "../db";
+import { attachInstantShoutoutPrice } from "../utils/helpers";
+import { CelebrityRegistration } from "../entities/CelebrityRegistrations";
+import { CELEB_PREREGISTRATION_PREFIX } from "../constants";
 
 @Resolver()
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
+
+  @Mutation(() => String)
+  @UseMiddleware(isAuthenticated)
+  async celebPreregistration(
+    @Arg("input") input: CelebrityPreregistrationInputs,
+    @Ctx() { req, redis }: AppContext
+  ): Promise<string> {
+    const userId = req.session.userId;
+    if (!input.facebook && !input.instagram && !input.twitter && !input.phoneNumber) {
+      return "You must provide at least one (1) medium to verify your claim";
+    }
+    const exists = await redis.get(CELEB_PREREGISTRATION_PREFIX + userId);
+    if (exists) return "Seems like you applied recently, try again a week from when you made your initial application";
+    try {
+      const user = await User.findOne({ where: { userId }, select: ["email"] });
+      if (!user) throw new Error("An error occured while trying to find the user on the database");
+      await CelebrityRegistration.create({
+        email: user.email,
+        alias: input.alias,
+        facebook: input.facebook,
+        instagram: input.instagram,
+        twitter: input.twitter,
+        phoneNumber: input.phoneNumber,
+      }).save();
+      await redis.set(CELEB_PREREGISTRATION_PREFIX + userId, userId as string, "EX", 3600 * 24 * 7);
+      return "Success!🔥 You'll hear from us soon";
+    } catch (err) {
+      return "Request Failed. An error occured";
+    }
+  }
+
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async registerUserAsCeleb(
@@ -76,14 +111,15 @@ export class CelebrityResolver {
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
-      await Celebrity.update({ userId }, data as Celebrity);
-      const user = await AppDataSource.getRepository(User)
-        .createQueryBuilder("user")
-        .where("user.userId = :userId", { userId })
-        .leftJoinAndSelect("user.celebrity", "celebrity")
-        .getOne();
+      const queryBuilderResult = await AppDataSource.getRepository(Celebrity)
+        .createQueryBuilder("celebrity")
+        .update(data)
+        .where('celebrity."userId" = :userId', { userId })
+        .returning('id, alias, thumbnail, "imagePlaceholder", "imageThumbnail", image, description, "profileHash"')
+        .execute();
+      const celeb = queryBuilderResult.raw[0];
 
-      upsertCelebritySearchItem(user);
+      upsertCelebritySearchItem(celeb);
 
       return { success: "updated succesfully!" };
     } catch (err) {
@@ -142,7 +178,7 @@ export class CelebrityResolver {
 
       return result;
     }
-    return null;
+    return {};
   }
 
   @Query(() => [Celebrity], { nullable: true })
@@ -173,7 +209,9 @@ export class CelebrityResolver {
       });
     }
     //
-    const celebs = await queryBuilder.getMany();
+    let celebs = await queryBuilder.getMany();
+
+    celebs = attachInstantShoutoutPrice(celebs);
 
     // const data = celebs.map((obj) => ({
     //   ...obj,

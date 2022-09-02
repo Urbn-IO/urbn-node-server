@@ -7,55 +7,55 @@ import { User } from "./User";
 export class CardAuthorization extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field(() => Boolean)
   @Column({ default: false })
   defaultCard: boolean;
 
   @Column({ nullable: true })
-  accountName!: string;
+  accountName: string;
 
   @Column()
-  email!: string;
+  email: string;
 
   @Column({ unique: true })
-  authorizationCode!: string;
+  authorizationCode: string;
 
   @Field()
   @Column()
-  cardType!: string;
+  cardType: string;
 
   @Field()
   @Column()
-  last4!: string;
+  last4: string;
 
   @Field()
   @Column()
-  expMonth!: string;
+  expMonth: string;
 
   @Field()
   @Column()
-  expYear!: string;
+  expYear: string;
 
   @Column()
-  bin!: string;
+  bin: string;
 
   @Field()
   @Column()
-  bank!: string;
+  bank: string;
 
   @Column()
-  channel!: string;
+  channel: string;
 
   @Column({ unique: true })
-  signature!: string;
+  signature: string;
 
   @Column()
-  reusable!: boolean;
+  reusable: boolean;
 
   @Column()
-  countryCode!: string;
+  countryCode: string;
 
   @Field(() => String)
   @CreateDateColumn({ type: "timestamp" })

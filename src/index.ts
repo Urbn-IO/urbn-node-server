@@ -24,6 +24,7 @@ import { createServer } from "http";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getSessionContext } from "./utils/helpers";
 import { AppDataSource } from "./db";
+import initializeWorkers from "./queues/job_queue";
 // import initializeWorkers from "./queues/job_queue";
 
 const app = express();
@@ -41,12 +42,12 @@ const main = async () => {
       console.error("Error during Data Source initialization", err);
     });
   // initializeSearch();
-  // initializeWorkers();
+  initializeWorkers();
 
   sqsConsumer.start();
   const RedisStore = connectRedis(session);
 
-  const store = new RedisStore({ client: redis, disableTouch: true, prefix: APP_SESSION_PREFIX });
+  const store = new RedisStore({ client: redis as never, disableTouch: true, prefix: APP_SESSION_PREFIX });
   app.use(
     session({
       name: SESSION_COOKIE_NAME,

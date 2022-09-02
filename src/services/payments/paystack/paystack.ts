@@ -18,6 +18,7 @@ const initializeTransaction = (apiUrl: string, secretKey: string) => {
           headers: {
             Authorization: `Bearer ${secretKey}`,
             "Content-Type": "application/json",
+            "cache-control": "no-cache",
           },
           body: params,
         });
@@ -67,6 +68,7 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
           headers: {
             Authorization: `Bearer ${secretKey}`,
             "Content-Type": "application/json",
+            "cache-control": "no-cache",
           },
           body: params,
         });
@@ -93,6 +95,7 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
           method: "get",
           headers: {
             Authorization: `Bearer ${secretKey}`,
+            "cache-control": "no-cache",
           },
         });
         const payload = await response.json();

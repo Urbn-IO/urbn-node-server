@@ -18,7 +18,7 @@ import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
 import { AppDataSource } from "../db";
-import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
+import { INSTANT_SHOUTOUT_MULTIPLIER, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
 
 @Resolver()
 export class RequestsResolver {
@@ -30,25 +30,19 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
-
-    if (Input.description.length > 300 || Input.description.length < 11) {
-      return {
-        errorMessage: "Invalid description length",
-      };
-    }
     const celebId = Input.celebId;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
-      .select(["user.firstName", "user.email"])
+      .select(["user.email", "user.displayName"])
       .leftJoin("user.cards", "cards")
       .where("cards.id = :cardId", { cardId })
-      .addSelect(['cards."authorizationCode"'])
+      .addSelect(["cards.authorizationCode"])
       .getRawOne();
 
     if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
 
     const email = user.user_email;
-    const requestorName = user.user_firstName;
+    const requestorName = user.user_displayName;
     const cardAuth = user.authorizationCode;
 
     const celeb = await Celebrity.findOne({ where: { id: celebId } });
@@ -64,8 +58,8 @@ export class RequestsResolver {
     }
     const requestType = Input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
     const transactionAmount = Input.instantShoutout
-      ? (celeb.shoutoutRates * 100 * INSTANT_SHOUTOUT_RATE).toString()
-      : (celeb.shoutoutRates * 100).toString();
+      ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_MULTIPLIER).toString()
+      : (celeb.shoutout * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
       userId,
@@ -106,7 +100,7 @@ export class RequestsResolver {
     const celebId = Input.celebId;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
-      .select(["user.firstName", "user.email"])
+      .select(["user.displayName", "user.email"])
       .leftJoin("user.cards", "cards")
       .where("cards.id = :cardId", { cardId })
       .addSelect(['cards."authorizationCode"'])
@@ -115,7 +109,7 @@ export class RequestsResolver {
     if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
 
     const email = user.user_email;
-    const requestorName = user.user_firstName;
+    const requestorName = user.user_displayName;
     const cardAuth = user.authorizationCode;
     const celeb = await Celebrity.findOne({ where: { id: celebId } });
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
@@ -141,8 +135,8 @@ export class RequestsResolver {
 
     const transactionAmount =
       callRequestType === RequestType.CALL_TYPE_A
-        ? (celeb.callRatesA * 100).toString()
-        : (celeb.callRatesB * 100).toString();
+        ? (celeb.callTypeA * 100).toString()
+        : (celeb.callTypeB * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
 
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {

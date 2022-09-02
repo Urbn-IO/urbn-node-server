@@ -64,17 +64,20 @@ export class Celebrity extends BaseEntity {
   @Column({ default: false })
   acceptsCallTypeB: boolean;
 
-  @Field(() => Int, { nullable: true })
+  @Field(() => Int, { defaultValue: 0 })
   @Column({ nullable: true })
-  shoutoutRates: number;
+  shoutout: number;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
-  callRatesA: number;
+  @Field(() => Int, { defaultValue: 0 })
+  instantShoutout: number;
 
-  @Field(() => Int, { nullable: true })
+  @Field(() => Int, { defaultValue: 0 })
   @Column({ nullable: true })
-  callRatesB: number;
+  callTypeA: number;
+
+  @Field(() => Int, { defaultValue: 0 })
+  @Column({ nullable: true })
+  callTypeB: number;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

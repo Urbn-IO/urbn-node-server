@@ -190,3 +190,19 @@ export enum SignInMethod {
   BASIC = "BASIC_AUTH",
   OAUTH = "OAUTH",
 }
+
+export enum PaymentStatus {
+  SUCCESS = "success",
+  FAILED = "failed",
+}
+
+export enum PaymentGateway {
+  PAYSTACK = "paystack",
+}
+
+export enum Currency {
+  NAIRA = "NGN",
+  GH_CEDIS = "GHS",
+  SA_RAND = "ZAR",
+  US_DOLLARS = "USD",
+}

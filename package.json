@@ -39,6 +39,7 @@
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.33.1",
     "@typescript-eslint/parser": "^5.33.1",
+    "apollo-server-types": "^3.6.2",
     "eslint": "^8.22.0",
     "nodemon": "^2.0.19",
     "ts-node": "^10.9.1",
@@ -74,6 +75,7 @@
     "graphql-ws": "^5.10.0",
     "ioredis": "^5.2.2",
     "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
     "nodemailer": "^6.7.8",
     "npm-watch": "^0.11.0",
     "pg": "^8.7.3",
@@ -86,5 +88,10 @@
     "typesense": "^1.4.0",
     "uuid": "^8.3.2",
     "ws": "^8.8.1"
+  },
+  "engines": {
+    "npm": "please-use-pnpm",
+    "yarn": "please-use-pnpm",
+    "pnpm": ">= 7.9.4"
   }
 }
