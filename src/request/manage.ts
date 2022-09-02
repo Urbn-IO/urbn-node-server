@@ -6,12 +6,14 @@ import { NotificationRouteCode, RequestStatus, RequestType } from "../types";
 export const processExpiredRequest = async (request: Requests) => {
   let delay: number;
   //execute job at request expiration time for shoutout requests
-  if (request.requestType === RequestType.SHOUTOUT) delay = request.requestExpires.getTime() - Date.now();
+  if (request.requestType === RequestType.SHOUTOUT || request.requestType === RequestType.INSTANT_SHOUTOUT) {
+    delay = request.requestExpires.getTime() - Date.now();
+  }
   //execute job 5 minutes after initial call time for call requests
   else delay = request.callRequestBegins.getTime() + 300000 - Date.now();
   await addJob(operationsQueue, "requests-op", request, {
     attempts: 6,
-    backoff: { type: "fixed", delay: 10000 },
+    backoff: { type: "fixed", delay: 30000 },
     delay,
     removeOnFail: true,
     removeOnComplete: true,
