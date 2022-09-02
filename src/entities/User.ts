@@ -49,7 +49,7 @@ export class User extends BaseEntity {
   @Column()
   sessionKey: string;
 
-  @Field()
+  @Field(() => SignInMethod)
   @Column({ type: "enum", enum: SignInMethod, default: SignInMethod.BASIC })
   authMethod: SignInMethod;
 

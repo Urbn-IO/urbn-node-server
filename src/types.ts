@@ -129,6 +129,7 @@ export enum RequestStatus {
 
 export enum RequestType {
   SHOUTOUT = "shoutout",
+  INSTANT_SHOUTOUT = "instant_shoutout",
   CALL_TYPE_A = "call_type_A",
   CALL_TYPE_B = "call_type_B",
 }

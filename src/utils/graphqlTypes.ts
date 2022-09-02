@@ -3,8 +3,8 @@ import { User } from "../entities/User";
 import { InputType, Field, ObjectType, Int, registerEnumType } from "type-graphql";
 import { Categories } from "../entities/Categories";
 import { CardAuthorization } from "../entities/CardAuthorization";
-import { CallType, ContentType, DayOfTheWeek, NotificationRouteCode, PlatformOptions } from "../types";
-import { config } from "../constants";
+import { CallType, ContentType, DayOfTheWeek, PlatformOptions, SignInMethod } from "../types";
+import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from "../constants";
 
 registerEnumType(CallType, {
   name: "CallType",
@@ -21,10 +21,9 @@ registerEnumType(PlatformOptions, {
   description: "Enum representing possible device platforms",
 });
 
-//remove this, its for testing
-registerEnumType(NotificationRouteCode, {
-  name: "NotificationRouteCode",
-  description: "Enum representing possible NotificationRouteCode",
+registerEnumType(SignInMethod, {
+  name: "SignInMethod",
+  description: "Enum representing possible SignInMethods",
 });
 
 @InputType()
@@ -51,7 +50,10 @@ export class RegisterCelebrityInputs {
   alias: string;
 
   @Field()
-  acceptShoutOut: boolean;
+  acceptsShoutout: boolean;
+
+  @Field()
+  acceptsInstantShoutout: boolean;
 
   @Field()
   acceptsCallTypeA: boolean;
@@ -59,18 +61,18 @@ export class RegisterCelebrityInputs {
   @Field()
   acceptsCallTypeB: boolean;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
   @Field(() => Int)
   shoutoutRates: number;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
   @Field(() => Int)
   callRatesA: number;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
   @Field(() => Int)
   callRatesB: number;
 
@@ -91,7 +93,10 @@ export class UpdateCelebrityInputs {
   alias: string;
 
   @Field({ nullable: true })
-  acceptShoutOut: boolean;
+  acceptsShoutout: boolean;
+
+  @Field({ nullable: true })
+  acceptsInstantShoutout: boolean;
 
   @Field({ nullable: true })
   acceptsCallTypeA: boolean;
@@ -102,18 +107,18 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   thumbnail: string;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
   @Field(() => Int, { nullable: true })
   shoutoutRates: number;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
   @Field(() => Int, { nullable: true })
   callRatesA: number;
 
-  @Min(config.REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
-  @Max(config.REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
+  @Min(REQUEST_MIN_RATE, { message: "Call rate must be more than $constraint1" })
+  @Max(REQUEST_MAX_RATE, { message: "Call rate must not be less than $constraint1" })
   @Field(() => Int, { nullable: true })
   callRatesB: number;
 
@@ -165,6 +170,8 @@ export class ShoutoutRequestInput {
   })
   @Field()
   description: string;
+  @Field({ defaultValue: false })
+  instantShoutout: boolean;
   @IsDate()
   @Field()
   requestExpiration: Date;
@@ -359,22 +366,4 @@ export class S3SignedObject {
 
   @Field({ nullable: true })
   fileName?: string;
-}
-///remove below after
-@InputType()
-export class TestData {
-  @Field(() => NotificationRouteCode)
-  routeCode: NotificationRouteCode;
-}
-
-@InputType()
-export class NotificationsPayloadTest {
-  @Field({ nullable: true })
-  messageTitle?: string;
-  @Field({ nullable: true })
-  messageBody?: string;
-  @Field(() => [String])
-  tokens: string[];
-  @Field({ nullable: true })
-  data?: TestData;
 }

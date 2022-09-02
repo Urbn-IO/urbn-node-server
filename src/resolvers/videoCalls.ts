@@ -12,13 +12,11 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { isAuthenticated } from "../middleware/isAuthenticated";
-import { CallTokenResponse, NotificationsPayloadTest, VideoCallEvent } from "../utils/graphqlTypes";
+import { CallTokenResponse, VideoCallEvent } from "../utils/graphqlTypes";
 import { AppContext, RequestStatus, SubscriptionTopics } from "../types";
 import { validateRecipient, validateRequestor } from "../utils/requestValidations";
 import { createVideoCallRoom, getVideoCallToken } from "../services/call/calls";
 import { sendCallNotification } from "../services/notifications/handler";
-import { notificationsManager } from "../services/notifications/notificationsManager";
-import { createDeepLink } from "../services/deep_links/dynamicLinks";
 
 @Resolver()
 export class VideoCallResolver {
@@ -87,20 +85,20 @@ export class VideoCallResolver {
 
   ///////////////////Test stuff
 
-  @Mutation(() => Boolean)
-  testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
-    notificationsManager().sendInstantTestMessage(payload);
-    return true;
-  }
-  @Mutation(() => Boolean)
-  testEmail(@Arg("payload") payload: NotificationsPayloadTest) {
-    notificationsManager().sendInstantTestMessage(payload);
-    return true;
-  }
-  @Mutation(() => String)
-  async testDeepLink(@Arg("url") url: string) {
-    const link = await createDeepLink(url);
-    if (link) return link;
-    return "An error occured";
-  }
+  // @Mutation(() => Boolean)
+  // testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
+  //   notificationsManager().sendInstantTestMessage(payload);
+  //   return true;
+  // }
+  // @Mutation(() => Boolean)
+  // testEmail(@Arg("payload") payload: NotificationsPayloadTest) {
+  //   notificationsManager().sendInstantTestMessage(payload);
+  //   return true;
+  // }
+  // @Mutation(() => String)
+  // async testDeepLink(@Arg("url") url: string) {
+  //   const link = await createDeepLink(url);
+  //   if (link) return link;
+  //   return "An error occured";
+  // }
 }

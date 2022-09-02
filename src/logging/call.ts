@@ -1,7 +1,7 @@
 import { CallLogs } from "../entities/CallLogs";
 import { CallLogInput } from "../types";
 
-export const logCall = async (data: CallLogInput) => {
+export const logCallSession = async (data: CallLogInput) => {
   try {
     await CallLogs.save({
       requestId: data.requestId,

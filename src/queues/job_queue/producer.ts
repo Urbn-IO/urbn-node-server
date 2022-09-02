@@ -35,15 +35,13 @@ export const operationsQueue = new Queue(config.OPERATIONS_QUEUE_NAME, {
 //   return queue;
 // };
 
-export const destroyRepeatableJob = async (queue: Queue<any, any, string>, jobId: string, repeatable = false) => {
-  if (repeatable) {
-    const repeatableJobs = await queue.getRepeatableJobs();
-    const key = repeatableJobs.map((x) => {
-      if (x.key.includes(jobId)) return x.key;
-      return "";
-    })[0];
-    await queue.removeRepeatableByKey(key);
-  }
+export const destroyRepeatableJob = async (queue: Queue<any, any, string>, jobId: string) => {
+  const repeatableJobs = await queue.getRepeatableJobs();
+  const key = repeatableJobs.map((x) => {
+    if (x.key.includes(jobId)) return x.key;
+    return null;
+  })[0];
+  if (key) await queue.removeRepeatableByKey(key);
 };
 
 export const addJob = async <T>(queue: Queue<any, any, string>, jobName: string, data: T, jobOptions?: JobsOptions) => {

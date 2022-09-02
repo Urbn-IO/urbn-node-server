@@ -17,8 +17,8 @@ import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
-import { config } from "../constants";
 import { AppDataSource } from "../db";
+import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
 
 @Resolver()
 export class RequestsResolver {
@@ -30,6 +30,7 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
+
     if (Input.description.length > 300 || Input.description.length < 11) {
       return {
         errorMessage: "Invalid description length",
@@ -54,32 +55,41 @@ export class RequestsResolver {
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
-    const acceptsShoutOut = celeb.acceptShoutOut;
+    const acceptsShoutOut = celeb.acceptsShoutout;
+    const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
     const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
-
-    const transactionAmount = (celeb.shoutoutRates * 100).toString();
+    if (acceptsInstantShoutOut === false && Input.instantShoutout === true) {
+      return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept instant shoutouts` };
+    }
+    const requestType = Input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
+    const transactionAmount = Input.instantShoutout
+      ? (celeb.shoutoutRates * 100 * INSTANT_SHOUTOUT_RATE).toString()
+      : (celeb.shoutoutRates * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
       userId,
       recipient: celeb.userId,
     });
-    if (!chargePayment) return { errorMessage: "Payment Error!" };
-    const request = {
-      requestor: userId,
-      requestorName,
-      recipient: celeb.userId,
-      amount: transactionAmount,
-      description: Input.description,
-      requestExpires: Input.requestExpiration,
-      recipientAlias: celebAlias,
-      recipientThumbnail: celebThumbnail,
-      paymentRef: ref,
-    };
-    const result = await Requests.create(request as Requests).save();
-    if (result) {
-      return { success: "Request Sent!" };
-    }
+    if (chargePayment) {
+      const request = {
+        requestor: userId,
+        requestorName,
+        recipient: celeb.userId,
+        requestType,
+        amount: transactionAmount,
+        description: Input.description,
+        requestExpires: Input.requestExpiration,
+        recipientAlias: celebAlias,
+        recipientThumbnail: celebThumbnail,
+        paymentRef: ref,
+      };
+      const result = await Requests.create(request as Requests).save();
+      if (result) {
+        return { success: "Request Sent!" };
+      }
+    } else return { errorMessage: "Payment Error! Try again" };
+
     return { errorMessage: "Failed to create your request at this time. Try again later" };
   }
 
@@ -116,10 +126,10 @@ export class RequestsResolver {
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
     if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
       callRequestType = RequestType.CALL_TYPE_A;
-      callDurationInSeconds = config.VIDEO_CALL_TYPE_A_DURATION;
+      callDurationInSeconds = VIDEO_CALL_TYPE_A_DURATION;
     } else if (acceptsCallTypeB === true && Input.callType === CallType.CALL_TYPE_B) {
       callRequestType = RequestType.CALL_TYPE_B;
-      callDurationInSeconds = config.VIDEO_CALL_TYPE_B_DURATION;
+      callDurationInSeconds = VIDEO_CALL_TYPE_B_DURATION;
     } else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
     const CallScheduleRepo = AppDataSource.getTreeRepository(CallScheduleBase);
     const availableSlot = await CallScheduleRepo.findOne({ where: { id: Input.selectedTimeSlotId } });

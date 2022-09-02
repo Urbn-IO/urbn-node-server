@@ -13,7 +13,7 @@ import { callDuration } from "../../../utils/helpers";
 import { RepeatOptions } from "bullmq";
 import { changeRequestState } from "../../../request/manage";
 import { endVideoCallRoom } from "../calls";
-import { logCall as logCallSession } from "../../../logging/call";
+import { logCallSession } from "../../../logging/call";
 
 const redis = redisClient;
 
@@ -183,7 +183,7 @@ const processCallEvent = () => {
         event.participantA = participantA;
         event.participantB = participantB;
 
-        await destroyRepeatableJob(callStatusQueue, event.RoomSid, true);
+        await destroyRepeatableJob(callStatusQueue, event.RoomSid);
         await changeRequestState(requestId, RequestStatus.FULFILLED);
         await logCallSession({
           requestId,

@@ -51,7 +51,11 @@ export class Celebrity extends BaseEntity {
 
   @Field()
   @Column({ default: false })
-  acceptShoutOut: boolean;
+  acceptsShoutout: boolean;
+
+  @Field()
+  @Column({ default: false })
+  acceptsInstantShoutout: boolean;
 
   @Field()
   @Column({ default: false })

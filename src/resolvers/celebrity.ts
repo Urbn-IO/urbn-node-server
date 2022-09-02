@@ -29,7 +29,7 @@ export class CelebrityResolver {
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.userId = userId;
-    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
+    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
     const hashString = hashRow(data);
@@ -57,7 +57,7 @@ export class CelebrityResolver {
       return { errorMessage: "Nothing to update" };
     }
 
-    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptShoutOut === false) {
+    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
 
