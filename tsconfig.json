@@ -23,6 +23,8 @@
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "jsx": "preserve",
+    "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
@@ -34,6 +36,5 @@
   "include": [
     "./src/**/*.tsx",
     "./src/**/*.ts",
-    "./src/env.d.ts",
-    "firebaseConfig.ts"  ]
+    "./src/env.d.ts", ]
 }
