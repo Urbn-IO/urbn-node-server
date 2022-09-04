@@ -9,7 +9,6 @@ export class ExtrasResolver {
   @Query()
   @CacheControl({ maxAge: 86400, scope: CacheScope.Public })
   getExtras(): Extras {
-    console.log("sssssssss");
     return {
       bannerMain: "",
       bannerDescription: "",
