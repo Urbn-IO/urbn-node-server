@@ -1,3 +1,4 @@
+   
 {
   "compilerOptions": {
     "target": "es2021",
@@ -22,17 +23,10 @@
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "jsx": "preserve",
-    "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "noEmit": true,
-    "incremental": true,
     "isolatedModules": true
   },
   "exclude": [
@@ -41,6 +35,5 @@
   "include": [
     "./src/**/*.tsx",
     "./src/**/*.ts",
-    "./src/env.d.ts"
-  ]
+    "./src/env.d.ts"]
 }
