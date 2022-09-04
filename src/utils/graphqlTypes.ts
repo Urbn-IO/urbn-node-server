@@ -415,5 +415,5 @@ export class Extras {
   bannerDescription: string;
 
   @Field()
-  shoutoutMultiplier: number;
+  instantShoutoutRate: number;
 }

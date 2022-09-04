@@ -1,4 +1,3 @@
-   
 {
   "compilerOptions": {
     "target": "es2021",
@@ -28,7 +27,13 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true
   },
   "exclude": [
     "node_modules"
@@ -36,5 +41,6 @@
   "include": [
     "./src/**/*.tsx",
     "./src/**/*.ts",
-    "./src/env.d.ts", ]
+    "./src/env.d.ts"
+  ]
 }

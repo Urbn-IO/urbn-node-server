@@ -18,7 +18,7 @@ import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import createhashString from "../utils/createHashString";
 import { AppDataSource } from "../db";
-import { INSTANT_SHOUTOUT_MULTIPLIER, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
+import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
 
 @Resolver()
 export class RequestsResolver {
@@ -58,7 +58,7 @@ export class RequestsResolver {
     }
     const requestType = Input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
     const transactionAmount = Input.instantShoutout
-      ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_MULTIPLIER).toString()
+      ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
       : (celeb.shoutout * 100).toString();
     const ref = createhashString([email, userId, celeb.id]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {

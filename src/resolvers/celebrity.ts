@@ -187,13 +187,14 @@ export class CelebrityResolver {
     @Arg("celebId", () => Int, { nullable: true }) celebId: number,
     @Arg("limit", () => Int, { nullable: true }) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
-  ) {
+  ): Promise<Celebrity[]> {
     if (celebId) {
       const celeb = await Celebrity.findOne({ where: { id: celebId } });
       if (!celeb) {
         return [];
       }
-      return [celeb];
+      const celebArray = attachInstantShoutoutPrice([celeb]);
+      return celebArray;
     }
     const maxLimit = Math.min(18, limit);
 

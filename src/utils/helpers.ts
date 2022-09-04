@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import cookie from "cookie";
 import cookieParser from "cookie-parser";
-import { INSTANT_SHOUTOUT_MULTIPLIER, SESSION_COOKIE_NAME } from "../constants";
+import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from "../constants";
 import connectRedis from "connect-redis";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { AppDataSource } from "../db";
@@ -46,7 +46,7 @@ export const callDuration = (callLength: number, startTime: Date, currentTime: D
 
 export const attachInstantShoutoutPrice = (celeb: Celebrity[]) => {
   celeb.forEach((x) => {
-    if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_MULTIPLIER;
+    if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_RATE;
   });
   return celeb;
 };
