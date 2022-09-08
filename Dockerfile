@@ -24,6 +24,9 @@ RUN pnpm build
 # ENV NODE_ENV production
 
 EXPOSE 8000
-EXPOSE 5432
 
 CMD [ "pnpm", "start" ]
+
+
+
+# FROM nginx:latest as nginx-proxy

@@ -19,7 +19,7 @@ import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 import { AppDataSource } from "../db";
 import { attachInstantShoutoutPrice } from "../utils/helpers";
-import { CelebrityRegistration } from "../entities/CelebrityRegistrations";
+import { CelebrityApplications } from "../entities/CelebrityApplications";
 import { CELEB_PREREGISTRATION_PREFIX } from "../constants";
 
 @Resolver()
@@ -41,7 +41,7 @@ export class CelebrityResolver {
     try {
       const user = await User.findOne({ where: { userId }, select: ["email"] });
       if (!user) throw new Error("An error occured while trying to find the user on the database");
-      await CelebrityRegistration.create({
+      await CelebrityApplications.create({
         email: user.email,
         alias: input.alias,
         facebook: input.facebook,

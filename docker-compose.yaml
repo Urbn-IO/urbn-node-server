@@ -16,27 +16,41 @@ services:
       - .env
     expose:
       - 8000
+      
   reverse-proxy:
-    image: 'nginx:latest'
+    image: 'nginx:1.23.1-alpine'
     container_name: 'nginx_reverse_proxy'
     restart: 'unless-stopped'
+    # command: 'nginx -V | grep --color stub_status_module'
+    depends_on:
+      - 'dnsrobocert'
     ports:
       - '80:80'
       - '443:443'
+      - '5030:5030'
     volumes:
-      - './data/nginx/:/etc/nginx/conf.d/:ro'
-      - './data/certbot/www:/var/www/certbot/:ro'
-      - './data/certbot/conf/:/etc/nginx/ssl/:ro'
-  certbot:
-    image: certbot/certbot:latest
+      - './config/nginx/:/etc/nginx'
+      - './config/letsencrypt/:/etc/letsencrypt/:ro'
+  dnsrobocert:
+    image: 'adferrand/dnsrobocert'
+    container_name: 'dnsrobocert'
     volumes:
-      - './data/certbot/www/:/var/www/certbot/:rw'
-      - './data/certbot/conf/:/etc/letsencrypt/:rw'
+      - './config/letsencrypt:/etc/letsencrypt'
+      - './config/dnsrobocert:/etc/dnsrobocert'
+    restart: 'unless-stopped'
+    
+  # certbot:
+  #   image: certbot/certbot:latest
+  #   volumes:
+  #     - './data/certbot/www/:/var/www/certbot/:rw'
+  #     - './data/certbot/conf/:/etc/letsencrypt/:rw'
   db:
     image: 'postgres'
     container_name: 'database'
     ports:
       - '5432:5432'
+    expose:
+      - 5432
     environment:
       POSTGRES_DB: 'urbn'
       POSTGRES_PASSWORD: '12345678'

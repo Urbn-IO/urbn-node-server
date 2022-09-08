@@ -79,6 +79,18 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   callTypeB: number;
 
+  @Column({ nullable: true })
+  twitter: string;
+
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  instagram: string;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
+
   @Field({ nullable: true })
   @Column({ nullable: true })
   profileHash: string;

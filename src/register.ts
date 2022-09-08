@@ -21,7 +21,7 @@ import { CallLogs } from "./entities/CallLogs";
 import { WalletTransactions } from "./entities/WalletTransactions";
 import { Wallet } from "./entities/Wallet";
 import { ExtrasResolver } from "./resolvers/extras";
-import { CelebrityRegistration } from "./entities/CelebrityRegistrations";
+import { CelebrityApplications } from "./entities/CelebrityApplications";
 
 export const entities = [
   User,
@@ -37,7 +37,7 @@ export const entities = [
   CallLogs,
   Wallet,
   WalletTransactions,
-  CelebrityRegistration,
+  CelebrityApplications,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
