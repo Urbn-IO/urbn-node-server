@@ -46,7 +46,7 @@ export class UserInputs {
 }
 
 @InputType()
-export class CelebrityPreregistrationInputs {
+export class CelebrityApplicationInputs {
   @Length(2, 20, {
     message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
   })
@@ -78,12 +78,6 @@ export class CelebrityPreregistrationInputs {
 
 @InputType()
 export class RegisterCelebrityInputs {
-  @Length(2, 20, {
-    message: "$property should be between $constraint1 and $constraint2 characters inclusive in length",
-  })
-  @Field()
-  alias: string;
-
   @Field()
   acceptsShoutout: boolean;
 
@@ -116,6 +110,16 @@ export class RegisterCelebrityInputs {
   })
   @Field()
   description: string;
+
+  @Field()
+  thumbnail: string;
+
+  @Field()
+  image: string;
+
+  imageThumbnail: string;
+  imagePlaceholder: string;
+
   profileHash: string;
   userId: string | undefined;
 }
@@ -168,6 +172,7 @@ export class UpdateCelebrityInputs {
 
   imageThumbnail: string;
   imagePlaceholder: string;
+
   profileHash: string;
   userId: string | undefined;
 }

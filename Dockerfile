@@ -27,6 +27,3 @@ EXPOSE 8000
 
 CMD [ "pnpm", "start" ]
 
-
-
-# FROM nginx:latest as nginx-proxy

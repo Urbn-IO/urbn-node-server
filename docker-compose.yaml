@@ -21,7 +21,6 @@ services:
     image: 'nginx:1.23.1-alpine'
     container_name: 'nginx_reverse_proxy'
     restart: 'unless-stopped'
-    # command: 'nginx -V | grep --color stub_status_module'
     depends_on:
       - 'dnsrobocert'
     ports:
@@ -39,11 +38,6 @@ services:
       - './config/dnsrobocert:/etc/dnsrobocert'
     restart: 'unless-stopped'
     
-  # certbot:
-  #   image: certbot/certbot:latest
-  #   volumes:
-  #     - './data/certbot/www/:/var/www/certbot/:rw'
-  #     - './data/certbot/conf/:/etc/letsencrypt/:rw'
   db:
     image: 'postgres'
     container_name: 'database'

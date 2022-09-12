@@ -22,6 +22,10 @@ export class Celebrity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Field()
+  @Column({ default: true })
+  isNew: boolean;
+
   @Column({ unique: true, type: "uuid" })
   userId!: string;
 
@@ -46,7 +50,7 @@ export class Celebrity extends BaseEntity {
   imagePlaceholder: string;
 
   @Field()
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Field()

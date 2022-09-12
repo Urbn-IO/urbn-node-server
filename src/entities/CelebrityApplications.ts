@@ -6,6 +6,9 @@ export class CelebrityApplications extends BaseEntity {
   id: number;
 
   @Column({ unique: true })
+  userId: string;
+
+  @Column({ unique: true })
   email: string;
 
   @Column()

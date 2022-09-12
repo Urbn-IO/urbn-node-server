@@ -1,6 +1,6 @@
 import {
   CallScheduleInput,
-  CelebrityPreregistrationInputs,
+  CelebrityApplicationInputs,
   GenericResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
@@ -28,8 +28,8 @@ export class CelebrityResolver {
 
   @Mutation(() => String)
   @UseMiddleware(isAuthenticated)
-  async celebPreregistration(
-    @Arg("input") input: CelebrityPreregistrationInputs,
+  async celebApplication(
+    @Arg("input") input: CelebrityApplicationInputs,
     @Ctx() { req, redis }: AppContext
   ): Promise<string> {
     const userId = req.session.userId;
@@ -39,10 +39,11 @@ export class CelebrityResolver {
     const exists = await redis.get(CELEB_PREREGISTRATION_PREFIX + userId);
     if (exists) return "Seems like you applied recently, try again a week from when you made your initial application";
     try {
-      const user = await User.findOne({ where: { userId }, select: ["email"] });
+      const user = await User.findOne({ where: { userId }, select: ["email", "userId"] });
       if (!user) throw new Error("An error occured while trying to find the user on the database");
       await CelebrityApplications.create({
         email: user.email,
+        userId: user.userId,
         alias: input.alias,
         facebook: input.facebook,
         instagram: input.instagram,
@@ -58,23 +59,41 @@ export class CelebrityResolver {
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async registerUserAsCeleb(
-    @Ctx() { req }: AppContext,
-    @Arg("data") data: RegisterCelebrityInputs
-  ): Promise<GenericResponse> {
+  async onBoardCeleb(@Ctx() { req }: AppContext, @Arg("data") data: RegisterCelebrityInputs): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.userId = userId;
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
+
+    if (data.image) {
+      const image = `${data.image}_image.webp`;
+      const imageThumbnail = `${data.image}_thumbnail.webp`;
+      const imagePlaceholder = `${data.image}_placeholder.webp`;
+      data.image = `${this.cdnUrl}/${image}`;
+      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
+      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
+    }
+    if (data.thumbnail) {
+      const thumbnail = data.thumbnail;
+      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
+    }
+
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
-      const celeb = Celebrity.create(data as Celebrity);
-      const celebrity = await celeb.save();
+      const queryBuilderResult = await AppDataSource.getRepository(Celebrity)
+        .createQueryBuilder("celebrity")
+        .update(data)
+        .where('celebrity."userId" = :userId', { userId })
+        .returning("*")
+        .execute();
+
+      const celebrity = queryBuilderResult.raw[0];
 
       await User.update({ userId }, { celebrity });
-      return { success: `Soft creation for ${celebrity.alias} successful` };
+
+      return { success: `You're set! Time to make someone's dream come through ⭐️` };
     } catch (err) {
       return { errorMessage: "An Error Occured" };
     }
@@ -214,10 +233,6 @@ export class CelebrityResolver {
 
     celebs = attachInstantShoutoutPrice(celebs);
 
-    // const data = celebs.map((obj) => ({
-    //   ...obj,
-    //   celebrity: obj.celebrity?.profileObject,
-    // }));
     return celebs;
   }
 
