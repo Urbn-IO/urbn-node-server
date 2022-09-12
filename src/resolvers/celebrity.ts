@@ -65,6 +65,9 @@ export class CelebrityResolver {
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
+    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
+      return { errorMessage: "An error occured" };
+    }
 
     if (data.image) {
       const image = `${data.image}_image.webp`;
@@ -113,6 +116,10 @@ export class CelebrityResolver {
 
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
+    }
+
+    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
+      return { errorMessage: "An error occured" };
     }
 
     if (data.image) {
