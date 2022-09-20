@@ -11,6 +11,7 @@ import sqsConsumer from "./services/aws/queues/videoOnDemand";
 import redisClient from "./redis/client";
 import pubsub from "./pubsub";
 import responseCachePlugin from "apollo-server-plugin-response-cache";
+import initializeWorkers from "./queues/job_queue";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from "./constants";
@@ -21,11 +22,10 @@ import { resolvers } from "./register";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
-import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import { ApolloError, ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { getSessionContext } from "./utils/helpers";
 import { AppDataSource } from "./db";
-import initializeWorkers from "./queues/job_queue";
-// import initializeWorkers from "./queues/job_queue";
+import { GraphQLError } from "graphql";
 
 const app = express();
 const httpServer = createServer(app);
@@ -154,15 +154,13 @@ const main = async () => {
       categoriesLoader: createCategoriesLoader(),
       celebsLoader: createCelebsLoader(),
     }),
-    // formatError: (err: GraphQLError) => {
-    //   if (err.originalError instanceof ApolloError) {
-    //     return err;
-    //   }
-    //   const errId = v4();
-    //   console.log(`error Id: ${errId}`);
-    //   console.log(err);
-    //   return new GraphQLError(`INTERNAL_SERVER_ERROR: ${errId}`);
-    // },
+    formatError: (err: GraphQLError) => {
+      if (err.originalError instanceof ApolloError) {
+        return err;
+      }
+      const message = err.message;
+      return new GraphQLError(message);
+    },
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app, cors: false });
