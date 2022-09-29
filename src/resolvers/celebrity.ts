@@ -26,18 +26,22 @@ import { CELEB_PREREGISTRATION_PREFIX } from "../constants";
 export class CelebrityResolver {
   cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
 
-  @Mutation(() => String)
+  @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async celebApplication(
     @Arg("input") input: CelebrityApplicationInputs,
     @Ctx() { req, redis }: AppContext
-  ): Promise<string> {
+  ): Promise<GenericResponse> {
     const userId = req.session.userId;
     if (!input.facebook && !input.instagram && !input.twitter && !input.phoneNumber) {
-      return "You must provide at least one (1) medium to verify your claim";
+      return { errorMessage: "You must provide at least one (1) medium to verify your claim" };
     }
     const exists = await redis.get(CELEB_PREREGISTRATION_PREFIX + userId);
-    if (exists) return "Seems like you applied recently, try again a week from when you made your initial application";
+    if (exists) {
+      return {
+        errorMessage: "Seems like you applied recently, try again a week from when you made your initial application",
+      };
+    }
     try {
       const user = await User.findOne({ where: { userId }, select: ["email", "userId"] });
       if (!user) throw new Error("An error occured while trying to find the user on the database");
@@ -51,9 +55,9 @@ export class CelebrityResolver {
         phoneNumber: input.phoneNumber,
       }).save();
       await redis.set(CELEB_PREREGISTRATION_PREFIX + userId, userId as string, "EX", 3600 * 24 * 7);
-      return "Success!🔥 You'll hear from us soon";
+      return { success: "Success!🔥 You'll hear from us soon" };
     } catch (err) {
-      return "Request Failed. An error occured";
+      return { errorMessage: "Request Failed. An error occured" };
     }
   }
 
@@ -61,7 +65,7 @@ export class CelebrityResolver {
   @UseMiddleware(isAuthenticated)
   async onBoardCeleb(@Ctx() { req }: AppContext, @Arg("data") data: RegisterCelebrityInputs): Promise<GenericResponse> {
     const userId = req.session.userId as string;
-    data.userId = userId;
+    data.isNew = false;
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }

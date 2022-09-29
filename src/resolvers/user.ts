@@ -59,13 +59,16 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const session = APP_SESSION_PREFIX + req.session.id;
     const key = await redis.exists(session);
+    const email = userInput.email;
     if (key === 0) {
-      const user = await User.findOne({
-        where: {
-          email: userInput.email.toLowerCase(),
-        },
-        relations: ["shoutouts", "celebrity", "cards"],
-      });
+      const user = await AppDataSource.getRepository(User)
+        .createQueryBuilder("user")
+        .leftJoinAndSelect("user.shoutouts", "shoutouts")
+        .leftJoinAndSelect("user.celebrity", "celebrity")
+        .leftJoinAndSelect("user.cards", "cards")
+        .where("user.email = :email", { email })
+        .getOne();
+
       if (!user) return { errorMessage: "Wrong Email or Password" };
       if (!user.password) return { errorMessage: "Wrong login method, login using another method" };
       const verifiedPassword = await argon2.verify(user.password, userInput.password);

@@ -6,7 +6,7 @@ services:
     image: 'urbn:latest'
     container_name: urbn
     restart: "unless-stopped"
-    platform: 'linux/amd64'
+    platform: 'linux/arm64'
     networks:
       - 'default'
     depends_on:

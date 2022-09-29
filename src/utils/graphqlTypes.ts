@@ -120,6 +120,8 @@ export class RegisterCelebrityInputs {
   imageThumbnail: string;
   imagePlaceholder: string;
 
+  isNew: boolean;
+
   profileHash: string;
   userId: string | undefined;
 }

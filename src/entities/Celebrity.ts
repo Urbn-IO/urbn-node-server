@@ -49,7 +49,7 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   imagePlaceholder: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ nullable: true })
   description: string;
 

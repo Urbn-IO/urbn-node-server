@@ -1,13 +1,13 @@
 import { __prod__ } from "../../constants";
 import jwt from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
+import { readFileSync } from "fs";
+import { join } from "path";
 import http2 from "http2";
 import { v4 } from "uuid";
 export const sendPushKitNotification = (tokens: string[], requestId: number, callerName: string) => {
   let host: string;
-  const pathToKey = path.join(__dirname, "../../../keys/AuthKey_3334434673.p8");
-  const key = fs.readFileSync(pathToKey, "utf8");
+  const pathToKey = join(__dirname, "../../../keys/AuthKey_3334434673.p8");
+  const key = readFileSync(pathToKey, "utf8");
   const time = Math.round(new Date().getTime() / 1000);
   const token = jwt.sign(
     {
