@@ -111,15 +111,6 @@ export class RegisterCelebrityInputs {
   @Field()
   description: string;
 
-  @Field()
-  thumbnail: string;
-
-  @Field()
-  image: string;
-
-  imageThumbnail: string;
-  imagePlaceholder: string;
-
   isNew: boolean;
 
   profileHash: string;
@@ -145,9 +136,6 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   acceptsCallTypeB: boolean;
 
-  @Field({ nullable: true })
-  thumbnail: string;
-
   @Min(REQUEST_MIN_RATE, { message: "Shoutout rate must be more than $constraint1" })
   @Max(REQUEST_MAX_RATE, { message: "Shoutout rate must not be less than $constraint1" })
   @Field(() => Int, { nullable: true })
@@ -168,12 +156,6 @@ export class UpdateCelebrityInputs {
   })
   @Field({ nullable: true })
   description: string;
-
-  @Field({ nullable: true })
-  image: string;
-
-  imageThumbnail: string;
-  imagePlaceholder: string;
 
   profileHash: string;
   userId: string | undefined;
@@ -242,6 +224,14 @@ export class CallScheduleInput {
   @IsDate()
   @Field()
   endTime: Date;
+}
+@InputType()
+export class ImageUploadInput {
+  @Field(() => Boolean, { defaultValue: false })
+  image: DayOfTheWeek;
+
+  @Field(() => Boolean, { defaultValue: false })
+  thumbnail: DayOfTheWeek;
 }
 
 // @InputType()
@@ -408,6 +398,43 @@ export class S3SignedObject {
 
   @Field({ nullable: true })
   fileName?: string;
+}
+@ObjectType()
+export class ImageUploadMetadata {
+  @Field()
+  userId: string;
+
+  @Field({ nullable: true })
+  thumbnail?: string;
+
+  @Field({ nullable: true })
+  image?: string;
+}
+@ObjectType()
+export class ImageUploadLinks {
+  @Field()
+  type: "image" | "thumbnail";
+
+  @Field()
+  signedUrl: string;
+
+  id: string;
+}
+@ObjectType()
+export class ImageUpload {
+  @Field(() => [ImageUploadLinks])
+  urls: ImageUploadLinks[];
+
+  @Field(() => ImageUploadMetadata)
+  metadata: ImageUploadMetadata;
+}
+@ObjectType()
+export class ImageUploadResponse {
+  @Field(() => ImageUpload, { nullable: true })
+  data?: ImageUpload;
+
+  @Field({ nullable: true })
+  errorMessage?: string;
 }
 
 @ObjectType()

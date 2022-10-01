@@ -49,12 +49,12 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
       await processExpiredRequest(request);
       //send notification
       userId = request.recipient;
-      messageTitle = "New Request Alert! 💪🏾";
+      messageTitle = "New Request Alert! 🚨";
       messageBody = `You have received a new ${requestType} request`;
       route = NotificationRouteCode.RECEIVED_REQUEST;
     } else {
       userId = request.requestor;
-      messageTitle = `Failed ${requestType} Request`;
+      messageTitle = `Failed ${requestType} Request 🛑`;
       messageBody = `Your request to ${request.recipient} failed due to an issue in processing your payment 😔`;
       route = NotificationRouteCode.RESPONSE;
     }

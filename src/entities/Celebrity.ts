@@ -20,14 +20,14 @@ import { CacheScope } from "apollo-server-types";
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Field()
   @Column({ default: true })
   isNew: boolean;
 
   @Column({ unique: true, type: "uuid" })
-  userId!: string;
+  userId: string;
 
   @Field()
   @Column()
@@ -35,19 +35,31 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  thumbnail: string;
+  thumbnail?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  image: string;
+  image?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  imageThumbnail: string;
+  placeholder?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  imagePlaceholder: string;
+  lowResPlaceholder?: string;
+
+  @Column({ nullable: true })
+  normalisedThumbnail: string;
+
+  @Column({ nullable: true })
+  normalisedImage: string;
+
+  @Column({ nullable: true })
+  normalisedPlaceholder: string;
+
+  @Column({ nullable: true })
+  normalisedLowResPlaceholder: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

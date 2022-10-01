@@ -65,7 +65,7 @@ export class CategoryResolver {
       return { errorMessage: "An Error occured while creating a category" };
     }
 
-    upsertCategorySearchItem([category]);
+    await upsertCategorySearchItem([category]);
 
     return { category };
   }
@@ -81,7 +81,7 @@ export class CategoryResolver {
       category.name = name;
       await Categories.update({ id: category.id }, { name: category.name });
     }
-    upsertCategorySearchItem([category]);
+    await upsertCategorySearchItem([category]);
     return category;
   }
 

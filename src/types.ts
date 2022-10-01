@@ -28,14 +28,6 @@ export interface NotificationsPayload {
   priority?: NotificationPriority;
   ttl?: number;
 }
-export interface NotificationsPayloadTest {
-  messageTitle?: string;
-  messageBody?: string;
-  tokens: string[];
-  data?: any;
-  priority?: NotificationPriority;
-  ttl?: number;
-}
 
 export interface VideoOutput {
   workFlowId: string | undefined;
@@ -64,6 +56,22 @@ export interface EmailBaseInput {
 export interface OAuth {
   displayName?: string;
   email?: string;
+}
+
+interface ImageProcessorQueueOutputBase {
+  userId: string;
+  status?: "success" | "failed";
+}
+
+export interface ImageProcessorQueueOutput extends ImageProcessorQueueOutputBase {
+  normalisedThumbnail?: string;
+  normalisedImage?: string;
+  normalisedPlaceholder?: string;
+  normalisedLowResPlaceholder?: string;
+  thumbnail?: string;
+  image?: string;
+  placeholder?: string;
+  lowResPlaceholder?: string;
 }
 
 export type TransactionsMetadata = {
@@ -147,7 +155,7 @@ export enum SubscriptionTopics {
 }
 
 export enum NotificationRouteCode {
-  RESPONSE = "0", // notification to display response from celebrity to a user on the client
+  RESPONSE = "0", // notification to display response to client UI
   RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
   DEFAULT = "10", //default route

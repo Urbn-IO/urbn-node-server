@@ -9,7 +9,6 @@ import { Requests } from "./entities/Requests";
 import { Shoutout } from "./entities/Shoutout";
 import { Transactions } from "./entities/Transactions";
 import { User } from "./entities/User";
-import { PublicMediaResolver } from "./resolvers/aws/publicMedia";
 import { CategoryResolver } from "./resolvers/category";
 import { UserCategoriesResolver } from "./resolvers/celebCategories";
 import { CelebrityResolver } from "./resolvers/celebrity";
@@ -45,7 +44,6 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CategoryResolver,
   UserResolver,
   UserCategoriesResolver,
-  PublicMediaResolver,
   CelebrityResolver,
   RequestsResolver,
   CardsResolver,

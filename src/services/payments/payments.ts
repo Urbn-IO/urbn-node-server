@@ -22,14 +22,8 @@ const verify = () => {
 
 const pay = () => {
   return {
-    chargeCard: async (
-      email: string,
-      amount: string,
-      authCode: string,
-      ref: string,
-      metadata?: TransactionsMetadata
-    ) => {
-      const result = await paystack().newPayment(email, amount, authCode, ref, metadata);
+    chargeCard: async (email: string, amount: string, authCode: string, metadata?: TransactionsMetadata) => {
+      const result = await paystack().newPayment(email, amount, authCode, metadata);
       return result;
     },
   };

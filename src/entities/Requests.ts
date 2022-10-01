@@ -27,7 +27,7 @@ export class Requests extends BaseEntity {
   recipientAlias: string;
 
   @Field()
-  @Column({ nullable: true })
+  @Column()
   recipientThumbnail: string;
 
   @Field()
@@ -46,10 +46,6 @@ export class Requests extends BaseEntity {
   @Index()
   @Column({ type: "enum", enum: RequestStatus, default: RequestStatus.VALIDATING })
   status: RequestStatus;
-
-  @Index()
-  @Column()
-  paymentRef: string;
 
   @Index()
   @Column({ nullable: true })

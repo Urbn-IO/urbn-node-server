@@ -11,9 +11,3 @@ export const AppDataSource = new DataSource({
   migrations: [path.join(__dirname, "./migrations/*")],
   entities,
 });
-
-// const delayInMilliseconds = 1000; //1 second
-
-// setTimeout(async () => {
-//   await AppDataSource.runMigrations();
-// }, delayInMilliseconds);

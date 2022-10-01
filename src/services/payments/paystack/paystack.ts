@@ -50,14 +50,12 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
       email: string,
       amount: string,
       authCode: string,
-      reference: string,
       metadata?: TransactionsMetadata
-    ) => {
+    ): Promise<boolean> => {
       const endpoint = `${apiUrl}/transaction/charge_authorization`;
       const params = JSON.stringify({
         email,
         amount,
-        reference,
         channels: ["card"],
         authorization_code: authCode,
         metadata,
@@ -75,9 +73,9 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
 
         const payload = await response.json();
 
-        const { status } = payload;
-
-        return status;
+        const { data } = payload;
+        if (data.status === "success") return true;
+        return false;
       } catch (err) {
         console.error(err);
         return false;

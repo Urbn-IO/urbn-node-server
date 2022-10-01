@@ -1,12 +1,12 @@
-import { NotificationRouteCode, RequestStatus, VideoOutput } from "../types";
-import { Shoutout } from "../entities/Shoutout";
-import { User } from "../entities/User";
+import { NotificationRouteCode, RequestStatus, VideoOutput } from "../../types";
+import { Shoutout } from "../../entities/Shoutout";
+import { User } from "../../entities/User";
 import { In } from "typeorm";
-import { sendInstantNotification } from "../services/notifications/handler";
-import { Requests } from "../entities/Requests";
-import { AppDataSource } from "../db";
+import { sendInstantNotification } from "../../services/notifications/handler";
+import { Requests } from "../../entities/Requests";
+import { AppDataSource } from "../../db";
 
-export const saveShoutout = async (data: VideoOutput[]) => {
+const saveShoutout = async (data: VideoOutput[]) => {
   const shoutouts: Shoutout[] = [];
   const ownerIds = data.map((x) => x.owner);
   const user = await User.find({ where: { userId: In(ownerIds) } });
@@ -42,11 +42,12 @@ export const saveShoutout = async (data: VideoOutput[]) => {
 
     sendInstantNotification(
       ownerIds as string[],
-      "New Shoutout!",
-      "You have received a new shoutout video",
+      "You received a Shoutout! 🌟",
+      "You have received a new shoutout video!",
       NotificationRouteCode.PROFILE_SHOUTOUT
     );
   } catch (err) {
     return;
   }
 };
+export default saveShoutout;

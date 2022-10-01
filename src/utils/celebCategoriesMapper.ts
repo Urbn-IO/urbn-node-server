@@ -38,7 +38,7 @@ async function createCustomCategory(customCats: string[] | null) {
     }
     try {
       newCategories = await Categories.save(categoryList);
-      upsertCategorySearchItem(newCategories);
+      await upsertCategorySearchItem(newCategories);
       const catIds = newCategories.map((x) => x.id);
       return catIds;
     } catch (err) {

@@ -1,7 +1,7 @@
 import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
-import { saveShoutout } from "../../../shoutout/saveShoutout";
 import { ContentType, VideoOutput } from "../../../types";
-import client from "../clients/sqs/client";
+import { sqsClient2 } from "../clients/sqs/client";
+import saveShoutout from "../../../lib/shoutout/saveShoutout";
 
 const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
 
@@ -11,7 +11,7 @@ const consumerOptions: ConsumerOptions = {
   waitTimeSeconds: 20,
   visibilityTimeout: 120,
   pollingWaitTimeMs: 120000,
-  sqs: client,
+  sqs: sqsClient2,
   handleMessageBatch: async (messages) => {
     const payload = messages.map((x) => {
       const body = JSON.parse(x.Body as string);
@@ -39,18 +39,18 @@ const consumerOptions: ConsumerOptions = {
   },
 };
 
-const sqsConsumer = Consumer.create(consumerOptions);
+const sqsVODConsumer = Consumer.create(consumerOptions);
 
-sqsConsumer.on("error", (err) => {
+sqsVODConsumer.on("error", (err) => {
   console.error(err.message);
 });
 
-sqsConsumer.on("processing_error", (err) => {
+sqsVODConsumer.on("processing_error", (err) => {
   console.error(err.message);
 });
 
-sqsConsumer.on("timeout_error", (err) => {
+sqsVODConsumer.on("timeout_error", (err) => {
   console.error(err.message);
 });
 
-export default sqsConsumer;
+export default sqsVODConsumer;

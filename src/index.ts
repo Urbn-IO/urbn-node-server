@@ -7,7 +7,7 @@ import payment from "./services/payments/paystack/webhook";
 import video from "./services/call/twilio/webhook";
 import search from "./api/typeSense";
 import firebaseConfig from "./firebaseConfig";
-import sqsConsumer from "./services/aws/queues/videoOnDemand";
+import sqsVODConsumer from "./services/aws/queues/videoOnDemand";
 import redisClient from "./redis/client";
 import pubsub from "./pubsub";
 import responseCachePlugin from "apollo-server-plugin-response-cache";
@@ -26,6 +26,7 @@ import { ApolloError, ApolloServerPluginDrainHttpServer } from "apollo-server-co
 import { getSessionContext } from "./utils/helpers";
 import { AppDataSource } from "./db";
 import { GraphQLError } from "graphql";
+import sqsImageConsumer from "./services/aws/queues/imageProcessing";
 
 const app = express();
 const httpServer = createServer(app);
@@ -44,7 +45,8 @@ const main = async () => {
   // initializeSearch();
   initializeWorkers();
 
-  sqsConsumer.start();
+  sqsVODConsumer.start();
+  sqsImageConsumer.start();
   const RedisStore = connectRedis(session);
 
   const store = new RedisStore({ client: redis as never, disableTouch: true, prefix: APP_SESSION_PREFIX });

@@ -8,7 +8,7 @@ export async function sendInstantNotification(
   messageTitle: string,
   messageBody: string,
   route: NotificationRouteCode = NotificationRouteCode.DEFAULT,
-  priority: NotificationPriority = NotificationPriority.HIGH
+  priority: NotificationPriority = NotificationPriority.NORMAL
 ) {
   const tokens = await tokensManager().getNotificationTokens(userIds);
   const message: NotificationsPayload = {

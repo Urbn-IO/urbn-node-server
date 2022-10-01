@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { s3SecondaryClient } from "../services/aws/clients/s3/client";
+import { s3Client2 } from "../services/aws/clients/s3/client";
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
@@ -12,11 +12,9 @@ import { validateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sendInstantNotification } from "../services/notifications/handler";
-import { appendCdnLink } from "../utils/cdnHelper";
 import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
-import createhashString from "../utils/createHashString";
 import { AppDataSource } from "../db";
 import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
 
@@ -51,7 +49,6 @@ export class RequestsResolver {
     const celebAlias = celeb.alias;
     const acceptsShoutOut = celeb.acceptsShoutout;
     const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
-    const celebThumbnail = appendCdnLink(celeb.thumbnail);
     if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
     if (acceptsInstantShoutOut === false && Input.instantShoutout === true) {
       return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept instant shoutouts` };
@@ -60,29 +57,27 @@ export class RequestsResolver {
     const transactionAmount = Input.instantShoutout
       ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
       : (celeb.shoutout * 100).toString();
-    const ref = createhashString([email, userId, celeb.id]);
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
       recipient: celeb.userId,
     });
-    if (chargePayment) {
-      const request = {
-        requestor: userId,
-        requestorName,
-        recipient: celeb.userId,
-        requestType,
-        amount: transactionAmount,
-        description: Input.description,
-        requestExpires: Input.requestExpiration,
-        recipientAlias: celebAlias,
-        recipientThumbnail: celebThumbnail,
-        paymentRef: ref,
-      };
-      const result = await Requests.create(request as Requests).save();
-      if (result) {
-        return { success: "Request Sent!" };
-      }
-    } else return { errorMessage: "Payment Error! Try again" };
+    if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
+
+    const request = {
+      requestor: userId,
+      requestorName,
+      recipient: celeb.userId,
+      requestType,
+      amount: transactionAmount,
+      description: Input.description,
+      requestExpires: Input.requestExpiration,
+      recipientAlias: celebAlias,
+      recipientThumbnail: celeb.thumbnail,
+    };
+    const result = await Requests.create(request as Requests).save();
+    if (result) {
+      return { success: "Request Sent!" };
+    }
 
     return { errorMessage: "Failed to create your request at this time. Try again later" };
   }
@@ -115,7 +110,6 @@ export class RequestsResolver {
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
     const celebAlias = celeb.alias;
-    const celebThumbnail = appendCdnLink(celeb.thumbnail);
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
     if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
@@ -137,15 +131,14 @@ export class RequestsResolver {
       callRequestType === RequestType.CALL_TYPE_A
         ? (celeb.callTypeA * 100).toString()
         : (celeb.callTypeB * 100).toString();
-    const ref = createhashString([email, userId, celeb.id]);
 
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, ref, {
+    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
       recipient: celeb.userId,
       availableSlotId: availableSlot.id,
     });
 
-    if (!chargePayment) return { errorMessage: "Payment Error!" };
+    if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
 
     const availabeDate = getNextAvailableDate(availableSlot.day as number);
     const startTime = availableSlot.startTime as unknown as string;
@@ -170,8 +163,7 @@ export class RequestsResolver {
       callRequestBegins,
       requestExpires,
       recipientAlias: celebAlias,
-      recipientThumbnail: celebThumbnail,
-      paymentRef: ref,
+      recipientThumbnail: celeb.thumbnail,
     };
     const result = await Requests.create(request).save();
     if (result) {
@@ -208,7 +200,7 @@ export class RequestsResolver {
             Bucket: bucketName,
             Key: key,
           });
-          const signedUrl = await getSignedUrl(s3SecondaryClient, s3Command, {
+          const signedUrl = await getSignedUrl(s3Client2, s3Command, {
             expiresIn: 3600,
           });
           return signedUrl;

@@ -35,5 +35,5 @@
   "include": [
     "./src/**/*.tsx",
     "./src/**/*.ts",
-    "./src/env.d.ts"]
+    "src/lib/env.d.ts"]
 }

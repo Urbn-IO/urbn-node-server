@@ -1,10 +1,21 @@
+import crypto from "crypto";
+import dayjs from "dayjs";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   CallScheduleInput,
   CelebrityApplicationInputs,
   GenericResponse,
+  ImageUpload,
+  ImageUploadInput,
+  ImageUploadLinks,
+  ImageUploadMetadata,
+  ImageUploadResponse,
   RegisterCelebrityInputs,
   UpdateCelebrityInputs,
 } from "../utils/graphqlTypes";
+import { Brackets } from "typeorm";
+import { Signer } from "../utils/cloudFront";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
@@ -24,8 +35,6 @@ import { CELEB_PREREGISTRATION_PREFIX } from "../constants";
 
 @Resolver()
 export class CelebrityResolver {
-  cdnUrl = process.env.AWS_CLOUD_FRONT_PUBLIC_DISTRIBUTION_DOMAIN;
-
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async celebApplication(
@@ -44,7 +53,7 @@ export class CelebrityResolver {
     }
     try {
       const user = await User.findOne({ where: { userId }, select: ["email", "userId"] });
-      if (!user) throw new Error("An error occured while trying to find the user on the database");
+      if (!user) throw new Error();
       await CelebrityApplications.create({
         email: user.email,
         userId: user.userId,
@@ -70,22 +79,8 @@ export class CelebrityResolver {
       return { errorMessage: "You have to accept at least one type of request" };
     }
     if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
-      return { errorMessage: "An error occured" };
+      throw new Error();
     }
-
-    if (data.image) {
-      const image = `${data.image}_image.webp`;
-      const imageThumbnail = `${data.image}_thumbnail.webp`;
-      const imagePlaceholder = `${data.image}_placeholder.webp`;
-      data.image = `${this.cdnUrl}/${image}`;
-      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
-      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
-    }
-    if (data.thumbnail) {
-      const thumbnail = data.thumbnail;
-      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
-    }
-
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
@@ -125,19 +120,6 @@ export class CelebrityResolver {
     if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
       return { errorMessage: "An error occured" };
     }
-
-    if (data.image) {
-      const image = `${data.image}_image.webp`;
-      const imageThumbnail = `${data.image}_thumbnail.webp`;
-      const imagePlaceholder = `${data.image}_placeholder.webp`;
-      data.image = `${this.cdnUrl}/${image}`;
-      data.imageThumbnail = `${this.cdnUrl}/${imageThumbnail}`;
-      data.imagePlaceholder = `${this.cdnUrl}/${imagePlaceholder}`;
-    }
-    if (data.thumbnail) {
-      const thumbnail = data.thumbnail;
-      data.thumbnail = `${this.cdnUrl}/${thumbnail}.webp`;
-    }
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
@@ -145,11 +127,13 @@ export class CelebrityResolver {
         .createQueryBuilder("celebrity")
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
-        .returning('id, alias, thumbnail, "imagePlaceholder", "imageThumbnail", image, description, "profileHash"')
+        .returning('id, alias, thumbnail, "placeholder", "lowResPlaceholder", image, description, "profileHash"')
         .execute();
-      const celeb = queryBuilderResult.raw[0];
+      const celeb: Celebrity = queryBuilderResult.raw[0];
 
-      upsertCelebritySearchItem(celeb);
+      if (celeb.thumbnail && celeb.placeholder && celeb.lowResPlaceholder && celeb.image) {
+        await upsertCelebritySearchItem(celeb);
+      }
 
       return { success: "updated succesfully!" };
     } catch (err) {
@@ -231,6 +215,14 @@ export class CelebrityResolver {
     const queryBuilder = AppDataSource.getRepository(Celebrity)
       .createQueryBuilder("celeb")
       .where("celeb.Id is not null")
+      .andWhere(
+        new Brackets((qb) => {
+          qb.andWhere("celeb.thumbnail is not null")
+            .andWhere("celeb.image is not null")
+            .andWhere("celeb.placeholder is not null")
+            .andWhere("celeb.lowResPlaceholder is not null");
+        })
+      )
       .orderBy("celeb.updatedAt", "DESC")
       .take(maxLimit);
 
@@ -280,5 +272,55 @@ export class CelebrityResolver {
     } catch (err) {
       return [];
     }
+  }
+
+  @Query(() => ImageUploadResponse)
+  @UseMiddleware(isAuthenticated)
+  getImageUploadUrl(@Arg("input") input: ImageUploadInput, @Ctx() { req }: AppContext): ImageUploadResponse {
+    if (!input.image && !input.thumbnail) return { errorMessage: "file url type not selected" };
+    const userId = req.session.userId as string;
+    const cdnUrl = process.env.AWS_CLOUD_FRONT_IMAGE_SOURCE_DOMAIN;
+    const keyPairId = process.env.AWS_CLOUD_FRONT_IMAGE_SOURCE_KEY_PAIR_ID;
+    const pathToKey = join(__dirname, "../../keys/private_key.pem");
+    const key = readFileSync(pathToKey, "utf8");
+
+    const cdnSigner = new Signer(keyPairId, key);
+
+    const duration = 1000 * 30; // 30 secs
+    const inputVals = Object.keys(input);
+    inputVals.forEach((x) => {
+      if (!input[x as keyof typeof input]) {
+        delete input[x as keyof typeof input];
+      }
+    });
+
+    const inputValsSanitized = Object.keys(input);
+
+    const randomNumber = Math.random().toString();
+    const datetime = dayjs().format("DD-MM-YYYY");
+    const hash = crypto
+      .createHash("md5")
+      .update(datetime + randomNumber)
+      .digest("hex");
+    const links: ImageUploadLinks[] = inputValsSanitized.map((x) => {
+      const type = x === "image" ? "image" : "thumbnail";
+      const id = `${userId}/${type}/${datetime}-${hash}`;
+      const signedUrl = cdnSigner.getSignedUrl({
+        url: `${cdnUrl}/${id}`,
+        expires: Math.floor((Date.now() + duration) / 1000),
+      });
+      return { type, id, signedUrl };
+    });
+
+    const metadata: ImageUploadMetadata = { userId };
+
+    links.forEach((x) => {
+      if (x.type === "image") metadata.image = x.id;
+      if (x.type === "thumbnail") metadata.thumbnail = x.id;
+    });
+
+    const imageData: ImageUpload = { urls: links, metadata };
+
+    return { data: imageData };
   }
 }

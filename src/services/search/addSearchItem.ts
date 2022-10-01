@@ -3,7 +3,7 @@ import { CelebCategories } from "../../entities/CelebCategories";
 import { Celebrity } from "../../entities/Celebrity";
 import { client } from "./client";
 
-export const upsertCelebritySearchItem = async (celebrity: Celebrity | null) => {
+export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
   if (celebrity) {
     const celebId = celebrity.id;
     const categoriesObj = await CelebCategories.find({
@@ -28,8 +28,8 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity | null) => 
       id: celebrity.id.toString(),
       alias: celebrity.alias,
       thumbnail: celebrity.thumbnail,
-      image_placeholder: celebrity.imagePlaceholder,
-      image_thumbnail: celebrity.imageThumbnail,
+      placeholder: celebrity.placeholder,
+      low_res_placeholder: celebrity.lowResPlaceholder,
       image: celebrity.image,
       description: celebrity.description,
       profile_hash: celebrity.profileHash,
@@ -43,8 +43,26 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity | null) => 
   }
 };
 
+export const upsertCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
+  if (celebs.length > 0) {
+    const celebObj = celebs.map((x) => ({
+      id: x.id.toString(),
+      profile_hash: x.profileHash,
+      thumbnail: x.thumbnail,
+      image: x.image,
+      placeholder: x.placeholder,
+      low_res_placeholder: x.lowResPlaceholder,
+    }));
+    try {
+      await client.collections("celebrity").documents().import(celebObj, { action: "upsert" });
+    } catch (err) {
+      console.log("typesense error: ", err);
+    }
+  }
+};
+
 export const upsertCategorySearchItem = async (category: Categories[] | undefined) => {
-  if (category) {
+  if (category && category.length > 0) {
     const catObj = category.map((x) => ({
       category_id: x.id,
       category_name: x.name,

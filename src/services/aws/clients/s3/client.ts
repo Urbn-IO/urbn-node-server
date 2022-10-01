@@ -1,23 +1,23 @@
 import { S3Client, S3ClientConfig } from "@aws-sdk/client-s3";
 
-const primaryRegion = process.env.AWS_PRIMARY_REGION;
-const secondaryRegion = process.env.AWS_SECONDARY_REGION;
+const awsRegion1 = process.env.AWS_REGION_1;
+const awsRegion2 = process.env.AWS_REGION_2;
 const accessKey = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
-const primaryConfig: S3ClientConfig = {
-  region: primaryRegion,
+const s3Config1: S3ClientConfig = {
+  region: awsRegion1,
   credentials: {
     accessKeyId: accessKey,
     secretAccessKey,
   },
 };
-const secondaryConfig: S3ClientConfig = {
-  region: secondaryRegion,
+const s3Config2: S3ClientConfig = {
+  region: awsRegion2,
   credentials: {
     accessKeyId: accessKey,
     secretAccessKey,
   },
 };
-export const s3primaryClient = new S3Client(primaryConfig);
-export const s3SecondaryClient = new S3Client(secondaryConfig);
+export const s3Client1 = new S3Client(s3Config1);
+export const s3Client2 = new S3Client(s3Config2);
