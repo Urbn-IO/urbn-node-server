@@ -399,6 +399,7 @@ export class S3SignedObject {
   @Field({ nullable: true })
   fileName?: string;
 }
+
 @ObjectType()
 export class ImageUploadMetadata {
   @Field()
@@ -412,18 +413,22 @@ export class ImageUploadMetadata {
 }
 @ObjectType()
 export class ImageUploadLinks {
+  id: string;
+
   @Field()
   type: "image" | "thumbnail";
 
   @Field()
   signedUrl: string;
-
-  id: string;
 }
+
 @ObjectType()
 export class ImageUpload {
   @Field(() => [ImageUploadLinks])
   urls: ImageUploadLinks[];
+
+  @Field()
+  metadataUrl: string;
 
   @Field(() => ImageUploadMetadata)
   metadata: ImageUploadMetadata;

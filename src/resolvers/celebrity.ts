@@ -319,7 +319,13 @@ export class CelebrityResolver {
       if (x.type === "thumbnail") metadata.thumbnail = x.id;
     });
 
-    const imageData: ImageUpload = { urls: links, metadata };
+    const jsonFileName = `${datetime}-${hash}.json`;
+    const signedUrl = cdnSigner.getSignedUrl({
+      url: `${cdnUrl}/${jsonFileName}`,
+      expires: Math.floor((Date.now() + duration) / 1000),
+    });
+
+    const imageData: ImageUpload = { urls: links, metadataUrl: signedUrl, metadata };
 
     return { data: imageData };
   }
