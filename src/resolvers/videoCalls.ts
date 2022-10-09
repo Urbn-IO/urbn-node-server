@@ -20,12 +20,6 @@ import { sendCallNotification } from "../services/notifications/handler";
 
 @Resolver()
 export class VideoCallResolver {
-  // @Subscription({
-  //   topics: ({ args, payload, context }) => args.topic,
-  // })
-  // newNotification(): Notification {
-  //   return new Notification("d");
-  // }
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
   async initiateVideoCall(@Arg("requestId", () => Int) requestId: number, @Ctx() { req }: AppContext) {
@@ -33,7 +27,7 @@ export class VideoCallResolver {
     const request = await validateRequestor(userId, requestId);
     if (request) {
       if (request.status !== RequestStatus.ACCEPTED) return false;
-      await sendCallNotification(request.recipient, requestId, request.requestorName);
+      await sendCallNotification(request.celebrity, requestId, request.userDisplayName);
       return true;
     }
     return false;
@@ -47,14 +41,14 @@ export class VideoCallResolver {
     @Ctx() { req }: AppContext
   ): Promise<CallTokenResponse> {
     const userId = req.session.userId;
-    const recipient = userId as string;
-    const request = await validateRecipient(recipient, requestId);
+    const celebrity = userId as string;
+    const request = await validateRecipient(celebrity, requestId);
     if (request) {
-      const requestor = request.requestor;
+      const user = request.user;
       const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
       if (callRoomName) {
-        const [callToken, requestorCallToken] = getVideoCallToken([recipient, requestor], callRoomName);
-        publish({ token: requestorCallToken, roomName: callRoomName, requestor });
+        const [callToken, userCallToken] = getVideoCallToken([celebrity, user], callRoomName);
+        publish({ token: userCallToken, roomName: callRoomName, user });
         return { token: callToken, roomName: callRoomName };
       }
       return { errorMessage: "An error occured while trying to create video call session" };
@@ -65,7 +59,7 @@ export class VideoCallResolver {
   @Subscription({
     topics: SubscriptionTopics.VIDEO_CALL,
     filter: ({ payload, context }: ResolverFilterData<CallTokenResponse, any, any>) => {
-      return context.userId === payload.requestor;
+      return context.userId === payload.user;
     },
   })
   listenToCallEvent(@Root() call: CallTokenResponse): CallTokenResponse {
@@ -82,23 +76,4 @@ export class VideoCallResolver {
   callStatus(@Root() status: VideoCallEvent): VideoCallEvent {
     return status;
   }
-
-  ///////////////////Test stuff
-
-  // @Mutation(() => Boolean)
-  // testNotification(@Arg("payload") payload: NotificationsPayloadTest) {
-  //   notificationsManager().sendInstantTestMessage(payload);
-  //   return true;
-  // }
-  // @Mutation(() => Boolean)
-  // testEmail(@Arg("payload") payload: NotificationsPayloadTest) {
-  //   notificationsManager().sendInstantTestMessage(payload);
-  //   return true;
-  // }
-  // @Mutation(() => String)
-  // async testDeepLink(@Arg("url") url: string) {
-  //   const link = await createDeepLink(url);
-  //   if (link) return link;
-  //   return "An error occured";
-  // }
 }

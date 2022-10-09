@@ -76,8 +76,15 @@ export interface ImageProcessorQueueOutput extends ImageProcessorQueueOutputBase
 
 export type TransactionsMetadata = {
   userId: string;
-  recipient: string;
-  availableSlotId?: number;
+  requestRef?: string;
+  celebrity?: string;
+  //for card initilization
+  email?: string;
+  newCard?: boolean;
+  defaultCard?: boolean;
+  //types for call request metadata
+  availableSlotId?: string;
+  availableDay?: DayOfTheWeek;
 };
 export type CachedCallEventPayload = {
   requestId: number;

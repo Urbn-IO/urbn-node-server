@@ -6,6 +6,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from "typeorm";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
@@ -13,10 +14,12 @@ import { AppContext } from "../types";
 import { Categories } from "./Categories";
 import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
+import { CallSlots } from "../utils/graphqlTypes";
 
 @ObjectType()
 @Entity()
 @CacheControl({ maxAge: 300, scope: CacheScope.Public })
+@Index(["userId", "availableTimeSlots"])
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -94,6 +97,10 @@ export class Celebrity extends BaseEntity {
   @Field(() => Int, { defaultValue: 0 })
   @Column({ nullable: true })
   callTypeB: number;
+
+  @Field(() => [CallSlots], { nullable: true })
+  @Column("jsonb", { array: false, default: () => "'[]'", nullable: true })
+  availableTimeSlots: CallSlots[];
 
   @Column({ nullable: true })
   twitter: string;

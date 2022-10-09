@@ -2,7 +2,15 @@ import crypto from "crypto";
 import { s3Client2 } from "../services/aws/clients/s3/client";
 import { Celebrity } from "../entities/Celebrity";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext, CallType, ContentType, NotificationRouteCode, RequestStatus, RequestType } from "../types";
+import {
+  AppContext,
+  CallType,
+  ContentType,
+  DayOfTheWeek,
+  NotificationRouteCode,
+  RequestStatus,
+  RequestType,
+} from "../types";
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Brackets } from "typeorm";
@@ -12,11 +20,12 @@ import { validateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sendInstantNotification } from "../services/notifications/handler";
-import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import { AppDataSource } from "../db";
 import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
+import { changeRequestState } from "../request/manage";
+import createhashString from "../utils/createHashString";
 
 @Resolver()
 export class RequestsResolver {
@@ -40,39 +49,42 @@ export class RequestsResolver {
     if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
 
     const email = user.user_email;
-    const requestorName = user.user_displayName;
+    const userDisplayName = user.user_displayName;
     const cardAuth = user.authorizationCode;
 
     const celeb = await Celebrity.findOne({ where: { id: celebId } });
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
-    const celebAlias = celeb.alias;
     const acceptsShoutOut = celeb.acceptsShoutout;
     const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
-    if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept shoutouts` };
+    if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts` };
     if (acceptsInstantShoutOut === false && Input.instantShoutout === true) {
-      return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept instant shoutouts` };
+      return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts` };
     }
     const requestType = Input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
     const transactionAmount = Input.instantShoutout
       ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
       : (celeb.shoutout * 100).toString();
+
+    const requestRef = createhashString([userId, celeb.userId, cardAuth]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
-      recipient: celeb.userId,
+      celebrity: celeb.userId,
+      requestRef,
     });
     if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
 
     const request = {
-      requestor: userId,
-      requestorName,
-      recipient: celeb.userId,
+      reference: requestRef,
+      user: userId,
+      userDisplayName,
+      celebrity: celeb.userId,
+      celebrityAlias: celeb.alias,
+      celebrityThumbnail: celeb.thumbnail,
       requestType,
       amount: transactionAmount,
       description: Input.description,
       requestExpires: Input.requestExpiration,
-      recipientAlias: celebAlias,
-      recipientThumbnail: celeb.thumbnail,
     };
     const result = await Requests.create(request as Requests).save();
     if (result) {
@@ -91,6 +103,9 @@ export class RequestsResolver {
   ): Promise<GenericResponse> {
     let callRequestType;
     let callDurationInSeconds;
+    let callSlotId = "";
+    let callSlotDay = DayOfTheWeek.SUNDAY;
+    let callStartTime = "";
     const userId = req.session.userId as string;
     const celebId = Input.celebId;
     const user = await AppDataSource.getRepository(User)
@@ -104,12 +119,23 @@ export class RequestsResolver {
     if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
 
     const email = user.user_email;
-    const requestorName = user.user_displayName;
+    const userDisplayName = user.user_displayName;
     const cardAuth = user.authorizationCode;
-    const celeb = await Celebrity.findOne({ where: { id: celebId } });
+    const celeb = await Celebrity.findOne({
+      where: { id: celebId },
+      select: [
+        "userId",
+        "alias",
+        "thumbnail",
+        "acceptsCallTypeA",
+        "acceptsCallTypeB",
+        "availableTimeSlots",
+        "callTypeA",
+        "callTypeB",
+      ],
+    });
     if (!celeb) return { errorMessage: "This celebrity is no longer available" };
     if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
-    const celebAlias = celeb.alias;
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
     if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
@@ -118,13 +144,25 @@ export class RequestsResolver {
     } else if (acceptsCallTypeB === true && Input.callType === CallType.CALL_TYPE_B) {
       callRequestType = RequestType.CALL_TYPE_B;
       callDurationInSeconds = VIDEO_CALL_TYPE_B_DURATION;
-    } else return { errorMessage: `Sorry! ${celebAlias} doesn't currently accept this type of request` };
-    const CallScheduleRepo = AppDataSource.getTreeRepository(CallScheduleBase);
-    const availableSlot = await CallScheduleRepo.findOne({ where: { id: Input.selectedTimeSlotId } });
-    if (!availableSlot || availableSlot.available === (false || null)) {
-      return {
-        errorMessage: "The selected time slot is no longer available, please select another time for this call",
-      };
+    } else return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request` };
+
+    loop: for (const x of celeb.availableTimeSlots) {
+      if (x.day === Input.selectedTimeSlot.day) {
+        for (const y of x.hourSlots) {
+          for (const z of y.minSlots) {
+            if (z.id === Input.selectedTimeSlot.slotId && z.available === true) {
+              callSlotDay = x.day;
+              callSlotId = z.id;
+              callStartTime = z.start;
+              break loop;
+            } else if (z.id === Input.selectedTimeSlot.slotId && z.available === false) {
+              return {
+                errorMessage: "The selected time slot is no longer available, please select another time for this call",
+              };
+            }
+          }
+        }
+      }
     }
 
     const transactionAmount =
@@ -132,16 +170,20 @@ export class RequestsResolver {
         ? (celeb.callTypeA * 100).toString()
         : (celeb.callTypeB * 100).toString();
 
+    const requestRef = createhashString([userId, celeb.userId, cardAuth, callSlotId]);
+
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
-      recipient: celeb.userId,
-      availableSlotId: availableSlot.id,
+      celebrity: celeb.userId,
+      requestRef,
+      availableSlotId: callSlotId,
+      availableDay: Input.selectedTimeSlot.day,
     });
 
     if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
 
-    const availabeDate = getNextAvailableDate(availableSlot.day as number);
-    const startTime = availableSlot.startTime as unknown as string;
+    const availabeDate = getNextAvailableDate(callSlotDay);
+    const startTime = callStartTime;
     const startTimeSplit = startTime.split(":");
     const availableDay = availabeDate
       .set("hour", parseInt(startTimeSplit[0]))
@@ -152,23 +194,22 @@ export class RequestsResolver {
     const requestExpires = availableDay.add(5, "minute");
 
     const request = {
-      requestor: userId,
-      requestorName: requestorName,
-      recipient: celeb.userId,
+      reference: requestRef,
+      user: userId,
+      userDisplayName,
+      celebrity: celeb.userId,
+      celebrityAlias: celeb.alias,
+      celebrityThumbnail: celeb.thumbnail,
       requestType: callRequestType,
       amount: transactionAmount,
-      description: `Video call request from ${requestorName} to ${celebAlias}`,
-      callScheduleId: availableSlot.id,
+      description: `Video call request from ${userDisplayName} to ${celeb.alias}`,
+      callSlotId,
       callDurationInSeconds: callDurationInSeconds.toString(),
       callRequestBegins,
       requestExpires,
-      recipientAlias: celebAlias,
-      recipientThumbnail: celeb.thumbnail,
     };
     const result = await Requests.create(request).save();
-    if (result) {
-      return { success: "Request Sent!" };
-    }
+    if (result) return { success: "Request Sent!" };
     return { errorMessage: "Failed to create your request at this time. Try again later" };
   }
 
@@ -178,14 +219,15 @@ export class RequestsResolver {
     @Arg("requestId", () => Int) requestId: number,
     @Ctx() { req }: AppContext
   ): Promise<VideoUploadData> {
+    // resolver celeb uses to fulfil a call request
     const userId = req.session.userId as string; //
     const bucketName = process.env.AWS_BUCKET_NAME;
     try {
       const request = await validateRecipient(userId, requestId);
       if (request) {
         if (request.status !== RequestStatus.ACCEPTED) throw new Error();
-        const owner = request.requestor;
-        const celebAlias = request.recipientAlias;
+        const owner = request.user;
+        const celebAlias = request.celebrityAlias;
         const time = Math.floor(new Date().getTime() / 1000);
         const randomNumber = Math.random().toString();
         const id = crypto
@@ -205,7 +247,7 @@ export class RequestsResolver {
           });
           return signedUrl;
         });
-        await Requests.update(request.id, { status: RequestStatus.PROCESSING });
+        await changeRequestState(request.id, RequestStatus.PROCESSING);
         return {
           videoData: {
             videoUrl: await urls[0],
@@ -233,16 +275,38 @@ export class RequestsResolver {
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
+    // resolver celeb uses to fulfil a call request
     try {
-      const request = await (
+      const request = (await (
         await Requests.createQueryBuilder()
           .update({ status: RequestStatus.PROCESSING })
           .where({ id: requestId })
-          .returning('"callScheduleId"')
+          .returning('celebrity, "callSlotId"')
           .execute()
-      ).raw[0];
-      const callScheduleTreeRepo = AppDataSource.getTreeRepository(CallScheduleBase);
-      await callScheduleTreeRepo.update(request.callScheduleId, { available: true });
+      ).raw[0]) as Requests;
+      // const callScheduleTreeRepo = AppDataSource.getTreeRepository(CallScheduleBase);
+      // await callScheduleTreeRepo.update(request.callSlotId, { available: true });
+      const celeb = await Celebrity.findOne({
+        where: {
+          userId: request.celebrity,
+        },
+        select: ["id", "availableTimeSlots"],
+      });
+      if (celeb) {
+        const slotId = request.callSlotId;
+        const availableTimeSlots = celeb.availableTimeSlots;
+        loop: for (const x of availableTimeSlots) {
+          for (const y of x.hourSlots) {
+            for (const z of y.minSlots) {
+              if (z.id === slotId) {
+                z.available = true;
+                break loop;
+              }
+            }
+          }
+        }
+        await Celebrity.update({ userId: request.celebrity }, { availableTimeSlots });
+      }
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
     }
@@ -258,13 +322,13 @@ export class RequestsResolver {
           await Requests.createQueryBuilder()
             .update({ status })
             .where({ id: requestId })
-            .returning('requestor, "requestType", "recipientAlias"')
+            .returning('user, "requestType", "celebrityAlias"')
             .execute()
         ).raw[0];
         const requestType = request.requestType === "shoutout" ? "shoutout" : "video call";
-        const celebAlias = request.recipientAlias;
+        const celebAlias = request.celebrityAlias;
         sendInstantNotification(
-          [request.requestor],
+          [request.user],
           "Response Alert",
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
           NotificationRouteCode.RESPONSE
@@ -290,7 +354,7 @@ export class RequestsResolver {
     const maxLimit = Math.min(9, limit);
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
-      .where("requests.requestor = :userId", { userId })
+      .where("requests.user = :userId", { userId })
       .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
 
@@ -315,7 +379,7 @@ export class RequestsResolver {
     const status = RequestStatus.PENDING;
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
-      .where("requests.recipient = :userId", { userId })
+      .where("requests.celebrity = :userId", { userId })
       .andWhere("requests.status = :status", { status })
       .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
@@ -344,7 +408,7 @@ export class RequestsResolver {
       .createQueryBuilder("requests")
       .where(
         new Brackets((qb) => {
-          qb.where("requests.recipient = :userId", { userId }).orWhere("requests.requestor = :userId", { userId });
+          qb.where("requests.celebrity = :userId", { userId }).orWhere("requests.user = :userId", { userId });
         })
       )
       .andWhere("requests.status = :status", { status })

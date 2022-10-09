@@ -77,7 +77,7 @@ export class CelebrityApplicationInputs {
 }
 
 @InputType()
-export class RegisterCelebrityInputs {
+export class OnboardCelebrityInputs {
   @Field()
   acceptsShoutout: boolean;
 
@@ -110,6 +110,11 @@ export class RegisterCelebrityInputs {
   })
   @Field()
   description: string;
+
+  @Field(() => [CallScheduleInput], { defaultValue: [] })
+  callScheduleSlots?: CallScheduleInput[];
+
+  availableTimeSlots: CallSlots[];
 
   isNew: boolean;
 
@@ -157,6 +162,11 @@ export class UpdateCelebrityInputs {
   @Field({ nullable: true })
   description: string;
 
+  @Field(() => [CallScheduleInput], { nullable: true })
+  callScheduleSlots?: CallScheduleInput[];
+
+  availableTimeSlots: CallSlots[];
+
   profileHash: string;
   userId: string | undefined;
 }
@@ -201,12 +211,20 @@ export class ShoutoutRequestInput {
   requestExpiration: Date;
 }
 @InputType()
+export class TimeSlot {
+  @Field()
+  slotId: string;
+
+  @Field(() => DayOfTheWeek)
+  day: DayOfTheWeek;
+}
+@InputType()
 export class VideoCallRequestInputs {
   @Field(() => Int)
   celebId: number;
 
-  @Field(() => Int)
-  selectedTimeSlotId: number;
+  @Field(() => TimeSlot)
+  selectedTimeSlot: TimeSlot;
 
   @Field(() => CallType)
   callType: CallType;
@@ -228,10 +246,10 @@ export class CallScheduleInput {
 @InputType()
 export class ImageUploadInput {
   @Field(() => Boolean, { defaultValue: false })
-  image: DayOfTheWeek;
+  image: boolean;
 
   @Field(() => Boolean, { defaultValue: false })
-  thumbnail: DayOfTheWeek;
+  thumbnail: boolean;
 }
 
 // @InputType()
@@ -298,7 +316,7 @@ export class CallTokenResponse {
   @Field(() => String, { nullable: true })
   roomName?: string;
 
-  requestor?: string;
+  user?: string;
 
   @Field({ nullable: true })
   errorMessage?: string;
@@ -307,9 +325,6 @@ export class CallTokenResponse {
 export class NewCardVerificationResponse {
   @Field(() => Boolean)
   status: boolean;
-
-  @Field()
-  ref: string;
 
   @Field()
   message?: string;
@@ -440,6 +455,33 @@ export class ImageUploadResponse {
 
   @Field({ nullable: true })
   errorMessage?: string;
+}
+@ObjectType()
+export class CallSlotBase {
+  @Field()
+  start: string;
+  @Field()
+  end: string;
+}
+
+@ObjectType()
+export class CallSlotMin extends CallSlotBase {
+  @Field()
+  id: string;
+  @Field()
+  available: boolean;
+}
+@ObjectType()
+export class CallSlotHrs extends CallSlotBase {
+  @Field(() => [CallSlotMin])
+  minSlots: CallSlotMin[];
+}
+@ObjectType()
+export class CallSlots extends CallSlotBase {
+  @Field(() => DayOfTheWeek)
+  day: DayOfTheWeek;
+  @Field(() => [CallSlotHrs])
+  hourSlots: CallSlotHrs[];
 }
 
 @ObjectType()

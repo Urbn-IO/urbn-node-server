@@ -3,7 +3,7 @@ import express from "express";
 import { saveTransaction } from "../../transactions";
 import { reserveVideoCallScheduleTimeSlot } from "../../../../utils/helpers";
 import { saveCardPaystack } from "../../saveCard";
-import { SubscriptionTopics } from "../../../../types";
+import { SubscriptionTopics, TransactionsMetadata } from "../../../../types";
 import publish from "../../../../utils/publish";
 import { NewCardVerificationResponse } from "../../../../utils/graphqlTypes";
 import { updateRequestAndNotify } from "../../../../request/manage";
@@ -19,17 +19,22 @@ router.post("/", async (req, res) => {
       const status = payload.event === "charge.success" ? true : false;
 
       const { data } = payload;
+      const metadata = data.metadata as TransactionsMetadata;
+      const userId = metadata.userId;
+      const celebrity = metadata.celebrity;
+      const availableSlotId = metadata.availableSlotId;
+      const day = metadata.availableDay;
 
-      if (data.metadata.newCard) {
-        saveCardPaystack(data);
-        const userId = data.metadata.userId;
-        const ref = data.reference;
-        publish<NewCardVerificationResponse>(SubscriptionTopics.NEW_CARD, { userId, status, ref });
+      if (metadata.newCard) {
+        await saveCardPaystack(data);
+        publish<NewCardVerificationResponse>(SubscriptionTopics.NEW_CARD, { userId, status });
         return;
       }
-      updateRequestAndNotify(data.reference, status);
-      if (data.metadata.availableSlotId) {
-        reserveVideoCallScheduleTimeSlot(data.metadata.availableSlotId);
+
+      updateRequestAndNotify(metadata, status);
+
+      if (celebrity && availableSlotId && day) {
+        reserveVideoCallScheduleTimeSlot(celebrity, availableSlotId, day);
       }
       saveTransaction(data);
       return;

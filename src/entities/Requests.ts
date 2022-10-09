@@ -4,31 +4,35 @@ import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedCo
 
 @ObjectType()
 @Entity()
-@Index(["requestor", "recipient"])
+@Index(["user", "celebrity"])
+@Index(["user", "reference"])
 export class Requests extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Field()
   @Column()
-  requestor: string;
+  reference: string;
 
   @Field()
   @Column()
-  requestorName: string;
+  user: string;
 
   @Field()
   @Column()
-  recipient: string;
+  userDisplayName: string;
 
   @Field()
   @Column()
-  recipientAlias: string;
+  celebrity: string;
 
   @Field()
   @Column()
-  recipientThumbnail: string;
+  celebrityAlias: string;
+
+  @Field()
+  @Column()
+  celebrityThumbnail: string;
 
   @Field()
   @Column({ type: "enum", enum: RequestType, default: RequestType.SHOUTOUT })
@@ -49,7 +53,7 @@ export class Requests extends BaseEntity {
 
   @Index()
   @Column({ nullable: true })
-  callScheduleId: number;
+  callSlotId: string;
 
   @Column({ nullable: true })
   callDurationInSeconds: string;

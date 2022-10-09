@@ -54,7 +54,7 @@ export class User extends BaseEntity {
   @Column({ type: "enum", enum: SignInMethod, default: SignInMethod.BASIC })
   authMethod: SignInMethod;
 
-  @Field({ nullable: true })
+  @Field(() => Celebrity, { nullable: true })
   @OneToOne(() => Celebrity, {
     nullable: true,
     cascade: true,

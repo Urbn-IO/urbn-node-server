@@ -1,7 +1,7 @@
 import { Requests } from "../entities/Requests";
 import { addJob, operationsQueue } from "../queues/job_queue/producer";
 import { sendInstantNotification } from "../services/notifications/handler";
-import { NotificationRouteCode, RequestStatus, RequestType } from "../types";
+import { NotificationRouteCode, RequestStatus, RequestType, TransactionsMetadata } from "../types";
 
 export const processExpiredRequest = async (request: Requests) => {
   let delay: number;
@@ -26,20 +26,22 @@ export const changeRequestState = async (requestId: number, status: RequestStatu
     return true;
   } catch (err) {
     console.log(err);
-    return false;
+    throw err;
   }
 };
 
-export const updateRequestAndNotify = async (paymentRef: string, success: boolean) => {
+export const updateRequestAndNotify = async (metadata: TransactionsMetadata, success: boolean) => {
   let userId: string, messageTitle: string, messageBody: string;
   let route: NotificationRouteCode;
   const status = success ? RequestStatus.PENDING : RequestStatus.FAILED;
+  const user = metadata.userId;
   try {
     const request = await (
       await Requests.createQueryBuilder()
         .update({ status })
-        .where({ paymentRef })
-        .returning('id, requestor, recipient, "recipientAlias", callRequestBegins, requestExpires, "requestType"')
+        .where({ user })
+        .andWhere({ ref: metadata.requestRef })
+        .returning('id, user, celebrity, "celebrityAlias", "callRequestBegins", "requestExpires", "requestType"')
         .execute()
     ).raw[0];
     const requestType =
@@ -48,14 +50,14 @@ export const updateRequestAndNotify = async (paymentRef: string, success: boolea
       //automagically check and update state of request on expiration
       await processExpiredRequest(request);
       //send notification
-      userId = request.recipient;
+      userId = request.celebrity;
       messageTitle = "New Request Alert! 🚨";
       messageBody = `You have received a new ${requestType} request`;
       route = NotificationRouteCode.RECEIVED_REQUEST;
     } else {
-      userId = request.requestor;
+      userId = request.user;
       messageTitle = `Failed ${requestType} Request 🛑`;
-      messageBody = `Your request to ${request.recipient} failed due to an issue in processing your payment 😔`;
+      messageBody = `Your request to ${request.celebrity} failed due to an issue in processing your payment 😔`;
       route = NotificationRouteCode.RESPONSE;
     }
     await sendInstantNotification([userId], messageTitle, messageBody, route);

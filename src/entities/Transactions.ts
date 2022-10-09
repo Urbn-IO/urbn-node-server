@@ -2,7 +2,7 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from "typeo
 import { Currency, PaymentGateway, PaymentStatus } from "../types";
 
 @Entity()
-@Index(["customer", "recipient"])
+@Index(["customer", "recipientCeleb"])
 export class Transactions extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -12,8 +12,8 @@ export class Transactions extends BaseEntity {
   customer: string;
 
   @Index()
-  @Column({ type: "uuid" })
-  recipient: string;
+  @Column({ type: "uuid", nullable: true })
+  recipientCeleb?: string;
 
   @Column({ unique: true })
   reference: string;

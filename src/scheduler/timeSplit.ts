@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import { DayOfTheWeek } from "../types";
 import { CallScheduleInput } from "../utils/graphqlTypes";
+import isBetween from "dayjs/plugin/isBetween";
+dayjs.extend(isBetween);
 
 export const processTimeSchedule = (daySchedule: CallScheduleInput[]) => {
   const timeRange = toOneHourCallIntervals(daySchedule);

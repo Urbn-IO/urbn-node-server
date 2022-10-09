@@ -1,10 +1,12 @@
 import { CardAuthorization } from "../../entities/CardAuthorization";
 import { User } from "../../entities/User";
+import { TransactionsMetadata } from "../../types";
 
 export const saveCardPaystack = async (payload: any) => {
-  const userId = payload.metadata.userId;
-  const defaultCard = payload.metadata.defaultCard;
-  const email = payload.metadata.email;
+  const metadata = payload.metadata as TransactionsMetadata;
+  const userId = metadata.userId;
+  const defaultCard = metadata.defaultCard;
+  const email = metadata.email;
   const {
     authorization_code,
     card_type,

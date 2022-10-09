@@ -3,7 +3,6 @@ import dayjs from "dayjs";
 import { readFileSync } from "fs";
 import { join } from "path";
 import {
-  CallScheduleInput,
   CelebrityApplicationInputs,
   GenericResponse,
   ImageUpload,
@@ -11,7 +10,7 @@ import {
   ImageUploadLinks,
   ImageUploadMetadata,
   ImageUploadResponse,
-  RegisterCelebrityInputs,
+  OnboardCelebrityInputs,
   UpdateCelebrityInputs,
 } from "../utils/graphqlTypes";
 import { Brackets } from "typeorm";
@@ -24,14 +23,13 @@ import { AppContext } from "../types";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/search/addSearchItem";
-import { scheduleCallSlot, updateCallSlot } from "../scheduler/videoCallScheduler";
-import { CallScheduleBase } from "../entities/CallScheduleBase";
 import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 import { AppDataSource } from "../db";
 import { attachInstantShoutoutPrice } from "../utils/helpers";
 import { CelebrityApplications } from "../entities/CelebrityApplications";
 import { CELEB_PREREGISTRATION_PREFIX } from "../constants";
+import { generateCallTimeSlots } from "../scheduler/videoCallScheduler";
 
 @Resolver()
 export class CelebrityResolver {
@@ -64,7 +62,7 @@ export class CelebrityResolver {
         phoneNumber: input.phoneNumber,
       }).save();
       await redis.set(CELEB_PREREGISTRATION_PREFIX + userId, userId as string, "EX", 3600 * 24 * 7);
-      return { success: "Success!🔥 You'll hear from us soon" };
+      return { success: "Great!🔥 You'll get an email from us soon regarding the next steps to take" };
     } catch (err) {
       return { errorMessage: "Request Failed. An error occured" };
     }
@@ -72,31 +70,32 @@ export class CelebrityResolver {
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async onBoardCeleb(@Ctx() { req }: AppContext, @Arg("data") data: RegisterCelebrityInputs): Promise<GenericResponse> {
+  async onBoardCeleb(@Ctx() { req }: AppContext, @Arg("data") data: OnboardCelebrityInputs): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.isNew = false;
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return { errorMessage: "You have to accept at least one type of request" };
     }
-    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
-      throw new Error();
+    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) throw new Error("");
+
+    if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
+      data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
     }
+    delete data.callScheduleSlots;
+
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
-      const queryBuilderResult = await AppDataSource.getRepository(Celebrity)
+      await AppDataSource.getRepository(Celebrity)
         .createQueryBuilder("celebrity")
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
         .returning("*")
         .execute();
 
-      const celebrity = queryBuilderResult.raw[0];
-
-      await User.update({ userId }, { celebrity });
-
       return { success: `You're set! Time to make someone's dream come through ⭐️` };
     } catch (err) {
+      console.log(err);
       return { errorMessage: "An Error Occured" };
     }
   }
@@ -120,6 +119,12 @@ export class CelebrityResolver {
     if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
       return { errorMessage: "An error occured" };
     }
+
+    if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
+      data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
+      delete data.callScheduleSlots;
+    }
+
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
@@ -127,7 +132,7 @@ export class CelebrityResolver {
         .createQueryBuilder("celebrity")
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
-        .returning('id, alias, thumbnail, "placeholder", "lowResPlaceholder", image, description, "profileHash"')
+        .returning('id, alias, thumbnail, placeholder, "lowResPlaceholder", image, description, "profileHash"')
         .execute();
       const celeb: Celebrity = queryBuilderResult.raw[0];
 
@@ -141,59 +146,19 @@ export class CelebrityResolver {
     }
   }
 
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
-  async setVideoCallTimeSlots(
-    @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
-    @Ctx() { req }: AppContext
-  ) {
-    const userId = req.session.userId;
-    const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
-    if (celeb && schedule.length > 0) {
-      const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
-      const scheduleExists = await callScheduleTreerepo.findOne({ where: { celebId: celeb.id, parent: false } });
-      if (scheduleExists) return false;
-      const result = await scheduleCallSlot(celeb.id, schedule);
-      return result;
-    } else return false;
-  }
-
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
-  async updateVideoCallTimeSlots(
-    @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
-    @Ctx() { req }: AppContext
-  ) {
-    const userId = req.session.userId;
-    const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
-    if (celeb && schedule.length > 0) {
-      const result = await updateCallSlot(celeb.id, schedule);
-      return result;
-    } else return false;
-  }
-
-  @Query(() => CallScheduleBase, { nullable: true })
-  @UseMiddleware(isAuthenticated)
-  async getAvailableTimeSlots(@Arg("celebId", () => Int) celebId: number) {
-    const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
-    const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: false } });
-    if (parent) {
-      const result = await callScheduleTreerepo.findDescendantsTree(parent);
-      result.children.forEach((x) => {
-        x.children.forEach((y) => {
-          y.children = y.children.filter((z) => {
-            if (z.available === true) {
-              return true;
-            }
-            return false;
-          });
-        });
-      });
-
-      return result;
-    }
-    return {};
-  }
+  // @Mutation(() => Boolean)
+  // @UseMiddleware(isAuthenticated)
+  // async updateVideoCallTimeSlots(
+  //   @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
+  //   @Ctx() { req }: AppContext
+  // ) {
+  //   const userId = req.session.userId;
+  //   const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
+  //   if (celeb && schedule.length > 0) {
+  //     const result = await updateCallSlot(celeb.id, schedule);
+  //     return result;
+  //   } else return false;
+  // }
 
   @Query(() => [Celebrity], { nullable: true })
   @CacheControl({ maxAge: 300, scope: CacheScope.Public })
