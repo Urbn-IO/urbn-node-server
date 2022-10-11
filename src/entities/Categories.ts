@@ -1,9 +1,9 @@
+import CacheControl from "../cache/cacheControl";
 import { AppContext } from "../types";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Celebrity } from "./Celebrity";
 import { CelebCategories } from "./CelebCategories";
-import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 @ObjectType()
 @Entity()

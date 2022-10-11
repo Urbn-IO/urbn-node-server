@@ -13,6 +13,7 @@ import {
   OnboardCelebrityInputs,
   UpdateCelebrityInputs,
 } from "../utils/graphqlTypes";
+import CacheControl from "../cache/cacheControl";
 import { Brackets } from "typeorm";
 import { Signer } from "../utils/cloudFront";
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
@@ -23,7 +24,6 @@ import { AppContext } from "../types";
 import { hashRow } from "../utils/hashRow";
 import { CelebCategories } from "../entities/CelebCategories";
 import { upsertCelebritySearchItem } from "../services/search/addSearchItem";
-import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 import { AppDataSource } from "../db";
 import { attachInstantShoutoutPrice } from "../utils/helpers";

@@ -8,11 +8,11 @@ import {
   UpdateDateColumn,
   Index,
 } from "typeorm";
+import CacheControl from "../cache/cacheControl";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
 import { AppContext } from "../types";
 import { Categories } from "./Categories";
-import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
 import { CallSlots } from "../utils/graphqlTypes";
 

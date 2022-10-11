@@ -1,7 +1,7 @@
 import { CacheHint } from "apollo-server-types";
 import { Directive } from "type-graphql";
 
-export function CacheControl({ maxAge, scope }: CacheHint) {
+function CacheControl({ maxAge, scope }: CacheHint) {
   if (!maxAge && !scope) {
     throw new Error("Missing maxAge or scope param for @CacheControl");
   }
@@ -17,3 +17,5 @@ export function CacheControl({ maxAge, scope }: CacheHint) {
 
   return Directive(sdl);
 }
+
+export default CacheControl;

@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { CacheControl } from "../cache/cacheControl";
+import CacheControl from "../cache/cacheControl";
 import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 import { Shoutout } from "./Shoutout";
