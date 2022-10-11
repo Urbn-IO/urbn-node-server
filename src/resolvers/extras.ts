@@ -7,7 +7,7 @@ import { CacheScope } from "apollo-server-types";
 @Resolver()
 export class ExtrasResolver {
   @Query()
-  @CacheControl({ maxAge: 86400, scope: CacheScope.Public })
+  @CacheControl({ maxAge: 604800, scope: CacheScope.Public })
   getExtras(): Extras {
     return {
       bannerMain: "",
