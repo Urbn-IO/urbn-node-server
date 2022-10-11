@@ -7,6 +7,7 @@ import { CacheScope } from "apollo-server-types";
 @Resolver()
 export class ExtrasResolver {
   @Query()
+  //cache for 1 week
   @CacheControl({ maxAge: 604800, scope: CacheScope.Public })
   getExtras(): Extras {
     return {
