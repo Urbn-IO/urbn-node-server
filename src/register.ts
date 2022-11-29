@@ -1,5 +1,4 @@
 import { NonEmptyArray } from "type-graphql";
-import { CallScheduleBase } from "./entities/CallScheduleBase";
 import { CardAuthorization } from "./entities/CardAuthorization";
 import { Categories } from "./entities/Categories";
 import { CelebCategories } from "./entities/CelebCategories";
@@ -31,7 +30,6 @@ export const entities = [
   NotificationToken,
   CardAuthorization,
   Shoutout,
-  CallScheduleBase,
   Transactions,
   CallLogs,
   Wallet,

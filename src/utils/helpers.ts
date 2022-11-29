@@ -4,9 +4,8 @@ import cookie from "cookie";
 import cookieParser from "cookie-parser";
 import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from "../constants";
 import connectRedis from "connect-redis";
-import { CallScheduleBase } from "../entities/CallScheduleBase";
-import { AppDataSource } from "../db";
 import { Celebrity } from "../entities/Celebrity";
+import { DayOfTheWeek } from "../types";
 
 export const getNextAvailableDate = (day: number) => {
   dayjs.extend(isoWeek);
@@ -32,9 +31,27 @@ export const getSessionContext = async (cookieString: string, store: connectRedi
     });
 };
 
-export const reserveVideoCallScheduleTimeSlot = (slotId: number) => {
-  const CallScheduleRepo = AppDataSource.getTreeRepository(CallScheduleBase);
-  CallScheduleRepo.update(slotId, { available: false });
+export const reserveVideoCallScheduleTimeSlot = async (celebrity: string, slotId: string, day: DayOfTheWeek) => {
+  const celeb = await Celebrity.findOne({
+    where: { userId: celebrity },
+    select: ["availableTimeSlots"],
+  });
+  if (!celeb) return;
+  const availableTimeSlots = celeb.availableTimeSlots;
+  for (const x of availableTimeSlots) {
+    if (x.day === day) {
+      for (const y of x.hourSlots) {
+        for (const z of y.minSlots) {
+          if (z.id === slotId) {
+            z.available = false;
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  await Celebrity.update({ userId: celebrity }, { availableTimeSlots });
 };
 
 export const callDuration = (callLength: number, startTime: Date, currentTime: Date) => {

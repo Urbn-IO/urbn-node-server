@@ -7,12 +7,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
+import CacheControl from "../cache/cacheControl";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
 import { CelebCategories } from "./CelebCategories";
 import { AppContext } from "../types";
 import { Categories } from "./Categories";
-import { CacheControl } from "../cache/cacheControl";
 import { CacheScope } from "apollo-server-types";
+import { CallSlots } from "../utils/graphqlTypes";
 
 @ObjectType()
 @Entity()
@@ -95,6 +96,10 @@ export class Celebrity extends BaseEntity {
   @Column({ nullable: true })
   callTypeB: number;
 
+  @Field(() => [CallSlots], { nullable: true })
+  @Column("jsonb", { array: false, default: () => "'[]'", nullable: true })
+  availableTimeSlots: CallSlots[];
+
   @Column({ nullable: true })
   twitter: string;
 
@@ -124,7 +129,9 @@ export class Celebrity extends BaseEntity {
 
   //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
-  async categories(@Ctx() { categoriesLoader }: AppContext): Promise<Categories[] | null> {
+  async categories(
+    @Ctx() { categoriesLoader }: AppContext
+  ): Promise<Categories[] | null> {
     return categoriesLoader.load(this.id);
   }
 }

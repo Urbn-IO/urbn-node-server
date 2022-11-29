@@ -6,7 +6,7 @@ export const saveTransaction = async (payload: any) => {
   try {
     await Transactions.create({
       customer: metadata.userId,
-      recipient: metadata.recipient,
+      recipientCeleb: metadata.celebrity,
       currency,
       amount,
       reference,

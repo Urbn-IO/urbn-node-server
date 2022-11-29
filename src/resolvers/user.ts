@@ -3,7 +3,7 @@ import { User } from "../entities/User";
 import { AppContext, EmailSubject, SignInMethod } from "../types";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { deviceInfo, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
+import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from "../utils/graphqlTypes";
 import { v4 } from "uuid";
 import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, SESSION_COOKIE_NAME, RESET_PASSWORD_PREFIX } from "../constants";
 import { isAuthenticated } from "../middleware/isAuthenticated";
@@ -21,7 +21,7 @@ export class UserResolver {
   async createUser(
     @Arg("token") token: string,
     @Arg("userInput") userInput: UserInputs,
-    @Arg("deviceInfo") device: deviceInfo,
+    @Arg("deviceInfo") device: DeviceInfoInput,
     @Ctx() { req, redis }: AppContext
   ): Promise<UserResponse> {
     const key = CONFIRM_EMAIL_PREFIX + token;
@@ -54,7 +54,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async loginUser(
     @Arg("userInput") userInput: UserInputsLogin,
-    @Arg("deviceInfo") device: deviceInfo,
+    @Arg("deviceInfo") device: DeviceInfoInput,
     @Ctx() { req, redis }: AppContext
   ): Promise<UserResponse> {
     const session = APP_SESSION_PREFIX + req.session.id;
@@ -99,7 +99,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async loginWithOAuth(
     @Arg("uid") uid: string,
-    @Arg("deviceInfo") device: deviceInfo,
+    @Arg("deviceInfo") device: DeviceInfoInput,
     @Ctx() { req, redis }: AppContext
   ): Promise<UserResponse> {
     const session = APP_SESSION_PREFIX + req.session.id;

@@ -1,9 +1,7 @@
 import crypto from "crypto";
-import { RegisterCelebrityInputs, UpdateCelebrityInputs } from "./graphqlTypes";
+import { OnboardCelebrityInputs, UpdateCelebrityInputs } from "./graphqlTypes";
 
-export const hashRow = (
-  data: RegisterCelebrityInputs | UpdateCelebrityInputs
-) => {
+export const hashRow = (data: OnboardCelebrityInputs | UpdateCelebrityInputs) => {
   let hashString = "";
   const values = Object.values(data);
   for (const val of values) {

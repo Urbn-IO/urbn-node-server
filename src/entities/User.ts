@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { CacheControl } from "../cache/cacheControl";
+import CacheControl from "../cache/cacheControl";
 import { CardAuthorization } from "./CardAuthorization";
 import { Celebrity } from "./Celebrity";
 import { Shoutout } from "./Shoutout";
@@ -54,7 +54,7 @@ export class User extends BaseEntity {
   @Column({ type: "enum", enum: SignInMethod, default: SignInMethod.BASIC })
   authMethod: SignInMethod;
 
-  @Field({ nullable: true })
+  @Field(() => Celebrity, { nullable: true })
   @OneToOne(() => Celebrity, {
     nullable: true,
     cascade: true,
