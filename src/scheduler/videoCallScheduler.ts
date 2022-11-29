@@ -1,7 +1,11 @@
 import dayjs from "dayjs";
-import _ from "lodash";
 import createhashString from "../utils/createHashString";
-import { CallScheduleInput, CallSlotHrs, CallSlotMin, CallSlots } from "../utils/graphqlTypes";
+import {
+  CallScheduleInput,
+  CallSlotHrs,
+  CallSlotMin,
+  CallSlots,
+} from "../utils/graphqlTypes";
 
 // const grandChildren: CallScheduleBase[] = [];
 // const children: CallScheduleBase[] = [];
@@ -109,13 +113,16 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
           const begin = time;
           const end = dayjs(time).add(1, "hour").toDate();
           const minSlots = generateMinutes(begin, end);
+          console.log("min slots: ", minSlots);
           const hrslots: CallSlotHrs = {
             start: dateToFormattedString(begin),
             end: dateToFormattedString(end),
             minSlots: minSlots,
           };
+
           arr.push(hrslots);
         }
+        console.log("hour slots: ", arr);
         return arr;
       })(),
     });

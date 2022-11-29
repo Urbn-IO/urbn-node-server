@@ -6,7 +6,6 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  Index,
 } from "typeorm";
 import CacheControl from "../cache/cacheControl";
 import { Ctx, Field, Int, ObjectType } from "type-graphql";
@@ -19,7 +18,6 @@ import { CallSlots } from "../utils/graphqlTypes";
 @ObjectType()
 @Entity()
 @CacheControl({ maxAge: 300, scope: CacheScope.Public })
-@Index(["userId", "availableTimeSlots"])
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -131,7 +129,9 @@ export class Celebrity extends BaseEntity {
 
   //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
-  async categories(@Ctx() { categoriesLoader }: AppContext): Promise<Categories[] | null> {
+  async categories(
+    @Ctx() { categoriesLoader }: AppContext
+  ): Promise<Categories[] | null> {
     return categoriesLoader.load(this.id);
   }
 }

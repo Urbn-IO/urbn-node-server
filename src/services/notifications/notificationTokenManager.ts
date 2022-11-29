@@ -30,15 +30,21 @@ export const addToken = async (
 };
 
 export const getTokens = async (userId: string[]): Promise<string[]> => {
-  const tokenObj = await NotificationToken.find({
-    where: { userId: In(userId) },
-    select: ["notificationToken"],
-  });
-  if (tokenObj) {
-    const tokens = tokenObj.map((x) => x.notificationToken);
-    return tokens;
+  try {
+    console.log("array of ids: ", userId);
+    const tokenObj = await NotificationToken.find({
+      where: { userId: In(userId) },
+      select: ["notificationToken"],
+    });
+    if (tokenObj) {
+      const tokens = tokenObj.map((x) => x.notificationToken);
+      return tokens;
+    }
+    throw new Error("Couldn't find list of notifications tokens");
+  } catch (err) {
+    console.error(err);
+    return [];
   }
-  return [];
 };
 
 export const getServiceCallTokens = async (userId: string[]) => {
@@ -62,7 +68,9 @@ export const getServiceCallTokens = async (userId: string[]) => {
 };
 
 export const deleteTokens = async (userId?: string, tokens?: string[]) => {
-  const queryBuilder = AppDataSource.createQueryBuilder().delete().from(NotificationToken);
+  const queryBuilder = AppDataSource.createQueryBuilder()
+    .delete()
+    .from(NotificationToken);
 
   if (userId) {
     queryBuilder.where("userId = :userId", { userId });

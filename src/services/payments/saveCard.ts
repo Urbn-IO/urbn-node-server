@@ -2,10 +2,11 @@ import { CardAuthorization } from "../../entities/CardAuthorization";
 import { User } from "../../entities/User";
 import { TransactionsMetadata } from "../../types";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const saveCardPaystack = async (payload: any) => {
   const metadata = payload.metadata as TransactionsMetadata;
   const userId = metadata.userId;
-  const defaultCard = metadata.defaultCard;
+  const defaultCard = String(metadata.defaultCard) === "true";
   const email = metadata.email;
   const {
     authorization_code,

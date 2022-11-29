@@ -1,7 +1,15 @@
 import crypto from "crypto";
 import { s3Client2 } from "../services/aws/clients/s3/client";
 import { Celebrity } from "../entities/Celebrity";
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import {
   AppContext,
   CallType,
@@ -14,7 +22,12 @@ import {
 import { Requests } from "../entities/Requests";
 import { isAuthenticated } from "../middleware/isAuthenticated";
 import { Brackets } from "typeorm";
-import { GenericResponse, ShoutoutRequestInput, VideoCallRequestInputs, VideoUploadData } from "../utils/graphqlTypes";
+import {
+  GenericResponse,
+  ShoutoutRequestInput,
+  VideoCallRequestInputs,
+  VideoUploadData,
+} from "../utils/graphqlTypes";
 import { User } from "../entities/User";
 import { validateRecipient } from "../utils/requestValidations";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -23,7 +36,11 @@ import { sendInstantNotification } from "../services/notifications/handler";
 import { getNextAvailableDate } from "../utils/helpers";
 import paymentManager from "../services/payments/payments";
 import { AppDataSource } from "../db";
-import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from "../constants";
+import {
+  INSTANT_SHOUTOUT_RATE,
+  VIDEO_CALL_TYPE_A_DURATION,
+  VIDEO_CALL_TYPE_B_DURATION,
+} from "../constants";
 import { changeRequestState } from "../request/manage";
 import createhashString from "../utils/createHashString";
 
@@ -32,12 +49,12 @@ export class RequestsResolver {
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async createShoutoutRequest(
-    @Arg("Input") Input: ShoutoutRequestInput,
+    @Arg("input") input: ShoutoutRequestInput,
     @Arg("cardId", () => Int) cardId: number,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
-    const celebId = Input.celebId;
+    const celebId = input.celebId;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
       .select(["user.email", "user.displayName"])
@@ -46,58 +63,79 @@ export class RequestsResolver {
       .addSelect(["cards.authorizationCode"])
       .getRawOne();
 
-    if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
+    if (!user)
+      return {
+        errorMessage:
+          "We don't have this card anymore, try adding it again or try another",
+      };
 
     const email = user.user_email;
-    const userDisplayName = user.user_displayName;
-    const cardAuth = user.authorizationCode;
+    const customerDisplayName = user.user_displayName;
+    const cardAuth = user.cards_authorizationCode;
 
     const celeb = await Celebrity.findOne({ where: { id: celebId } });
-    if (!celeb) return { errorMessage: "This celebrity is no longer available" };
-    if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
+    if (!celeb)
+      return { errorMessage: "This celebrity is no longer available" };
+    if (celeb.userId === userId)
+      return { errorMessage: "You cannot make a request to yourself" };
     const acceptsShoutOut = celeb.acceptsShoutout;
     const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
-    if (acceptsShoutOut === false) return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts` };
-    if (acceptsInstantShoutOut === false && Input.instantShoutout === true) {
-      return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts` };
+    if (acceptsShoutOut === false)
+      return {
+        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts`,
+      };
+    if (acceptsInstantShoutOut === false && input.instantShoutout === true) {
+      return {
+        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts`,
+      };
     }
-    const requestType = Input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
-    const transactionAmount = Input.instantShoutout
+    const requestType = input.instantShoutout
+      ? RequestType.INSTANT_SHOUTOUT
+      : RequestType.SHOUTOUT;
+    const transactionAmount = input.instantShoutout
       ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
       : (celeb.shoutout * 100).toString();
 
     const requestRef = createhashString([userId, celeb.userId, cardAuth]);
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
-      userId,
-      celebrity: celeb.userId,
-      requestRef,
-    });
+    const chargePayment = await paymentManager().chargeCard(
+      email,
+      transactionAmount,
+      cardAuth,
+      {
+        userId,
+        celebrity: celeb.userId,
+        requestRef,
+      }
+    );
     if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
 
-    const request = {
+    const request: Partial<Requests> = {
       reference: requestRef,
-      user: userId,
-      userDisplayName,
+      customer: userId,
+      customerDisplayName,
       celebrity: celeb.userId,
       celebrityAlias: celeb.alias,
-      celebrityThumbnail: celeb.thumbnail,
+      celebrityThumbnail: celeb.thumbnail as string,
       requestType,
       amount: transactionAmount,
-      description: Input.description,
-      requestExpires: Input.requestExpiration,
+      description: input.description,
+      requestExpires: input.requestExpiration,
     };
-    const result = await Requests.create(request as Requests).save();
+    const result = await Requests.create(request).save();
     if (result) {
       return { success: "Request Sent!" };
     }
 
-    return { errorMessage: "Failed to create your request at this time. Try again later" };
+    return {
+      errorMessage:
+        "Failed to create your request at this time. Try again later",
+    };
   }
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
   async createVideoCallRequest(
-    @Arg("Input") Input: VideoCallRequestInputs,
+    @Arg("input") input: VideoCallRequestInputs,
     @Arg("cardId", () => Int) cardId: number,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
@@ -107,7 +145,7 @@ export class RequestsResolver {
     let callSlotDay = DayOfTheWeek.SUNDAY;
     let callStartTime = "";
     const userId = req.session.userId as string;
-    const celebId = Input.celebId;
+    const celebId = input.celebId;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder("user")
       .select(["user.displayName", "user.email"])
@@ -116,10 +154,14 @@ export class RequestsResolver {
       .addSelect(['cards."authorizationCode"'])
       .getRawOne();
 
-    if (!user) return { errorMessage: "We don't have this card anymore, try adding it again or try another" };
+    if (!user)
+      return {
+        errorMessage:
+          "We don't have this card anymore, try adding it again or try another",
+      };
 
     const email = user.user_email;
-    const userDisplayName = user.user_displayName;
+    const customerDisplayName = user.user_displayName;
     const cardAuth = user.authorizationCode;
     const celeb = await Celebrity.findOne({
       where: { id: celebId },
@@ -134,30 +176,50 @@ export class RequestsResolver {
         "callTypeB",
       ],
     });
-    if (!celeb) return { errorMessage: "This celebrity is no longer available" };
-    if (celeb.userId === userId) return { errorMessage: "You cannot make a request to yourself" };
+    if (!celeb) {
+      return { errorMessage: "This celebrity is no longer available" };
+    }
+    // if (celeb.userId === userId)
+    //   return { errorMessage: "You cannot make a request to yourself" };
+    const availableTimeSlots = celeb.availableTimeSlots;
     const acceptsCallTypeA = celeb.acceptsCallTypeA;
     const acceptsCallTypeB = celeb.acceptsCallTypeB;
-    if (acceptsCallTypeA === true && Input.callType === CallType.CALL_TYPE_A) {
+    if (acceptsCallTypeA === true && input.callType === CallType.CALL_TYPE_A) {
       callRequestType = RequestType.CALL_TYPE_A;
       callDurationInSeconds = VIDEO_CALL_TYPE_A_DURATION;
-    } else if (acceptsCallTypeB === true && Input.callType === CallType.CALL_TYPE_B) {
+    } else if (
+      acceptsCallTypeB === true &&
+      input.callType === CallType.CALL_TYPE_B
+    ) {
       callRequestType = RequestType.CALL_TYPE_B;
       callDurationInSeconds = VIDEO_CALL_TYPE_B_DURATION;
-    } else return { errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request` };
+    } else
+      return {
+        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request`,
+      };
 
-    loop: for (const x of celeb.availableTimeSlots) {
-      if (x.day === Input.selectedTimeSlot.day) {
+    let wasNotFound = true;
+
+    loop: for (const x of availableTimeSlots) {
+      if (x.day === input.selectedTimeSlot.day) {
         for (const y of x.hourSlots) {
           for (const z of y.minSlots) {
-            if (z.id === Input.selectedTimeSlot.slotId && z.available === true) {
+            if (
+              z.id === input.selectedTimeSlot.slotId &&
+              z.available === true
+            ) {
+              wasNotFound = false;
               callSlotDay = x.day;
               callSlotId = z.id;
               callStartTime = z.start;
               break loop;
-            } else if (z.id === Input.selectedTimeSlot.slotId && z.available === false) {
+            } else if (
+              z.id === input.selectedTimeSlot.slotId &&
+              z.available === false
+            ) {
               return {
-                errorMessage: "The selected time slot is no longer available, please select another time for this call",
+                errorMessage:
+                  "The selected time slot is no longer available, please select another time for this call",
               };
             }
           }
@@ -165,20 +227,34 @@ export class RequestsResolver {
       }
     }
 
+    if (wasNotFound) {
+      return { errorMessage: "slotId was not found for supplied day" };
+    }
+
     const transactionAmount =
       callRequestType === RequestType.CALL_TYPE_A
         ? (celeb.callTypeA * 100).toString()
         : (celeb.callTypeB * 100).toString();
 
-    const requestRef = createhashString([userId, celeb.userId, cardAuth, callSlotId]);
-
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
+    const requestRef = createhashString([
       userId,
-      celebrity: celeb.userId,
-      requestRef,
-      availableSlotId: callSlotId,
-      availableDay: Input.selectedTimeSlot.day,
-    });
+      celeb.userId,
+      cardAuth,
+      callSlotId,
+    ]);
+
+    const chargePayment = await paymentManager().chargeCard(
+      email,
+      transactionAmount,
+      cardAuth,
+      {
+        userId,
+        celebrity: celeb.userId,
+        requestRef,
+        availableSlotId: callSlotId,
+        availableDay: input.selectedTimeSlot.day,
+      }
+    );
 
     if (!chargePayment) return { errorMessage: "Payment Error! Try again" };
 
@@ -195,22 +271,27 @@ export class RequestsResolver {
 
     const request = {
       reference: requestRef,
-      user: userId,
-      userDisplayName,
+      customer: userId,
+      customerDisplayName,
       celebrity: celeb.userId,
       celebrityAlias: celeb.alias,
       celebrityThumbnail: celeb.thumbnail,
       requestType: callRequestType,
       amount: transactionAmount,
-      description: `Video call request from ${userDisplayName} to ${celeb.alias}`,
+      description: `Video call request from ${customerDisplayName} to ${celeb.alias}`,
       callSlotId,
       callDurationInSeconds: callDurationInSeconds.toString(),
       callRequestBegins,
       requestExpires,
     };
     const result = await Requests.create(request).save();
-    if (result) return { success: "Request Sent!" };
-    return { errorMessage: "Failed to create your request at this time. Try again later" };
+    if (result) {
+      return { success: "Request Sent!" };
+    }
+    return {
+      errorMessage:
+        "Failed to create your request at this time. Try again later",
+    };
   }
 
   @Mutation(() => VideoUploadData)
@@ -225,8 +306,10 @@ export class RequestsResolver {
     try {
       const request = await validateRecipient(userId, requestId);
       if (request) {
-        if (request.status !== RequestStatus.ACCEPTED) throw new Error();
-        const owner = request.user;
+        if (request.status !== RequestStatus.ACCEPTED) {
+          throw new Error("Invalid request state for this operation");
+        }
+        const owner = request.customer;
         const celebAlias = request.celebrityAlias;
         const time = Math.floor(new Date().getTime() / 1000);
         const randomNumber = Math.random().toString();
@@ -237,7 +320,7 @@ export class RequestsResolver {
         const videoKey = `${owner}-${time}-${id}`;
         const metadataKey = `${owner}-${time}-${id}.json`;
         const keys = [videoKey, metadataKey];
-        const urls = keys.map(async (key) => {
+        const urlsPromise = keys.map(async (key) => {
           const s3Command = new PutObjectCommand({
             Bucket: bucketName,
             Key: key,
@@ -247,11 +330,12 @@ export class RequestsResolver {
           });
           return signedUrl;
         });
+        const urls = await Promise.all(urlsPromise);
         await changeRequestState(request.id, RequestStatus.PROCESSING);
         return {
           videoData: {
-            videoUrl: await urls[0],
-            metadataUrl: await urls[1],
+            videoUrl: urls[0],
+            metadataUrl: urls[1],
             metadata: {
               srcVideo: videoKey,
               customMetadata: {
@@ -268,13 +352,16 @@ export class RequestsResolver {
         return { errorMessage: "Unauthorized action" };
       }
     } catch (err) {
+      console.error(err);
       return { errorMessage: "Error fulfilling request, Try again later" };
     }
   }
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async fulfilCallRequest(@Arg("requestId") requestId: number): Promise<GenericResponse> {
+  async fulfilCallRequest(
+    @Arg("requestId") requestId: number
+  ): Promise<GenericResponse> {
     // resolver celeb uses to fulfil a call request
     try {
       const request = (await (
@@ -305,7 +392,10 @@ export class RequestsResolver {
             }
           }
         }
-        await Celebrity.update({ userId: request.celebrity }, { availableTimeSlots });
+        await Celebrity.update(
+          { userId: request.celebrity },
+          { availableTimeSlots }
+        );
       }
     } catch (err) {
       return { errorMessage: "Error fulfilling request, Try again later" };
@@ -315,20 +405,29 @@ export class RequestsResolver {
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async respondToRequest(@Arg("requestId") requestId: number, @Arg("status") status: string): Promise<GenericResponse> {
-    if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
+  async respondToRequest(
+    @Arg("requestId") requestId: number,
+    @Arg("status") status: string
+  ): Promise<GenericResponse> {
+    if (
+      status === RequestStatus.ACCEPTED ||
+      status === RequestStatus.REJECTED
+    ) {
       try {
         const request = await (
           await Requests.createQueryBuilder()
             .update({ status })
             .where({ id: requestId })
-            .returning('user, "requestType", "celebrityAlias"')
+            .returning('customer, "requestType", "celebrityAlias"')
             .execute()
         ).raw[0];
-        const requestType = request.requestType === "shoutout" ? "shoutout" : "video call";
+
+        console.log(".....request object: ", request);
+        const requestType =
+          request.requestType === "shoutout" ? "shoutout" : "video call";
         const celebAlias = request.celebrityAlias;
         sendInstantNotification(
-          [request.user],
+          [request.customer],
           "Response Alert",
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
           NotificationRouteCode.RESPONSE
@@ -354,7 +453,7 @@ export class RequestsResolver {
     const maxLimit = Math.min(9, limit);
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder("requests")
-      .where("requests.user = :userId", { userId })
+      .where("requests.customer = :userId", { userId })
       .orderBy("requests.createdAt", "DESC")
       .take(maxLimit);
 
@@ -408,7 +507,10 @@ export class RequestsResolver {
       .createQueryBuilder("requests")
       .where(
         new Brackets((qb) => {
-          qb.where("requests.celebrity = :userId", { userId }).orWhere("requests.user = :userId", { userId });
+          qb.where("requests.celebrity = :userId", { userId }).orWhere(
+            "requests.customer = :userId",
+            { userId }
+          );
         })
       )
       .andWhere("requests.status = :status", { status })

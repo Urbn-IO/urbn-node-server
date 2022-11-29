@@ -4,7 +4,11 @@ import { saveTransaction } from "../transactions";
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {
-    initializePayment: async <T>(email: string, amount: string, metadata: T) => {
+    initializePayment: async <T>(
+      email: string,
+      amount: string,
+      metadata: T
+    ) => {
       const endpoint = `${apiUrl}/transaction/initialize`;
       const params = JSON.stringify({
         email,
@@ -27,8 +31,7 @@ const initializeTransaction = (apiUrl: string, secretKey: string) => {
 
         const { status, message, data } = payload;
         if (!status) {
-          console.error(message);
-          return status;
+          throw new Error(message);
         }
 
         // const accessCode = data.access_code;
@@ -60,6 +63,7 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
         authorization_code: authCode,
         metadata,
       });
+
       try {
         const response = await fetch(endpoint, {
           method: "post",
@@ -73,9 +77,14 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
 
         const payload = await response.json();
 
-        const { data } = payload;
+        const { status, message, data } = payload;
+        if (!status) {
+          throw new Error(message);
+        }
+
         if (data.status === "success") return true;
-        return false;
+
+        throw new Error("Failed to charge card");
       } catch (err) {
         console.error(err);
         return false;

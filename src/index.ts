@@ -22,7 +22,10 @@ import { resolvers } from "./register";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { createServer } from "http";
-import { ApolloError, ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import {
+  ApolloError,
+  ApolloServerPluginDrainHttpServer,
+} from "apollo-server-core";
 import { getSessionContext } from "./utils/helpers";
 import { AppDataSource } from "./db";
 import { GraphQLError } from "graphql";
@@ -49,7 +52,11 @@ const main = async () => {
   sqsImageConsumer.start();
   const RedisStore = connectRedis(session);
 
-  const store = new RedisStore({ client: redis as never, disableTouch: true, prefix: APP_SESSION_PREFIX });
+  const store = new RedisStore({
+    client: redis as never,
+    disableTouch: true,
+    prefix: APP_SESSION_PREFIX,
+  });
   app.use(
     session({
       name: SESSION_COOKIE_NAME,
@@ -74,7 +81,11 @@ const main = async () => {
   app.set("trust proxy", !__prod__);
   app.use(
     cors({
-      origin: ["https://studio.apollographql.com", "http://localhost:8000", "https://geturbn.io"], //to be revisited when making web version of  app
+      origin: [
+        "https://studio.apollographql.com",
+        "http://localhost:8000",
+        "https://geturbn.io",
+      ], //to be revisited when making web version of  app
       credentials: true,
     })
   );
@@ -82,6 +93,7 @@ const main = async () => {
   app.use("/twilio", video);
   app.use("/paystack", payment);
   app.use("/search", search);
+  app.use("/request-state", search);
 
   const schema = await buildSchema({
     resolvers,
@@ -101,7 +113,10 @@ const main = async () => {
     {
       schema,
       context: async ({ extra }) => {
-        const sess = await getSessionContext(extra.request.headers.cookie as string, store);
+        const sess = await getSessionContext(
+          extra.request.headers.cookie as string,
+          store
+        );
         if (!sess?.userId) {
           throw new Error("Users not logged in");
         }
@@ -123,7 +138,8 @@ const main = async () => {
       //response caching
       responseCachePlugin({
         sessionId: async (requestContext) => {
-          const cookie = requestContext?.request?.http?.headers.get("cookie") || null;
+          const cookie =
+            requestContext?.request?.http?.headers.get("cookie") || null;
           if (cookie) {
             const sess = await getSessionContext(cookie, store);
             if (!sess) {

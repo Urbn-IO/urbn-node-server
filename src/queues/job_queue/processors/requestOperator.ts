@@ -3,7 +3,11 @@ import { Requests } from "../../../entities/Requests";
 import { sendInstantNotification } from "../../../services/notifications/handler";
 import { NotificationRouteCode, RequestStatus } from "../../../types";
 
-const expireRequest = async ({ id, user, celebrityAlias }: Requests) => {
+const expireRequest = async ({
+  id,
+  customer: user,
+  celebrityAlias,
+}: Requests) => {
   const request = await Requests.findOne({ where: { id }, select: ["status"] });
   if (!request) return;
   const status = request.status;

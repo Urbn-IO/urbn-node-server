@@ -16,7 +16,15 @@ import {
 import CacheControl from "../cache/cacheControl";
 import { Brackets } from "typeorm";
 import { Signer } from "../utils/cloudFront";
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 import { Celebrity } from "../entities/Celebrity";
 import { User } from "../entities/User";
 import { isAuthenticated } from "../middleware/isAuthenticated";
@@ -40,17 +48,29 @@ export class CelebrityResolver {
     @Ctx() { req, redis }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId;
-    if (!input.facebook && !input.instagram && !input.twitter && !input.phoneNumber) {
-      return { errorMessage: "You must provide at least one (1) medium to verify your claim" };
+    if (
+      !input.facebook &&
+      !input.instagram &&
+      !input.twitter &&
+      !input.phoneNumber
+    ) {
+      return {
+        errorMessage:
+          "You must provide at least one (1) medium to verify your claim",
+      };
     }
     const exists = await redis.get(CELEB_PREREGISTRATION_PREFIX + userId);
     if (exists) {
       return {
-        errorMessage: "Seems like you applied recently, try again a week from when you made your initial application",
+        errorMessage:
+          "Seems like you applied recently, try again a week from when you made your initial application",
       };
     }
     try {
-      const user = await User.findOne({ where: { userId }, select: ["email", "userId"] });
+      const user = await User.findOne({
+        where: { userId },
+        select: ["email", "userId"],
+      });
       if (!user) throw new Error();
       await CelebrityApplications.create({
         email: user.email,
@@ -61,8 +81,16 @@ export class CelebrityResolver {
         twitter: input.twitter,
         phoneNumber: input.phoneNumber,
       }).save();
-      await redis.set(CELEB_PREREGISTRATION_PREFIX + userId, userId as string, "EX", 3600 * 24 * 7);
-      return { success: "Great!🔥 You'll get an email from us soon regarding the next steps to take" };
+      await redis.set(
+        CELEB_PREREGISTRATION_PREFIX + userId,
+        userId as string,
+        "EX",
+        3600 * 24 * 7
+      );
+      return {
+        success:
+          "Great!🔥 You'll get an email from us soon regarding the next steps to take",
+      };
     } catch (err) {
       return { errorMessage: "Request Failed. An error occured" };
     }
@@ -70,13 +98,27 @@ export class CelebrityResolver {
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async onBoardCeleb(@Ctx() { req }: AppContext, @Arg("data") data: OnboardCelebrityInputs): Promise<GenericResponse> {
+  async onBoardCeleb(
+    @Ctx() { req }: AppContext,
+    @Arg("data") data: OnboardCelebrityInputs
+  ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.isNew = false;
-    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
-      return { errorMessage: "You have to accept at least one type of request" };
+    if (
+      data.acceptsCallTypeA === false &&
+      data.acceptsCallTypeB === false &&
+      data.acceptsShoutout === false
+    ) {
+      return {
+        errorMessage: "You have to accept at least one type of request",
+      };
     }
-    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) throw new Error("");
+    if (
+      data.acceptsShoutout === false &&
+      data.acceptsInstantShoutout === true
+    ) {
+      throw new Error("Invalid request ");
+    }
 
     if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
       data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
@@ -93,7 +135,9 @@ export class CelebrityResolver {
         .returning("*")
         .execute();
 
-      return { success: `You're set! Time to make someone's dream come through ⭐️` };
+      return {
+        success: `You're set! Time to make someone's dreams come through ⭐️`,
+      };
     } catch (err) {
       console.log(err);
       return { errorMessage: "An Error Occured" };
@@ -112,16 +156,27 @@ export class CelebrityResolver {
       return { errorMessage: "Nothing to update" };
     }
 
-    if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
-      return { errorMessage: "You have to accept at least one type of request" };
+    if (
+      data.acceptsCallTypeA === false &&
+      data.acceptsCallTypeB === false &&
+      data.acceptsShoutout === false
+    ) {
+      return {
+        errorMessage: "You have to accept at least one type of request",
+      };
     }
 
-    if (data.acceptsShoutout === false && data.acceptsInstantShoutout === true) {
+    if (
+      data.acceptsShoutout === false &&
+      data.acceptsInstantShoutout === true
+    ) {
       return { errorMessage: "An error occured" };
     }
 
     if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
+      console.log("...callSchedule input data: ", data.callScheduleSlots);
       data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
+      console.log("...availableTimeSlots: ", data.availableTimeSlots);
       delete data.callScheduleSlots;
     }
 
@@ -132,11 +187,18 @@ export class CelebrityResolver {
         .createQueryBuilder("celebrity")
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
-        .returning('id, alias, thumbnail, placeholder, "lowResPlaceholder", image, description, "profileHash"')
+        .returning(
+          'id, alias, thumbnail, placeholder, "lowResPlaceholder", image, description, "profileHash"'
+        )
         .execute();
       const celeb: Celebrity = queryBuilderResult.raw[0];
 
-      if (celeb.thumbnail && celeb.placeholder && celeb.lowResPlaceholder && celeb.image) {
+      if (
+        celeb.thumbnail &&
+        celeb.placeholder &&
+        celeb.lowResPlaceholder &&
+        celeb.image
+      ) {
         await upsertCelebritySearchItem(celeb);
       }
 
@@ -206,7 +268,10 @@ export class CelebrityResolver {
 
   @Query(() => [Celebrity])
   @CacheControl({ maxAge: 3600, scope: CacheScope.Public })
-  async similarToCelebrity(@Arg("celebId") celebId: number, @Arg("limit", () => Int) limit: number) {
+  async similarToCelebrity(
+    @Arg("celebId") celebId: number,
+    @Arg("limit", () => Int) limit: number
+  ) {
     const maxLimit = Math.min(8, limit);
     try {
       const catIds = [];
@@ -241,8 +306,12 @@ export class CelebrityResolver {
 
   @Query(() => ImageUploadResponse)
   @UseMiddleware(isAuthenticated)
-  getImageUploadUrl(@Arg("input") input: ImageUploadInput, @Ctx() { req }: AppContext): ImageUploadResponse {
-    if (!input.image && !input.thumbnail) return { errorMessage: "file url type not selected" };
+  getImageUploadUrl(
+    @Arg("input") input: ImageUploadInput,
+    @Ctx() { req }: AppContext
+  ): ImageUploadResponse {
+    if (!input.image && !input.thumbnail)
+      return { errorMessage: "file url type not selected" };
     const userId = req.session.userId as string;
     const cdnUrl = process.env.AWS_CLOUD_FRONT_IMAGE_SOURCE_DOMAIN;
     const keyPairId = process.env.AWS_CLOUD_FRONT_IMAGE_SOURCE_KEY_PAIR_ID;
@@ -290,7 +359,11 @@ export class CelebrityResolver {
       expires: Math.floor((Date.now() + duration) / 1000),
     });
 
-    const imageData: ImageUpload = { urls: links, metadataUrl: signedUrl, metadata };
+    const imageData: ImageUpload = {
+      urls: links,
+      metadataUrl: signedUrl,
+      metadata,
+    };
 
     return { data: imageData };
   }

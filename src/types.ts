@@ -63,7 +63,8 @@ interface ImageProcessorQueueOutputBase {
   status?: "success" | "failed";
 }
 
-export interface ImageProcessorQueueOutput extends ImageProcessorQueueOutputBase {
+export interface ImageProcessorQueueOutput
+  extends ImageProcessorQueueOutputBase {
   normalisedThumbnail?: string;
   normalisedImage?: string;
   normalisedPlaceholder?: string;

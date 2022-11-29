@@ -4,7 +4,6 @@ import {
   Ctx,
   Int,
   Mutation,
-  Query,
   Resolver,
   ResolverFilterData,
   Root,
@@ -12,7 +11,10 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { AppContext, SubscriptionTopics } from "../types";
-import { CardResponse, InitializeCardResponse, NewCardVerificationResponse } from "../utils/graphqlTypes";
+import {
+  InitializeCardResponse,
+  VerifyCardResponse,
+} from "../utils/graphqlTypes";
 import { User } from "../entities/User";
 import paymentManager from "../services/payments/payments";
 import { CardAuthorization } from "../entities/CardAuthorization";
@@ -32,38 +34,58 @@ export class CardsResolver {
       .leftJoinAndSelect("user.cards", "cards")
       .getOne();
 
-    // const user = await User.findOne({ where: { userId }, select: ["email", "cards"], relations: ["cards"] });
     if (!user) return { errorMessage: "User not found" };
     if (user.cards.length < 1) defaultCard = true;
     const email = user.email;
     const amount = 50 * 100;
     const stringAmount = amount.toString();
-    const result = await paymentManager().initializeCard(email, userId, stringAmount, defaultCard);
+    const result = await paymentManager().initializeCard(
+      email,
+      userId,
+      stringAmount,
+      defaultCard
+    );
     if (!result) {
-      return { errorMessage: "An error occured while adding this card. Try another card or try again later" };
+      return {
+        errorMessage:
+          "An error occured while adding this card. Try another card or try again later",
+      };
     }
     return result;
   }
 
   @Subscription({
     topics: SubscriptionTopics.NEW_CARD,
-    filter: ({ payload, context }: ResolverFilterData<NewCardVerificationResponse, any, any>) => {
+    filter: ({
+      payload,
+      context,
+    }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResolverFilterData<VerifyCardResponse, any, any>) => {
       return context.userId === payload.userId;
     },
   })
-  newCardVerification(@Root() verification: NewCardVerificationResponse): NewCardVerificationResponse {
+  verifyCard(@Root() verification: VerifyCardResponse): VerifyCardResponse {
     const status = verification.status;
     if (status) verification.message = "Card successfully verified";
-    else verification.message = "Unable to verify this card. Please try again or try another card";
+    else
+      verification.message =
+        "Unable to verify this card. Please try again or try another card";
     return verification;
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async setDefaultCard(@Arg("id", () => Int) id: number, @Ctx() { req }: AppContext): Promise<boolean> {
+  async setDefaultCard(
+    @Arg("id", () => Int) id: number,
+    @Ctx() { req }: AppContext
+  ): Promise<boolean> {
     const userId = req.session.userId;
     try {
-      const user = await User.findOne({ where: { userId }, relations: ["cards"], select: ["cards"] });
+      const user = await User.findOne({
+        where: { userId },
+        relations: ["cards"],
+        select: ["cards"],
+      });
       if (!user) return false;
       const cards = user.cards;
       const cardToSet = cards.find((x) => x.id === id);
@@ -75,35 +97,11 @@ export class CardsResolver {
         return false;
       });
       if (isDefault) return true;
-      console.log(cards);
       await CardAuthorization.save(cards);
       return true;
     } catch (err) {
       console.log(err);
       return false;
-    }
-  }
-
-  @Query(() => CardResponse)
-  @UseMiddleware(isAuthenticated)
-  async getCards(@Ctx() { req }: AppContext): Promise<CardResponse> {
-    const userId = req.session.userId;
-    try {
-      const user = await AppDataSource.getRepository(User)
-        .createQueryBuilder("user")
-        .select("user.id")
-        .leftJoinAndSelect("user.cards", "cards")
-        .where("user.userId = :userId", { userId })
-        .getOne();
-      // const user = await User.findOne({ where: { userId }, relations: { cards: true } });
-      if (!user) {
-        return { errorMessage: "User not found" };
-      }
-      const cards = user.cards;
-      return { cards };
-    } catch (err) {
-      console.log(err);
-      return { errorMessage: "An error occured" };
     }
   }
 }
