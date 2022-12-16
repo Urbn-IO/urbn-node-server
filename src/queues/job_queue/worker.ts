@@ -1,6 +1,6 @@
-import { Worker } from "bullmq";
-import { config } from "../../constants";
-import redisClient from "../../redis/client";
+import { Worker } from 'bullmq';
+import { config } from '../../constants';
+import redisClient from '../../redis/client';
 
 const redis = redisClient;
 const callStatusProcessor = `${config.APP_ROOT}/queues/job_queue/processors/callDuration`;

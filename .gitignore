@@ -1,5 +1,4 @@
 dist
-src/constants.ts
 src/migrations
 .DS_Store
 node_modules

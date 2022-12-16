@@ -1,11 +1,6 @@
-import dayjs from "dayjs";
-import createhashString from "../utils/createHashString";
-import {
-  CallScheduleInput,
-  CallSlotHrs,
-  CallSlotMin,
-  CallSlots,
-} from "../utils/graphqlTypes";
+import dayjs from 'dayjs';
+import createhashString from '../utils/createHashString';
+import { CallScheduleInput, CallSlotHrs, CallSlotMin, CallSlots } from '../utils/graphqlTypes';
 
 // const grandChildren: CallScheduleBase[] = [];
 // const children: CallScheduleBase[] = [];
@@ -72,18 +67,18 @@ import {
 // };
 
 const dateToFormattedString = (date: Date) => {
-  return dayjs(date).format("HH:mm:ss");
+  return dayjs(date).format('HH:mm:ss');
 };
 
 const generateMinutes = (startTime: Date, endTime: Date): CallSlotMin[] => {
   const arr: CallSlotMin[] = [];
   for (
     let time = startTime;
-    time <= dayjs(endTime).subtract(10, "minute").toDate();
-    time = dayjs(time).add(10, "minute").toDate()
+    time <= dayjs(endTime).subtract(10, 'minute').toDate();
+    time = dayjs(time).add(10, 'minute').toDate()
   ) {
     const begin = time;
-    const end = dayjs(time).add(10, "minute").toDate();
+    const end = dayjs(time).add(10, 'minute').toDate();
 
     arr.push({
       id: createhashString([begin.toISOString(), end.toISOString()], 3),
@@ -100,20 +95,20 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
   input.forEach((x) => {
     g.push({
       day: x.day,
-      start: dayjs(x.startTime).format("HH:mm:ss"),
-      end: dayjs(x.endTime).format("HH:mm:ss"),
+      start: dayjs(x.startTime).format('HH:mm:ss'),
+      end: dayjs(x.endTime).format('HH:mm:ss'),
       hourSlots: (() => {
         /// break time into hourly chunks
         const arr: CallSlotHrs[] = [];
         for (
           let time = x.startTime;
-          time <= dayjs(x.endTime).subtract(1, "hour").toDate();
-          time = dayjs(time).add(1, "hour").toDate()
+          time <= dayjs(x.endTime).subtract(1, 'hour').toDate();
+          time = dayjs(time).add(1, 'hour').toDate()
         ) {
           const begin = time;
-          const end = dayjs(time).add(1, "hour").toDate();
+          const end = dayjs(time).add(1, 'hour').toDate();
           const minSlots = generateMinutes(begin, end);
-          console.log("min slots: ", minSlots);
+          console.log('min slots: ', minSlots);
           const hrslots: CallSlotHrs = {
             start: dateToFormattedString(begin),
             end: dateToFormattedString(end),
@@ -122,7 +117,7 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
 
           arr.push(hrslots);
         }
-        console.log("hour slots: ", arr);
+        console.log('hour slots: ', arr);
         return arr;
       })(),
     });

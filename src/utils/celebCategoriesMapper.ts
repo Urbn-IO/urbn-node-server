@@ -1,9 +1,13 @@
-import { upsertCategorySearchItem } from "../services/search/addSearchItem";
-import { Categories } from "../entities/Categories";
-import { CelebCategories } from "../entities/CelebCategories";
-import { Celebrity } from "../entities/Celebrity";
+import { upsertCategorySearchItem } from '../services/search/addSearchItem';
+import { Categories } from '../entities/Categories';
+import { CelebCategories } from '../entities/CelebCategories';
+import { Celebrity } from '../entities/Celebrity';
 
-export async function celebCategoriesMapper(userId: string, categoryIds: number[], customCats: string[] | null) {
+export async function celebCategoriesMapper(
+  userId: string,
+  categoryIds: number[],
+  customCats: string[] | null
+) {
   const customCategories = await createCustomCategory(customCats);
   const celebCategoryMap = [];
   if (customCategories) {
@@ -11,11 +15,14 @@ export async function celebCategoriesMapper(userId: string, categoryIds: number[
   }
   const celebId = await Celebrity.findOne({
     where: { userId },
-    select: ["id"],
+    select: ['id'],
   }).then((x) => x?.id);
   try {
     for (const categoryId of categoryIds) {
-      const celebCategory = CelebCategories.create({ celebId, categoryId });
+      const celebCategory = CelebCategories.create({
+        celebId,
+        categoryId,
+      });
       celebCategoryMap.push(celebCategory);
     }
     await CelebCategories.save(celebCategoryMap);

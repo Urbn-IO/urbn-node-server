@@ -1,4 +1,4 @@
-import { validate } from "class-validator";
+import { validate } from 'class-validator';
 
 export const validateInput = async (obj: any) => {
   const validationMessage = await validate(obj, { forbidUnknownValues: true });

@@ -1,7 +1,8 @@
-import { Consumer, ConsumerOptions } from "sqs-consumer-v3";
-import { ContentType, VideoOutput } from "../../../types";
-import { sqsClient2 } from "../clients/sqs/client";
-import saveShoutout from "../../../lib/shoutout/saveShoutout";
+import { Consumer, ConsumerOptions } from 'sqs-consumer-v3';
+import { ContentType, VideoOutput } from '../../../types';
+import { sqsClient } from '../clients/sqs/client';
+import saveShoutout from '../../../lib/shoutout/saveShoutout';
+import saveVideoBanner from '../../../lib/banner/saveBanner';
 
 const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
 
@@ -11,7 +12,7 @@ const consumerOptions: ConsumerOptions = {
   waitTimeSeconds: 20,
   visibilityTimeout: 120,
   pollingWaitTimeMs: 120000,
-  sqs: sqsClient2,
+  sqs: sqsClient,
   handleMessageBatch: async (messages) => {
     const payload = messages.map((x) => {
       const body = JSON.parse(x.Body as string);
@@ -22,6 +23,7 @@ const consumerOptions: ConsumerOptions = {
         workFlowId: body.guid,
         hlsUrl: body.hlsUrl,
         thumbnailUrl: body.thumbNailsUrls[0],
+        lowResPlaceholderUrl: body.lowResPlaceholderUrl,
         mp4Url: body.mp4Urls[0],
         srcVideo: body.srcVideo,
         datePublished: body.endTime,
@@ -32,24 +34,25 @@ const consumerOptions: ConsumerOptions = {
         contentType: body.customMetadata.contentType,
       };
     });
+    const banners: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.BANNER);
     const shoutouts: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
-    if (shoutouts.length > 0) {
-      saveShoutout(shoutouts);
-    }
+
+    if (banners.length > 0) saveVideoBanner(banners);
+    if (shoutouts.length > 0) saveShoutout(shoutouts);
   },
 };
 
 const sqsVODConsumer = Consumer.create(consumerOptions);
 
-sqsVODConsumer.on("error", (err) => {
+sqsVODConsumer.on('error', (err) => {
   console.error(err.message);
 });
 
-sqsVODConsumer.on("processing_error", (err) => {
+sqsVODConsumer.on('processing_error', (err) => {
   console.error(err.message);
 });
 
-sqsVODConsumer.on("timeout_error", (err) => {
+sqsVODConsumer.on('timeout_error', (err) => {
   console.error(err.message);
 });
 

@@ -1,5 +1,11 @@
-import { AndroidConfig, ApnsConfig, getMessaging, MulticastMessage, Notification } from "firebase-admin/messaging";
-import tokensManager from "./tokensManager";
+import {
+  AndroidConfig,
+  ApnsConfig,
+  getMessaging,
+  MulticastMessage,
+  Notification,
+} from 'firebase-admin/messaging';
+import tokensManager from './tokensManager';
 
 export const propagateMessage = async (
   tokens: string[],
@@ -23,7 +29,7 @@ export const propagateMessage = async (
       .sendMulticast(message)
       .then((response) => {
         if (response.successCount > 0) {
-          console.log("Notification sent!");
+          console.log('Notification sent!');
         }
         if (response.failureCount > 0) {
           const failedTokens: string[] = [];
@@ -32,11 +38,11 @@ export const propagateMessage = async (
               failedTokens.push(tokens[idx]);
             }
           });
-          console.log("List of tokens that caused failures: " + failedTokens);
+          console.log('List of tokens that caused failures: ' + failedTokens);
           tokensManager().removeNotificationTokens(undefined, failedTokens);
         }
       });
   } catch (err) {
-    console.error("error: ", err);
+    console.error('error: ', err);
   }
 };

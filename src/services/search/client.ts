@@ -1,4 +1,4 @@
-import { Client } from "typesense";
+import { Client } from 'typesense';
 
 export const client = new Client({
   apiKey: process.env.TYPESENSE_API_KEY,
@@ -6,7 +6,7 @@ export const client = new Client({
     {
       host: process.env.TYPESENSE_NODE_CLUSTER,
       port: 443,
-      protocol: "https",
+      protocol: 'https',
     },
   ],
   connectionTimeoutSeconds: 10,

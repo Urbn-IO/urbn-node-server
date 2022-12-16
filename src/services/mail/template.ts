@@ -1,6 +1,6 @@
-import { addJob, mailQueue } from "../../queues/job_queue/producer";
-import { SendTemplatedEmailCommandInput } from "@aws-sdk/client-ses";
-import { EmailBaseInput, EmailTemplates } from "../../types";
+import { addJob, mailQueue } from '../../queues/job_queue/producer';
+import { SendTemplatedEmailCommandInput } from '@aws-sdk/client-ses';
+import { EmailBaseInput, EmailTemplates } from '../../types';
 
 const sendTemplatedMail = async (
   source: string,
@@ -13,14 +13,17 @@ const sendTemplatedMail = async (
 
   const mail: SendTemplatedEmailCommandInput = {
     Source: source,
-    Destination: { ToAddresses: destinationAddresses, CcAddresses: ccAddresses },
+    Destination: {
+      ToAddresses: destinationAddresses,
+      CcAddresses: ccAddresses,
+    },
     Template: template,
     TemplateData: templateData,
   };
 
-  await addJob(mailQueue, "email", mail, {
+  await addJob(mailQueue, 'email', mail, {
     attempts: 5,
-    backoff: { type: "exponential", delay: 60000 },
+    backoff: { type: 'exponential', delay: 60000 },
     removeOnFail: true,
     removeOnComplete: true,
   });

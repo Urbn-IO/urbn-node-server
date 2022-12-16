@@ -1,16 +1,16 @@
-import { AppDataSource } from "../../db";
-import { User } from "../../entities/User";
-import { Wallet } from "../../entities/Wallet";
-import { WalletTransactions } from "../../entities/WalletTransactions";
-import { Currency } from "../../types";
+import { AppDataSource } from '../../db';
+import { User } from '../../entities/User';
+import { Wallet } from '../../entities/Wallet';
+import { WalletTransactions } from '../../entities/WalletTransactions';
+import { Currency } from '../../types';
 
 export const createWallet = async (userId: string, currency: Currency) => {
   try {
     const user = await AppDataSource.getRepository(User)
-      .createQueryBuilder("user")
-      .where("user.userId = :userId", { userId })
-      .select("user.id")
-      .leftJoinAndSelect("user.wallet", "wallet")
+      .createQueryBuilder('user')
+      .where('user.userId = :userId', { userId })
+      .select('user.id')
+      .leftJoinAndSelect('user.wallet', 'wallet')
       .getOne();
     if (!user) return;
     if (!user.wallet) {
@@ -29,10 +29,10 @@ export const createWallet = async (userId: string, currency: Currency) => {
 export const updateWallet = async (userId: string, amount: string) => {
   try {
     const user = await AppDataSource.getRepository(User)
-      .createQueryBuilder("user")
-      .where("user.userId = :userId", { userId })
-      .select("user.id")
-      .leftJoinAndSelect("user.wallet", "wallet")
+      .createQueryBuilder('user')
+      .where('user.userId = :userId', { userId })
+      .select('user.id')
+      .leftJoinAndSelect('user.wallet', 'wallet')
       .getOne();
     if (!user) return;
     if (!user.wallet) return;

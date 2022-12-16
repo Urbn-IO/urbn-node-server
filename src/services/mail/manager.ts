@@ -1,7 +1,7 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import { EmailBaseInput, EmailSubject, EmailTemplates, SendEmailInputType } from "../../types";
-import sendTemplatedMail from "./template";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { EmailBaseInput, EmailSubject, EmailTemplates, SendEmailInputType } from '../../types';
+import sendTemplatedMail from './template';
 dayjs.extend(utc);
 
 const source = process.env.URBN_SECURITY_MAIL;
@@ -15,7 +15,7 @@ const sendMail = async (data: SendEmailInputType) => {
   else template = EmailTemplates.SecurityAlertTemplate;
   const date = dayjs();
   const year = date.year().toString();
-  const time = date.utc().format("HH:mm");
+  const time = date.utc().format('HH:mm');
   const mail: EmailBaseInput = {
     name,
     logo,

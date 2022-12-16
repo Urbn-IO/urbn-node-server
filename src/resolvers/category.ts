@@ -1,19 +1,19 @@
-import { isAuthenticated } from "../middleware/isAuthenticated";
-import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
-import { Categories } from "../entities/Categories";
-import { CategoryResponse } from "../utils/graphqlTypes";
-import { upsertCategorySearchItem } from "../services/search/addSearchItem";
-import { AppDataSource } from "../db";
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Categories } from '../entities/Categories';
+import { CategoryResponse } from '../utils/graphqlTypes';
+import { upsertCategorySearchItem } from '../services/search/addSearchItem';
+import { AppDataSource } from '../db';
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
   async getCategories(
-    @Arg("categoryId", () => Int, { nullable: true }) id: number,
-    @Arg("name", { nullable: true }) name: string,
-    @Arg("withCelebs", { defaultValue: false }) withCelebs: boolean,
-    @Arg("isPrimary", { defaultValue: false }) primary: boolean,
-    @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string
+    @Arg('categoryId', () => Int, { nullable: true }) id: number,
+    @Arg('name', { nullable: true }) name: string,
+    @Arg('withCelebs', { defaultValue: false }) withCelebs: boolean,
+    @Arg('isPrimary', { defaultValue: false }) primary: boolean,
+    @Arg('limit', () => Int) limit: number,
+    @Arg('cursor', () => String, { nullable: true }) cursor: string
   ) {
     if (id) {
       const category = await Categories.findOne({ where: { id } });
@@ -28,32 +28,34 @@ export class CategoryResolver {
       return [category];
     }
     const maxLimit = Math.min(18, limit);
-    const queryBuilder = AppDataSource.getRepository(Categories).createQueryBuilder("categories").limit(maxLimit);
+    const queryBuilder = AppDataSource.getRepository(Categories)
+      .createQueryBuilder('categories')
+      .limit(maxLimit);
     if (primary) {
       queryBuilder.where('categories."primary" = :primary', { primary });
     }
 
     if (withCelebs) {
-      queryBuilder.leftJoinAndSelect("categories.celebConn", "celebrity").andWhere("celebrity IS NOT NULL");
+      queryBuilder.leftJoinAndSelect('categories.celebConn', 'celebrity').andWhere('celebrity IS NOT NULL');
     }
 
     if (cursor) {
-      if (cursor !== "0") {
+      if (cursor !== '0') {
         queryBuilder.andWhere('categories."createdAt" < :cursor', {
           cursor: new Date(parseInt(cursor)),
         });
       }
-      queryBuilder.orderBy("categories.createdAt", "DESC");
+      queryBuilder.orderBy('categories.createdAt', 'DESC');
     } else {
-      queryBuilder.orderBy("RANDOM()");
+      queryBuilder.orderBy('RANDOM()');
     }
     return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
   @UseMiddleware(isAuthenticated)
   async createCategory(
-    @Arg("name") name: string,
-    @Arg("recommendable") recommendable: boolean
+    @Arg('name') name: string,
+    @Arg('recommendable') recommendable: boolean
   ): Promise<CategoryResponse> {
     const category = Categories.create({
       name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -62,7 +64,9 @@ export class CategoryResolver {
     try {
       await category.save();
     } catch (err) {
-      return { errorMessage: "An Error occured while creating a category" };
+      return {
+        errorMessage: 'An Error occured while creating a category',
+      };
     }
 
     await upsertCategorySearchItem([category]);
@@ -72,7 +76,10 @@ export class CategoryResolver {
 
   @Mutation(() => Categories, { nullable: true })
   @UseMiddleware(isAuthenticated)
-  async updateCategory(@Arg("id", () => Int) id: number, @Arg("name") name: string): Promise<Categories | boolean> {
+  async updateCategory(
+    @Arg('id', () => Int) id: number,
+    @Arg('name') name: string
+  ): Promise<Categories | boolean> {
     const category = await Categories.findOne({ where: { id } });
     if (!category) {
       return false;

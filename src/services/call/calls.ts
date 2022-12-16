@@ -1,7 +1,7 @@
-import crypto from "crypto";
-import client from "./twilio/client";
-import { jwt } from "twilio";
-import { VIDE_CALL_PREFIX } from "../../constants";
+import crypto from 'crypto';
+import client from './twilio/client';
+import { jwt } from 'twilio';
+import { VIDE_CALL_PREFIX } from '../../constants';
 
 export const createVideoCallRoom = async (requestId: number, callDurationInSeconds: string) => {
   try {
@@ -9,16 +9,16 @@ export const createVideoCallRoom = async (requestId: number, callDurationInSecon
     const randomNumber = Math.random().toString();
     const id = requestId.toString();
     const serial = crypto
-      .createHash("sha1")
+      .createHash('sha1')
       .update(currentTime + randomNumber)
-      .digest("hex");
+      .digest('hex');
 
     //Do not change the string format of the room name. If it must be changed, change how the requestId and call duration are retrieved from the webhook handler for calls
     const roomName = `${VIDE_CALL_PREFIX}${serial}/${id}/:::${callDurationInSeconds}`;
     const result = await client.video.rooms.create({
       uniqueName: roomName,
-      type: "go",
-      statusCallbackMethod: "POST",
+      type: 'go',
+      statusCallbackMethod: 'POST',
       statusCallback: process.env.TWILIO_WEBHOOK,
       emptyRoomTimeout: 1,
       unusedRoomTimeout: 1,
@@ -31,7 +31,7 @@ export const createVideoCallRoom = async (requestId: number, callDurationInSecon
 };
 
 export const endVideoCallRoom = async (roomSid: string) => {
-  const room = await client.video.rooms(roomSid).update({ status: "completed" });
+  const room = await client.video.rooms(roomSid).update({ status: 'completed' });
   const status = room.status;
   const duration = room.duration;
   console.log(`room ${roomSid} ${status} in ${duration}`);

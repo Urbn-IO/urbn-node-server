@@ -10,34 +10,24 @@ import {
   Root,
   Subscription,
   UseMiddleware,
-} from "type-graphql";
-import { isAuthenticated } from "../middleware/isAuthenticated";
-import { CallTokenResponse, VideoCallEvent } from "../utils/graphqlTypes";
-import { AppContext, RequestStatus, SubscriptionTopics } from "../types";
-import {
-  validateRecipient,
-  validateRequestor,
-} from "../utils/requestValidations";
-import { createVideoCallRoom, getVideoCallToken } from "../services/call/calls";
-import { sendCallNotification } from "../services/notifications/handler";
+} from 'type-graphql';
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
+import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
+import { validateRecipient, validateRequestor } from '../utils/requestValidations';
+import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
+import { sendCallNotification } from '../services/notifications/handler';
 
 @Resolver()
 export class VideoCallResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async initiateVideoCall(
-    @Arg("requestId", () => Int) requestId: number,
-    @Ctx() { req }: AppContext
-  ) {
+  async initiateVideoCall(@Arg('requestId', () => Int) requestId: number, @Ctx() { req }: AppContext) {
     const userId = req.session.userId as string;
     const request = await validateRequestor(userId, requestId);
     if (request) {
       if (request.status !== RequestStatus.ACCEPTED) return false;
-      await sendCallNotification(
-        request.celebrity,
-        requestId,
-        request.customerDisplayName
-      );
+      await sendCallNotification(request.celebrity, requestId, request.customerDisplayName);
       return true;
     }
     return false;
@@ -46,7 +36,7 @@ export class VideoCallResolver {
   @Mutation(() => CallTokenResponse)
   @UseMiddleware(isAuthenticated)
   async acceptVideoCall(
-    @Arg("requestId", () => Int) requestId: number,
+    @Arg('requestId', () => Int) requestId: number,
     @PubSub(SubscriptionTopics.VIDEO_CALL)
     publish: Publisher<CallTokenResponse>,
     @Ctx() { req }: AppContext
@@ -56,24 +46,17 @@ export class VideoCallResolver {
     const request = await validateRecipient(celebrity, requestId);
     if (request) {
       const user = request.customer;
-      const callRoomName = await createVideoCallRoom(
-        request.id,
-        request.callDurationInSeconds
-      );
+      const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
       if (callRoomName) {
-        const [callToken, userCallToken] = getVideoCallToken(
-          [celebrity, user],
-          callRoomName
-        );
+        const [callToken, userCallToken] = getVideoCallToken([celebrity, user], callRoomName);
         publish({ token: userCallToken, roomName: callRoomName, user });
         return { token: callToken, roomName: callRoomName };
       }
       return {
-        errorMessage:
-          "An error occured while trying to create video call session",
+        errorMessage: 'An error occured while trying to create video call session',
       };
     }
-    return { errorMessage: "Unauthorized call request" };
+    return { errorMessage: 'Unauthorized call request' };
   }
 
   @Subscription({
@@ -97,9 +80,7 @@ export class VideoCallResolver {
       context,
     }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ResolverFilterData<VideoCallEvent, any, any>) => {
-      const res =
-        context.userId === payload.participantA ||
-        context.userId === payload.participantB;
+      const res = context.userId === payload.participantA || context.userId === payload.participantB;
       return res;
     },
   })

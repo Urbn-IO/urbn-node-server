@@ -1,16 +1,16 @@
-import { Categories } from "src/entities/Categories";
-import { CelebCategories } from "../../entities/CelebCategories";
-import { Celebrity } from "../../entities/Celebrity";
-import { client } from "./client";
+import { Categories } from '../../entities/Categories';
+import { CelebCategories } from '../../entities/CelebCategories';
+import { Celebrity } from '../../entities/Celebrity';
+import { client } from './client';
 
 export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
   if (celebrity) {
     const celebId = celebrity.id;
     const categoriesObj = await CelebCategories.find({
       join: {
-        alias: "celebCategory",
+        alias: 'celebCategory',
         innerJoinAndSelect: {
-          Celebrity: "celebCategory.category",
+          Celebrity: 'celebCategory.category',
         },
       },
       where: {
@@ -30,15 +30,15 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
       thumbnail: celebrity.thumbnail,
       placeholder: celebrity.placeholder,
       low_res_placeholder: celebrity.lowResPlaceholder,
-      image: celebrity.image,
+      video_banner: celebrity.videoBanner,
       description: celebrity.description,
       profile_hash: celebrity.profileHash,
       categories,
     };
     try {
-      await client.collections("celebrity").documents().upsert(celebObj);
+      await client.collections('celebrity').documents().upsert(celebObj);
     } catch (err) {
-      console.log("typesense error: ", err);
+      console.log('typesense error: ', err);
     }
   }
 };
@@ -49,14 +49,14 @@ export const upsertCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
       id: x.id.toString(),
       profile_hash: x.profileHash,
       thumbnail: x.thumbnail,
-      image: x.image,
+      video_banner: x.videoBanner,
       placeholder: x.placeholder,
       low_res_placeholder: x.lowResPlaceholder,
     }));
     try {
-      await client.collections("celebrity").documents().import(celebObj, { action: "upsert" });
+      await client.collections('celebrity').documents().import(celebObj, { action: 'upsert' });
     } catch (err) {
-      console.log("typesense error: ", err);
+      console.log('typesense error: ', err);
     }
   }
 };
@@ -68,9 +68,9 @@ export const upsertCategorySearchItem = async (category: Categories[] | undefine
       category_name: x.name,
     }));
     try {
-      await client.collections("category").documents().import(catObj, { action: "upsert" });
+      await client.collections('category').documents().import(catObj, { action: 'upsert' });
     } catch (err) {
-      console.log("typesense error: ", err);
+      console.log('typesense error: ', err);
     }
   }
 };

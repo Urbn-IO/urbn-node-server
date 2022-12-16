@@ -1,28 +1,24 @@
-import { TransactionsMetadata } from "../../../types";
-import { saveCardPaystack } from "../saveCard";
-import { saveTransaction } from "../transactions";
+import { TransactionsMetadata } from '../../../types';
+import { saveCardPaystack } from '../saveCard';
+import { saveTransaction } from '../transactions';
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {
-    initializePayment: async <T>(
-      email: string,
-      amount: string,
-      metadata: T
-    ) => {
+    initializePayment: async <T>(email: string, amount: string, metadata: T) => {
       const endpoint = `${apiUrl}/transaction/initialize`;
       const params = JSON.stringify({
         email,
         amount,
-        channels: ["card"],
+        channels: ['card'],
         metadata,
       });
       try {
         const response = await fetch(endpoint, {
-          method: "post",
+          method: 'post',
           headers: {
             Authorization: `Bearer ${secretKey}`,
-            "Content-Type": "application/json",
-            "cache-control": "no-cache",
+            'Content-Type': 'application/json',
+            'cache-control': 'no-cache',
           },
           body: params,
         });
@@ -59,18 +55,18 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
       const params = JSON.stringify({
         email,
         amount,
-        channels: ["card"],
+        channels: ['card'],
         authorization_code: authCode,
         metadata,
       });
 
       try {
         const response = await fetch(endpoint, {
-          method: "post",
+          method: 'post',
           headers: {
             Authorization: `Bearer ${secretKey}`,
-            "Content-Type": "application/json",
-            "cache-control": "no-cache",
+            'Content-Type': 'application/json',
+            'cache-control': 'no-cache',
           },
           body: params,
         });
@@ -82,9 +78,9 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
           throw new Error(message);
         }
 
-        if (data.status === "success") return true;
+        if (data.status === 'success') return true;
 
-        throw new Error("Failed to charge card");
+        throw new Error('Failed to charge card');
       } catch (err) {
         console.error(err);
         return false;
@@ -99,10 +95,10 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
       const endpoint = `${apiUrl}/transaction/verify/${ref}`;
       try {
         const response = await fetch(endpoint, {
-          method: "get",
+          method: 'get',
           headers: {
             Authorization: `Bearer ${secretKey}`,
-            "cache-control": "no-cache",
+            'cache-control': 'no-cache',
           },
         });
         const payload = await response.json();
@@ -113,7 +109,7 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
           return false;
         }
         const transactionStatus = data.status;
-        if (transactionStatus === "success") {
+        if (transactionStatus === 'success') {
           if (newCard) {
             saveCardPaystack(data);
           }

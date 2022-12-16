@@ -1,13 +1,6 @@
-import { Field, Int, ObjectType } from "type-graphql";
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { User } from "./User";
+import { Field, Int, ObjectType } from 'type-graphql';
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from './User';
 
 @ObjectType()
 @Entity()
@@ -65,7 +58,7 @@ export class CardAuthorization extends BaseEntity {
   countryCode: string;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.cards)

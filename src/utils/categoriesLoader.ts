@@ -1,14 +1,14 @@
-import DataLoader from "dataloader";
-import { In } from "typeorm";
-import { Categories } from "../entities/Categories";
-import { CelebCategories } from "../entities/CelebCategories";
+import DataLoader from 'dataloader';
+import { In } from 'typeorm';
+import { Categories } from '../entities/Categories';
+import { CelebCategories } from '../entities/CelebCategories';
 
 const batchCategories = async (celebIds: readonly number[]) => {
   const celebCategories = await CelebCategories.find({
     join: {
-      alias: "celebCategory",
+      alias: 'celebCategory',
       innerJoinAndSelect: {
-        Categories: "celebCategory.category",
+        Categories: 'celebCategory.category',
       },
     },
     where: {
@@ -20,9 +20,7 @@ const batchCategories = async (celebIds: readonly number[]) => {
 
   celebCategories.forEach((celebCat) => {
     if (celebCat.celebId in celebIdToCategories) {
-      celebIdToCategories[celebCat.celebId].push(
-        (celebCat as any).__category__
-      );
+      celebIdToCategories[celebCat.celebId].push((celebCat as any).__category__);
     } else {
       celebIdToCategories[celebCat.celebId] = [(celebCat as any).__category__];
     }

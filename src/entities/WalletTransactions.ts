@@ -1,6 +1,6 @@
-import { Field } from "type-graphql";
-import { Entity, BaseEntity, PrimaryGeneratedColumn, Index, Column, CreateDateColumn } from "typeorm";
-import { Currency, PaymentGateway, PaymentStatus } from "../types";
+import { Field } from 'type-graphql';
+import { Entity, BaseEntity, PrimaryGeneratedColumn, Index, Column, CreateDateColumn } from 'typeorm';
+import { Currency, PaymentGateway, PaymentStatus } from '../types';
 
 @Entity()
 export class WalletTransactions extends BaseEntity {
@@ -17,20 +17,24 @@ export class WalletTransactions extends BaseEntity {
   amount: string;
 
   @Field(() => Currency)
-  @Column({ type: "enum", enum: Currency, default: Currency.NAIRA })
+  @Column({ type: 'enum', enum: Currency, default: Currency.NAIRA })
   currency: Currency;
 
-  @Column({ type: "enum", enum: PaymentStatus })
+  @Column({ type: 'enum', enum: PaymentStatus })
   status: PaymentStatus;
 
   @Field()
   @Column()
   isInflow: boolean;
 
-  @Column({ type: "enum", enum: PaymentGateway, default: PaymentGateway.PAYSTACK })
+  @Column({
+    type: 'enum',
+    enum: PaymentGateway,
+    default: PaymentGateway.PAYSTACK,
+  })
   gateway: PaymentGateway;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 }

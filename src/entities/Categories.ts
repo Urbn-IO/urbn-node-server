@@ -1,10 +1,10 @@
-import CacheControl from "../cache/cacheControl";
-import { AppContext } from "../types";
-import { Ctx, Field, Int, ObjectType } from "type-graphql";
-import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Celebrity } from "./Celebrity";
-import { CelebCategories } from "./CelebCategories";
-import { CacheScope } from "apollo-server-types";
+import CacheControl from '../cache/cacheControl';
+import { AppContext } from '../types';
+import { Ctx, Field, Int, ObjectType } from 'type-graphql';
+import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Celebrity } from './Celebrity';
+import { CelebCategories } from './CelebCategories';
+import { CacheScope } from 'apollo-server-types';
 @ObjectType()
 @Entity()
 @CacheControl({ maxAge: 300, scope: CacheScope.Public })
@@ -30,7 +30,7 @@ export class Categories extends BaseEntity {
   thumbnail: string;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)

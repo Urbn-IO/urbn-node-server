@@ -1,5 +1,5 @@
-import { CallLogs } from "../entities/CallLogs";
-import { CallLogInput } from "../types";
+import { CallLogs } from '../entities/CallLogs';
+import { CallLogInput } from '../types';
 
 export const logCallSession = async (data: CallLogInput) => {
   try {

@@ -1,6 +1,14 @@
-import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { PlatformOptions } from "../types";
+import { Field, ObjectType } from 'type-graphql';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { PlatformOptions } from '../types';
 
 @ObjectType()
 @Entity()
@@ -9,7 +17,7 @@ export class NotificationToken extends BaseEntity {
   id: number;
 
   @Field()
-  @Column({ type: "uuid", unique: true })
+  @Column({ type: 'uuid', unique: true })
   @Index()
   userId: string;
 
@@ -18,7 +26,7 @@ export class NotificationToken extends BaseEntity {
   deviceId: string;
 
   @Field()
-  @Column({ type: "enum", enum: PlatformOptions })
+  @Column({ type: 'enum', enum: PlatformOptions })
   devicePlatform: string;
 
   @Field({ nullable: true })
@@ -29,9 +37,9 @@ export class NotificationToken extends BaseEntity {
   @Column()
   notificationToken: string;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 }

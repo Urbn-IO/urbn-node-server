@@ -1,6 +1,6 @@
-import { In } from "typeorm";
-import { AppDataSource } from "../../db";
-import { NotificationToken } from "../../entities/NotificationToken";
+import { In } from 'typeorm';
+import { AppDataSource } from '../../db';
+import { NotificationToken } from '../../entities/NotificationToken';
 
 export const addToken = async (
   userId: string,
@@ -19,22 +19,22 @@ export const addToken = async (
   try {
     await token.save();
   } catch (err) {
-    if (err.code === "23505") {
+    if (err.code === '23505') {
       await NotificationToken.update({ userId }, token);
-      console.log("Token Updated");
+      console.log('Token Updated');
     }
-    return "An Error occured while storing token";
+    return 'An Error occured while storing token';
   }
 
-  return "sucessfully added token";
+  return 'sucessfully added token';
 };
 
 export const getTokens = async (userId: string[]): Promise<string[]> => {
   try {
-    console.log("array of ids: ", userId);
+    console.log('array of ids: ', userId);
     const tokenObj = await NotificationToken.find({
       where: { userId: In(userId) },
-      select: ["notificationToken"],
+      select: ['notificationToken'],
     });
     if (tokenObj) {
       const tokens = tokenObj.map((x) => x.notificationToken);
@@ -50,13 +50,13 @@ export const getTokens = async (userId: string[]): Promise<string[]> => {
 export const getServiceCallTokens = async (userId: string[]) => {
   const tokenObj = await NotificationToken.find({
     where: { userId: In(userId) },
-    select: ["notificationToken", "pushkitToken", "devicePlatform"],
+    select: ['notificationToken', 'pushkitToken', 'devicePlatform'],
   });
   if (tokenObj) {
     const tokens: string[] = [];
     const pushkitTokens: string[] = [];
     tokenObj.forEach(async (x) => {
-      if (x.devicePlatform === "ios") {
+      if (x.devicePlatform === 'ios') {
         pushkitTokens.push(x.pushkitToken as string);
       } else {
         tokens.push(x.notificationToken);
@@ -68,21 +68,19 @@ export const getServiceCallTokens = async (userId: string[]) => {
 };
 
 export const deleteTokens = async (userId?: string, tokens?: string[]) => {
-  const queryBuilder = AppDataSource.createQueryBuilder()
-    .delete()
-    .from(NotificationToken);
+  const queryBuilder = AppDataSource.createQueryBuilder().delete().from(NotificationToken);
 
   if (userId) {
-    queryBuilder.where("userId = :userId", { userId });
+    queryBuilder.where('userId = :userId', { userId });
   } else if (tokens) {
-    queryBuilder.where("notificationToken In (:...tokens)", { tokens });
+    queryBuilder.where('notificationToken In (:...tokens)', { tokens });
   } else {
-    throw new Error("User token to be deleted not supplied");
+    throw new Error('User token to be deleted not supplied');
   }
 
   try {
     queryBuilder.execute();
   } catch (err) {
-    throw new Error("An error occured while attempting to delete tokens");
+    throw new Error('An error occured while attempting to delete tokens');
   }
 };

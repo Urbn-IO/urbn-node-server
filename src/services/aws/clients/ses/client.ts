@@ -1,6 +1,6 @@
-import { SESClient, SESClientConfig } from "@aws-sdk/client-ses";
+import { SESClient, SESClientConfig } from '@aws-sdk/client-ses';
 
-const region = process.env.AWS_REGION_1;
+const region = process.env.AWS_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 

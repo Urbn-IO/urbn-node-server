@@ -1,4 +1,4 @@
-import { Transactions } from "../../entities/Transactions";
+import { Transactions } from '../../entities/Transactions';
 
 export const saveTransaction = async (payload: any) => {
   const { reference, channel, amount, currency, status, paid_at, created_at, metadata } = payload;

@@ -1,18 +1,18 @@
-import { CelebCategories } from "../entities/CelebCategories";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
-import { AppContext } from "../types";
-import { Celebrity } from "../entities/Celebrity";
-import { isAuthenticated } from "../middleware/isAuthenticated";
-import { celebCategoriesMapper } from "../utils/celebCategoriesMapper";
-import { AppDataSource } from "../db";
+import { CelebCategories } from '../entities/CelebCategories';
+import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from 'type-graphql';
+import { AppContext } from '../types';
+import { Celebrity } from '../entities/Celebrity';
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { celebCategoriesMapper } from '../utils/celebCategoriesMapper';
+import { AppDataSource } from '../db';
 
 @Resolver()
 export class UserCategoriesResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
   async mapCelebToCategories(
-    @Arg("categoryIds", () => [Number]) categoryIds: number[],
-    @Arg("customCategories", () => [String], { nullable: true })
+    @Arg('categoryIds', () => [Number]) categoryIds: number[],
+    @Arg('customCategories', () => [String], { nullable: true })
     customCats: string[],
     @Ctx() { req }: AppContext
   ): Promise<boolean> {
@@ -24,21 +24,21 @@ export class UserCategoriesResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
   async detachCelebFromCategories(
-    @Arg("categoryIds", () => [Number]) categoryIds: number[],
+    @Arg('categoryIds', () => [Number]) categoryIds: number[],
     @Ctx() { req }: AppContext
   ): Promise<boolean> {
     const userId = req.session.userId;
     const celeb = await Celebrity.findOne({
       where: { userId },
-      select: ["id"],
+      select: ['id'],
     });
     const celebId = celeb?.id;
     try {
       AppDataSource.createQueryBuilder()
         .delete()
         .from(CelebCategories)
-        .where("celebId = :celebId", { celebId })
-        .andWhere("categoryId = ANY(:categoryIds)", { categoryIds })
+        .where('celebId = :celebId', { celebId })
+        .andWhere('categoryId = ANY(:categoryIds)', { categoryIds })
         .execute();
     } catch (err) {
       return false;

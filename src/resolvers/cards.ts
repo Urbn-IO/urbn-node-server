@@ -1,4 +1,4 @@
-import { isAuthenticated } from "../middleware/isAuthenticated";
+import { isAuthenticated } from '../middleware/isAuthenticated';
 import {
   Arg,
   Ctx,
@@ -9,16 +9,13 @@ import {
   Root,
   Subscription,
   UseMiddleware,
-} from "type-graphql";
-import { AppContext, SubscriptionTopics } from "../types";
-import {
-  InitializeCardResponse,
-  VerifyCardResponse,
-} from "../utils/graphqlTypes";
-import { User } from "../entities/User";
-import paymentManager from "../services/payments/payments";
-import { CardAuthorization } from "../entities/CardAuthorization";
-import { AppDataSource } from "../db";
+} from 'type-graphql';
+import { AppContext, SubscriptionTopics } from '../types';
+import { InitializeCardResponse, VerifyCardResponse } from '../utils/graphqlTypes';
+import { User } from '../entities/User';
+import paymentManager from '../services/payments/payments';
+import { CardAuthorization } from '../entities/CardAuthorization';
+import { AppDataSource } from '../db';
 
 @Resolver()
 export class CardsResolver {
@@ -28,27 +25,21 @@ export class CardsResolver {
     let defaultCard = false;
     const userId = req.session.userId as string;
     const user = await AppDataSource.getRepository(User)
-      .createQueryBuilder("user")
-      .select(["user.email"])
-      .where("user.userId = :userId", { userId })
-      .leftJoinAndSelect("user.cards", "cards")
+      .createQueryBuilder('user')
+      .select(['user.email'])
+      .where('user.userId = :userId', { userId })
+      .leftJoinAndSelect('user.cards', 'cards')
       .getOne();
 
-    if (!user) return { errorMessage: "User not found" };
+    if (!user) return { errorMessage: 'User not found' };
     if (user.cards.length < 1) defaultCard = true;
     const email = user.email;
     const amount = 50 * 100;
     const stringAmount = amount.toString();
-    const result = await paymentManager().initializeCard(
-      email,
-      userId,
-      stringAmount,
-      defaultCard
-    );
+    const result = await paymentManager().initializeCard(email, userId, stringAmount, defaultCard);
     if (!result) {
       return {
-        errorMessage:
-          "An error occured while adding this card. Try another card or try again later",
+        errorMessage: 'An error occured while adding this card. Try another card or try again later',
       };
     }
     return result;
@@ -66,25 +57,20 @@ export class CardsResolver {
   })
   verifyCard(@Root() verification: VerifyCardResponse): VerifyCardResponse {
     const status = verification.status;
-    if (status) verification.message = "Card successfully verified";
-    else
-      verification.message =
-        "Unable to verify this card. Please try again or try another card";
+    if (status) verification.message = 'Card successfully verified';
+    else verification.message = 'Unable to verify this card. Please try again or try another card';
     return verification;
   }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuthenticated)
-  async setDefaultCard(
-    @Arg("id", () => Int) id: number,
-    @Ctx() { req }: AppContext
-  ): Promise<boolean> {
+  async setDefaultCard(@Arg('id', () => Int) id: number, @Ctx() { req }: AppContext): Promise<boolean> {
     const userId = req.session.userId;
     try {
       const user = await User.findOne({
         where: { userId },
-        relations: ["cards"],
-        select: ["cards"],
+        relations: ['cards'],
+        select: ['cards'],
       });
       if (!user) return false;
       const cards = user.cards;

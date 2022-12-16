@@ -1,67 +1,45 @@
-import {
-  IsDate,
-  IsEmail,
-  Length,
-  Max,
-  Min,
-  IsPhoneNumber,
-} from "class-validator";
-import { User } from "../entities/User";
-import {
-  InputType,
-  Field,
-  ObjectType,
-  Int,
-  registerEnumType,
-} from "type-graphql";
-import { Categories } from "../entities/Categories";
-import { CardAuthorization } from "../entities/CardAuthorization";
-import {
-  CallType,
-  ContentType,
-  Currency,
-  DayOfTheWeek,
-  PlatformOptions,
-  SignInMethod,
-} from "../types";
-import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from "../constants";
+import { IsDate, IsEmail, Length, Max, Min, IsPhoneNumber } from 'class-validator';
+import { User } from '../entities/User';
+import { InputType, Field, ObjectType, Int, registerEnumType } from 'type-graphql';
+import { Categories } from '../entities/Categories';
+import { CardAuthorization } from '../entities/CardAuthorization';
+import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from '../types';
+import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from '../constants';
 
 registerEnumType(CallType, {
-  name: "CallType",
-  description: "Type of video call to be made",
+  name: 'CallType',
+  description: 'Type of video call to be made',
 });
 
 registerEnumType(DayOfTheWeek, {
-  name: "DayOfTheWeek",
-  description: "Enum representing each day of the week",
+  name: 'DayOfTheWeek',
+  description: 'Enum representing each day of the week',
 });
 
 registerEnumType(PlatformOptions, {
-  name: "PlatformOptions",
-  description: "Enum representing possible device platforms",
+  name: 'PlatformOptions',
+  description: 'Enum representing possible device platforms',
 });
 
 registerEnumType(SignInMethod, {
-  name: "SignInMethod",
-  description: "Enum representing possible SignInMethods",
+  name: 'SignInMethod',
+  description: 'Enum representing possible SignInMethods',
 });
 registerEnumType(Currency, {
-  name: "Currency",
-  description: "Enum representing possible Currencies",
+  name: 'Currency',
+  description: 'Enum representing possible Currencies',
 });
 
 @InputType()
 export class UserInputs {
   @Length(2, 20, {
-    message:
-      "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property field should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
   displayName: string;
 
   @Length(8, 16, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
   password!: string;
@@ -70,29 +48,25 @@ export class UserInputs {
 @InputType()
 export class CelebrityApplicationInputs {
   @Length(2, 20, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
   alias: string;
 
   @Length(2, 20, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })
   twitter?: string;
 
   @Length(2, 20, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })
   instagram?: string;
 
   @Length(2, 20, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })
   facebook?: string;
@@ -117,35 +91,34 @@ export class OnboardCelebrityInputs {
   acceptsCallTypeB: boolean;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Shoutout rate must be more than $constraint1",
+    message: 'Shoutout rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Shoutout rate must not be less than $constraint1",
+    message: 'Shoutout rate must not be less than $constraint1',
   })
   @Field(() => Int)
   shoutout: number;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Call rate must be more than $constraint1",
+    message: 'Call rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Call rate must not be less than $constraint1",
+    message: 'Call rate must not be less than $constraint1',
   })
   @Field(() => Int, { nullable: true })
   callTypeA: number;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Call rate must be more than $constraint1",
+    message: 'Call rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Call rate must not be less than $constraint1",
+    message: 'Call rate must not be less than $constraint1',
   })
   @Field(() => Int, { nullable: true })
   callTypeB: number;
 
   @Length(10, 50, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
   description: string;
@@ -163,8 +136,7 @@ export class OnboardCelebrityInputs {
 @InputType()
 export class UpdateCelebrityInputs {
   @Length(2, 20, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })
   alias: string;
@@ -182,35 +154,34 @@ export class UpdateCelebrityInputs {
   acceptsCallTypeB: boolean;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Shoutout rate must be more than $constraint1",
+    message: 'Shoutout rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Shoutout rate must not be less than $constraint1",
+    message: 'Shoutout rate must not be less than $constraint1',
   })
   @Field(() => Int, { nullable: true })
   shoutout: number;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Call rate must be more than $constraint1",
+    message: 'Call rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Call rate must not be less than $constraint1",
+    message: 'Call rate must not be less than $constraint1',
   })
   @Field(() => Int, { nullable: true })
   callTypeA: number;
 
   @Min(REQUEST_MIN_RATE, {
-    message: "Call rate must be more than $constraint1",
+    message: 'Call rate must be more than $constraint1',
   })
   @Max(REQUEST_MAX_RATE, {
-    message: "Call rate must not be less than $constraint1",
+    message: 'Call rate must not be less than $constraint1',
   })
   @Field(() => Int, { nullable: true })
   callTypeB: number;
 
   @Length(10, 50, {
-    message:
-      "$property should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })
   description: string;
@@ -253,8 +224,7 @@ export class ShoutoutRequestInput {
   @Field(() => Int)
   celebId: number;
   @Length(15, 250, {
-    message:
-      "$property field should be between $constraint1 and $constraint2 characters inclusive in length",
+    message: '$property field should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
   description: string;
@@ -296,14 +266,6 @@ export class CallScheduleInput {
   @IsDate()
   @Field()
   endTime: Date;
-}
-@InputType()
-export class ImageUploadInput {
-  @Field(() => Boolean, { defaultValue: false })
-  image: boolean;
-
-  @Field(() => Boolean, { defaultValue: false })
-  thumbnail: boolean;
 }
 
 // @InputType()
@@ -363,6 +325,15 @@ export class GenericResponse {
 }
 
 @ObjectType()
+export class S3SignedObject {
+  @Field()
+  signedUrl: string;
+
+  @Field({ nullable: true })
+  fileName?: string;
+}
+
+@ObjectType()
 export class CallTokenResponse {
   @Field(() => String, { nullable: true })
   token?: string;
@@ -417,7 +388,7 @@ export class VideoCallEvent {
 }
 
 @ObjectType()
-class CustomVideoMetadata {
+export class CustomVideoMetadata {
   @Field()
   userId: string;
 
@@ -435,12 +406,21 @@ class CustomVideoMetadata {
 }
 
 @ObjectType()
-class VideoMetadata {
+export class VideoMetadata {
   @Field(() => String)
   srcVideo: string;
 
   @Field(() => CustomVideoMetadata)
   customMetadata: CustomVideoMetadata;
+
+  @Field(() => String, { nullable: true })
+  destBucket?: string;
+
+  @Field(() => String, { nullable: true })
+  jobTemplate?: string;
+
+  @Field(() => String, { nullable: true })
+  cloudFront?: string;
 }
 @ObjectType()
 export class VideoData {
@@ -453,7 +433,7 @@ export class VideoData {
 }
 
 @ObjectType()
-export class VideoUploadData {
+export class VideoUploadResponse {
   @Field(() => VideoData, { nullable: true })
   videoData?: VideoData;
   @Field({ nullable: true })
@@ -461,40 +441,21 @@ export class VideoUploadData {
 }
 
 @ObjectType()
-export class S3SignedObject {
-  @Field()
-  signedUrl: string;
-
-  @Field({ nullable: true })
-  fileName?: string;
-}
-
-@ObjectType()
 export class ImageUploadMetadata {
   @Field()
   userId: string;
 
-  @Field({ nullable: true })
-  thumbnail?: string;
-
-  @Field({ nullable: true })
-  image?: string;
-}
-@ObjectType()
-export class ImageUploadLinks {
-  id: string;
+  @Field()
+  key: string;
 
   @Field()
-  type: "image" | "thumbnail";
-
-  @Field()
-  signedUrl: string;
+  type: 'thumbnail' | 'low_res_placeholder';
 }
 
 @ObjectType()
 export class ImageUpload {
-  @Field(() => [ImageUploadLinks])
-  urls: ImageUploadLinks[];
+  @Field()
+  url: string;
 
   @Field()
   metadataUrl: string;

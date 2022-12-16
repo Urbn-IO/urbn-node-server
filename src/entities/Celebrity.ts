@@ -6,14 +6,14 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-} from "typeorm";
-import CacheControl from "../cache/cacheControl";
-import { Ctx, Field, Int, ObjectType } from "type-graphql";
-import { CelebCategories } from "./CelebCategories";
-import { AppContext } from "../types";
-import { Categories } from "./Categories";
-import { CacheScope } from "apollo-server-types";
-import { CallSlots } from "../utils/graphqlTypes";
+} from 'typeorm';
+import CacheControl from '../cache/cacheControl';
+import { Ctx, Field, Int, ObjectType } from 'type-graphql';
+import { CelebCategories } from './CelebCategories';
+import { AppContext } from '../types';
+import { Categories } from './Categories';
+import { CacheScope } from 'apollo-server-types';
+import { CallSlots } from '../utils/graphqlTypes';
 
 @ObjectType()
 @Entity()
@@ -27,7 +27,7 @@ export class Celebrity extends BaseEntity {
   @Column({ default: true })
   isNew: boolean;
 
-  @Column({ unique: true, type: "uuid" })
+  @Column({ unique: true, type: 'uuid' })
   userId: string;
 
   @Field()
@@ -40,7 +40,7 @@ export class Celebrity extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  image?: string;
+  videoBanner?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -49,18 +49,6 @@ export class Celebrity extends BaseEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   lowResPlaceholder?: string;
-
-  @Column({ nullable: true })
-  normalisedThumbnail: string;
-
-  @Column({ nullable: true })
-  normalisedImage: string;
-
-  @Column({ nullable: true })
-  normalisedPlaceholder: string;
-
-  @Column({ nullable: true })
-  normalisedLowResPlaceholder: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -97,7 +85,7 @@ export class Celebrity extends BaseEntity {
   callTypeB: number;
 
   @Field(() => [CallSlots], { nullable: true })
-  @Column("jsonb", { array: false, default: () => "'[]'", nullable: true })
+  @Column('jsonb', { array: false, default: () => "'[]'", nullable: true })
   availableTimeSlots: CallSlots[];
 
   @Column({ nullable: true })
@@ -117,11 +105,11 @@ export class Celebrity extends BaseEntity {
   profileHash: string;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @Field(() => String)
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
   @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
@@ -129,9 +117,7 @@ export class Celebrity extends BaseEntity {
 
   //dataloader takes in the userId and maps the Id to the categories
   @Field(() => [Categories], { nullable: true })
-  async categories(
-    @Ctx() { categoriesLoader }: AppContext
-  ): Promise<Categories[] | null> {
+  async categories(@Ctx() { categoriesLoader }: AppContext): Promise<Categories[] | null> {
     return categoriesLoader.load(this.id);
   }
 }

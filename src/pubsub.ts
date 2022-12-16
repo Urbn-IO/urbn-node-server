@@ -1,5 +1,5 @@
-import { RedisPubSub } from "graphql-redis-subscriptions";
-import Redis, { RedisOptions } from "ioredis";
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import Redis, { RedisOptions } from 'ioredis';
 
 const options: RedisOptions = {
   host: process.env.REDIS_HOST,

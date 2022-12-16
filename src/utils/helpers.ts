@@ -1,17 +1,17 @@
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
-import cookie from "cookie";
-import cookieParser from "cookie-parser";
-import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from "../constants";
-import connectRedis from "connect-redis";
-import { Celebrity } from "../entities/Celebrity";
-import { DayOfTheWeek } from "../types";
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import cookie from 'cookie';
+import cookieParser from 'cookie-parser';
+import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from '../constants';
+import connectRedis from 'connect-redis';
+import { Celebrity } from '../entities/Celebrity';
+import { DayOfTheWeek } from '../types';
 
 export const getNextAvailableDate = (day: number) => {
   dayjs.extend(isoWeek);
   const today = dayjs().isoWeekday();
-  if (today < day) return dayjs().set("day", day);
-  else return dayjs().add(1, "week").set("day", day);
+  if (today < day) return dayjs().set('day', day);
+  else return dayjs().add(1, 'week').set('day', day);
 };
 
 export const getSessionContext = async (cookieString: string, store: connectRedis.RedisStore) => {
@@ -31,10 +31,14 @@ export const getSessionContext = async (cookieString: string, store: connectRedi
     });
 };
 
-export const reserveVideoCallScheduleTimeSlot = async (celebrity: string, slotId: string, day: DayOfTheWeek) => {
+export const reserveVideoCallScheduleTimeSlot = async (
+  celebrity: string,
+  slotId: string,
+  day: DayOfTheWeek
+) => {
   const celeb = await Celebrity.findOne({
     where: { userId: celebrity },
-    select: ["availableTimeSlots"],
+    select: ['availableTimeSlots'],
   });
   if (!celeb) return;
   const availableTimeSlots = celeb.availableTimeSlots;

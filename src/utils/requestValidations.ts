@@ -1,8 +1,8 @@
-import { Requests } from "../entities/Requests";
+import { Requests } from '../entities/Requests';
 
 export const validateRequestor = async (userId: string, id: number) => {
   const request = await Requests.findOne({ where: { id } });
-  if (request?.customer === userId && request.requestType !== "shoutout") {
+  if (request?.customer === userId && request.requestType !== 'shoutout') {
     return request;
   }
   return null;

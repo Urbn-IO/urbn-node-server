@@ -1,9 +1,9 @@
-import express from "express";
-import { client } from "../services/search/client";
+import express from 'express';
+import { client } from '../services/search/client';
 
 const router = express.Router();
 
-router.get("/getCollection", async (req, res) => {
+router.get('/getCollection', async (req, res) => {
   const { q } = req.query;
   try {
     const result = await client.collections(q as string).retrieve();
@@ -13,7 +13,7 @@ router.get("/getCollection", async (req, res) => {
   }
 });
 
-router.get("/getAllCollections", async (_, res) => {
+router.get('/getAllCollections', async (_, res) => {
   try {
     const result = await client.collections().retrieve();
     res.send(result);
@@ -22,7 +22,7 @@ router.get("/getAllCollections", async (_, res) => {
   }
 });
 
-router.get("/dropCollection", async (req, res) => {
+router.get('/dropCollection', async (req, res) => {
   const { q } = req.query;
   try {
     const result = await client.collections(q as string).delete();
@@ -32,36 +32,36 @@ router.get("/dropCollection", async (req, res) => {
   }
 });
 
-router.get("/searchCelebrity", async (req, res) => {
+router.get('/searchCelebrity', async (req, res) => {
   const { q } = req.query;
 
   const searchParameters = {
     q: q as string,
-    query_by: "first_name, last_name, alias, description, categories",
+    query_by: 'first_name, last_name, alias, description, categories',
   };
 
   try {
-    const result = await client.collections("celebrity").documents().search(searchParameters);
+    const result = await client.collections('celebrity').documents().search(searchParameters);
     res.send(result);
   } catch (err) {
     res.send(err);
   }
 });
 
-router.post("/addCelebrity", async (req, res) => {
+router.post('/addCelebrity', async (req, res) => {
   const celebs = req.body;
   try {
-    const result = await client.collections("celebrity").documents().import(celebs, { action: "upsert" });
+    const result = await client.collections('celebrity').documents().import(celebs, { action: 'upsert' });
     res.send(result);
   } catch (err) {
     res.send(err);
   }
 });
 
-router.post("/addCategory", async (req, res) => {
+router.post('/addCategory', async (req, res) => {
   const category = req.body.data;
   try {
-    const result = await client.collections("category").documents().import(category, { action: "upsert" });
+    const result = await client.collections('category').documents().import(category, { action: 'upsert' });
     res.send(result);
   } catch (err) {
     res.send(err);

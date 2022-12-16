@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from 'crypto';
 
 type GetSignedCookieOptions =
   | {
@@ -30,9 +30,9 @@ type GetSignedUrlOptions = GetSignedUrlWithExpires | GetSignedUrlWithPolicy;
 
 const queryEncode = function (string: string) {
   const replacements = {
-    "+": "-",
-    "=": "_",
-    "/": "~",
+    '+': '-',
+    '=': '_',
+    '/': '~',
   } as Record<string, string>;
   return string.replace(/[+=/]/g, function (match) {
     return replacements[match];
@@ -40,57 +40,50 @@ const queryEncode = function (string: string) {
 };
 
 const determineScheme = function (url: string) {
-  const parts = url.split("://");
+  const parts = url.split('://');
   if (parts.length < 2) {
-    throw new Error("Invalid URL.");
+    throw new Error('Invalid URL.');
   }
 
-  return parts[0].replace("*", "");
+  return parts[0].replace('*', '');
 };
 
 const getRtmpUrl = function (rtmpUrl: string) {
   const parsed = new URL(rtmpUrl);
-  return parsed.pathname.replace(/^\//, "") + parsed.search + parsed.hash;
+  return parsed.pathname.replace(/^\//, '') + parsed.search + parsed.hash;
 };
 
 const getResource = function (url: string): string {
   switch (determineScheme(url)) {
-    case "http":
-    case "https":
+    case 'http':
+    case 'https':
       return url;
-    case "rtmp":
+    case 'rtmp':
       return getRtmpUrl(url);
     default:
-      throw new Error(
-        "Invalid URI scheme. Scheme must be one of" + " http, https, or rtmp"
-      );
+      throw new Error('Invalid URI scheme. Scheme must be one of' + ' http, https, or rtmp');
   }
 };
 
 const signPolicy = function (policy: string, privateKey: string) {
-  const sign = crypto.createSign("RSA-SHA1");
+  const sign = crypto.createSign('RSA-SHA1');
   sign.write(policy);
-  return queryEncode(sign.sign(privateKey, "base64"));
+  return queryEncode(sign.sign(privateKey, 'base64'));
 };
 
-const signWithCannedPolicy = function (
-  url: string,
-  expires: number,
-  keyPairId: string,
-  privateKey: string
-) {
+const signWithCannedPolicy = function (url: string, expires: number, keyPairId: string, privateKey: string) {
   const policy = JSON.stringify({
     Statement: [
       {
         Resource: url,
-        Condition: { DateLessThan: { "AWS:EpochTime": expires } },
+        Condition: { DateLessThan: { 'AWS:EpochTime': expires } },
       },
     ],
   });
 
   return {
     Expires: expires,
-    "Key-Pair-Id": keyPairId,
+    'Key-Pair-Id': keyPairId,
     Signature: signPolicy(policy.toString(), privateKey),
   };
 };
@@ -99,12 +92,12 @@ const signWithCustomPolicy = function (
   policy: string,
   keyPairId: string,
   privateKey: string
-): { Policy: string; "Key-Pair-Id": string; Signature: string } {
-  const modifiedPolicy = policy.replace(/\s/gm, "");
+): { Policy: string; 'Key-Pair-Id': string; Signature: string } {
+  const modifiedPolicy = policy.replace(/\s/gm, '');
 
   return {
-    Policy: queryEncode(Buffer.from(modifiedPolicy).toString("base64")),
-    "Key-Pair-Id": keyPairId,
+    Policy: queryEncode(Buffer.from(modifiedPolicy).toString('base64')),
+    'Key-Pair-Id': keyPairId,
     Signature: signPolicy(policy, privateKey),
   };
 };
@@ -115,7 +108,7 @@ export class Signer {
 
   constructor(keyPairId: string, privateKey: string) {
     if (keyPairId === void 0 || privateKey === void 0) {
-      throw new Error("A key pair ID and private key are required");
+      throw new Error('A key pair ID and private key are required');
     }
 
     this.keyPairId = keyPairId;
@@ -126,18 +119,16 @@ export class Signer {
     const signatureHash = options.policy
       ? signWithCustomPolicy(options.policy, this.keyPairId, this.privateKey)
       : options.url
-      ? (signWithCannedPolicy(
-          options.url,
-          options.expires!,
-          this.keyPairId,
-          this.privateKey
-        ) as Record<string, unknown>)
+      ? (signWithCannedPolicy(options.url, options.expires!, this.keyPairId, this.privateKey) as Record<
+          string,
+          unknown
+        >)
       : {};
 
     const cookieHash: Record<string, any> = {};
     for (const key in signatureHash) {
       if (Object.prototype.hasOwnProperty.call(signatureHash, key)) {
-        cookieHash["CloudFront-" + key] = signatureHash[key];
+        cookieHash['CloudFront-' + key] = signatureHash[key];
       }
     }
 
@@ -150,15 +141,13 @@ export class Signer {
     const signatureHash = options.policy
       ? signWithCustomPolicy(options.policy, this.keyPairId, this.privateKey)
       : options.expires
-      ? (signWithCannedPolicy(
-          resource,
-          options.expires,
-          this.keyPairId,
-          this.privateKey
-        ) as Record<string, any>)
+      ? (signWithCannedPolicy(resource, options.expires, this.keyPairId, this.privateKey) as Record<
+          string,
+          any
+        >)
       : {};
 
-    parsedUrl.search = "";
+    parsedUrl.search = '';
     const searchParams = parsedUrl.searchParams;
     for (const key in signatureHash) {
       if (Object.prototype.hasOwnProperty.call(signatureHash, key)) {
@@ -167,9 +156,7 @@ export class Signer {
     }
 
     const signedUrl =
-      determineScheme(options.url) === "rtmp"
-        ? getRtmpUrl(parsedUrl.toString())
-        : parsedUrl.toString();
+      determineScheme(options.url) === 'rtmp' ? getRtmpUrl(parsedUrl.toString()) : parsedUrl.toString();
 
     return signedUrl;
   }

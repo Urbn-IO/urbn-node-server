@@ -6,16 +6,18 @@ declare global {
       APP_DYNAMIC_URL_PREFIX: string;
       APP_LOGO_URL: string;
       APP_BUNDLE_NAME: string;
-      AWS_BUCKET_NAME: string;
-      AWS_PUBLIC_BUCKET_NAME: string;
-      AWS_REGION_1: string;
-      AWS_REGION_2: string;
+      AWS_VOD_STACK_NAME: string;
+      AWS_STATIC_VIDEO_BUCKET: string;
+      AWS_REGION: string;
       AWS_ACCESS_KEY: string;
       AWS_SECRET_ACCESS_KEY: string;
-      AWS_CLOUD_FRONT_IMAGE_SOURCE_DOMAIN: string;
-      AWS_CLOUD_FRONT_IMAGE_SOURCE_KEY_PAIR_ID: string;
+      AWS_STATIC_IMAGE_DISTRIBUTION_DOMAIN: string;
+      AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR: string;
+      AWS_VOD_STATIC_DISTRIBUTION_DOMAIN: string;
+      AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR: string;
       AWS_SQS_VOD_QUEUE_URL: string;
       AWS_SQS_IMAGE_PROCESSOR_QUEUE_URL: string;
+      AWS_VOD_CUSTOM_JOB_TEMPLATE: string;
       FIREBASE_WEBAPI_KEY: string;
       DEFUALT_CURRENCY: string;
       DATABASE_URL: string;
@@ -46,4 +48,4 @@ declare global {
   }
 }
 
-export {};
+export {}

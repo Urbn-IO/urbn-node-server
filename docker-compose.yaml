@@ -1,66 +1,66 @@
 version: '3.8'
 
 services:
-  server:
-    build: .
-    image: 'urbn:latest'
-    container_name: urbn
-    restart: "unless-stopped"
-    platform: 'linux/arm64'
-    networks:
-      - 'default'
-    depends_on:
-      - 'db'
-      - 'redis'
-    env_file:
-      - .env
-    expose:
-      - 8000
-      
-  nginx:
-    image: 'nginx:1.23.1-alpine'
-    container_name: 'nginx_reverse_proxy'
-    restart: 'unless-stopped'
-    depends_on:
-      - 'dnsrobocert'
-    ports:
-      - '80:80'
-      - '443:443'
-      - '5030:5030'
-    volumes:
-      - './config/nginx/:/etc/nginx'
-      - './config/letsencrypt/:/etc/letsencrypt/:ro'
-  dnsrobocert:
-    image: 'adferrand/dnsrobocert'
-    container_name: 'dnsrobocert'
-    volumes:
-      - './config/letsencrypt:/etc/letsencrypt'
-      - './config/dnsrobocert:/etc/dnsrobocert'
-    restart: 'unless-stopped'
-    
-  db:
-    image: 'postgres'
-    container_name: 'database'
-    ports:
-      - '5432:5432'
-    expose:
-      - 5432
-    environment:
-      POSTGRES_DB: 'urbn'
-      POSTGRES_PASSWORD: '12345678'
-      POSTGRES_USER: 'urbn'
-    restart: 'unless-stopped'
-    volumes:
-      - data:/var/lib/postgresql/data
-  redis:
-    image: 'redis:latest'
-    container_name: 'redis'
-    restart: 'unless-stopped'
-    ports:
-      - '6379:${REDIS_PORT}'
-    # command: redis-server /usr/local/etc/redis/redis.conf
-    # volumes:
-    #     - ./data/redis/:/usr/local/etc/redis
+    server:
+        build: .
+        image: 'urbn:latest'
+        container_name: urbn
+        restart: 'unless-stopped'
+        platform: 'linux/arm64'
+        networks:
+            - 'default'
+        depends_on:
+            - 'db'
+            - 'redis'
+        env_file:
+            - .env
+        expose:
+            - 8000
+
+    nginx:
+        image: 'nginx:1.23.1-alpine'
+        container_name: 'nginx_reverse_proxy'
+        restart: 'unless-stopped'
+        depends_on:
+            - 'dnsrobocert'
+        ports:
+            - '80:80'
+            - '443:443'
+            - '5030:5030'
+        volumes:
+            - './config/nginx/:/etc/nginx'
+            - './config/letsencrypt/:/etc/letsencrypt/:ro'
+    dnsrobocert:
+        image: 'adferrand/dnsrobocert'
+        container_name: 'dnsrobocert'
+        volumes:
+            - './config/letsencrypt:/etc/letsencrypt'
+            - './config/dnsrobocert:/etc/dnsrobocert'
+        restart: 'unless-stopped'
+
+    db:
+        image: 'postgres'
+        container_name: 'database'
+        ports:
+            - '5432:5432'
+        expose:
+            - 5432
+        environment:
+            POSTGRES_DB: 'urbn'
+            POSTGRES_PASSWORD: '12345678'
+            POSTGRES_USER: 'urbn'
+        restart: 'unless-stopped'
+        volumes:
+            - data:/var/lib/postgresql/data
+    redis:
+        image: 'redis:latest'
+        container_name: 'redis'
+        restart: 'unless-stopped'
+        ports:
+            - '6379:${REDIS_PORT}'
+        # command: redis-server /usr/local/etc/redis/redis.conf
+        # volumes:
+        #     - ./data/redis/:/usr/local/etc/redis
 
 volumes:
-  data:
+    data:

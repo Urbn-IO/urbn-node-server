@@ -1,19 +1,19 @@
-import publish from "../../../utils/publish";
-import redisClient from "../../../redis/client";
-import { addJob, callStatusQueue, destroyRepeatableJob } from "../../../queues/job_queue/producer";
+import publish from '../../../utils/publish';
+import redisClient from '../../../redis/client';
+import { addJob, callStatusQueue, destroyRepeatableJob } from '../../../queues/job_queue/producer';
 import {
   CachedCallEventPayload,
   CallTimerOptions,
   RequestStatus,
   SubscriptionTopics,
   UpdateCallDurationArgs,
-} from "../../../types";
-import { VideoCallEvent } from "../../../utils/graphqlTypes";
-import { callDuration } from "../../../utils/helpers";
-import { RepeatOptions } from "bullmq";
-import { changeRequestState } from "../../../request/manage";
-import { endVideoCallRoom } from "../calls";
-import { logCallSession } from "../../../logging/call";
+} from '../../../types';
+import { VideoCallEvent } from '../../../utils/graphqlTypes';
+import { callDuration } from '../../../utils/helpers';
+import { RepeatOptions } from 'bullmq';
+import { changeRequestState } from '../../../request/manage';
+import { endVideoCallRoom } from '../calls';
+import { logCallSession } from '../../../logging/call';
 
 const redis = redisClient;
 
@@ -36,7 +36,7 @@ const timeOperator = async (options: CallTimerOptions) => {
     };
 
     const data: UpdateCallDurationArgs = { roomSid: payload.roomSid };
-    await addJob(callStatusQueue, "call-status", data, {
+    await addJob(callStatusQueue, 'call-status', data, {
       repeat,
       jobId: payload.roomSid,
       removeOnComplete: true,
@@ -81,13 +81,25 @@ const timeOperator = async (options: CallTimerOptions) => {
     const startTime = new Date(startTimestring);
     const currentTime = new Date();
     const duration = callDuration(payload.callLength, startTime, currentTime);
-    console.log("call duration updated!");
+    console.log('call duration updated!');
     const participantA = payload.participantA;
     const participantB = payload.participantB;
-    return { duration, participantA, participantB, requestId: payload.requestId, callLength: payload.callLength };
+    return {
+      duration,
+      participantA,
+      participantB,
+      requestId: payload.requestId,
+      callLength: payload.callLength,
+    };
   }
 
-  return { duration: 0, participantA: undefined, participantB: undefined, requestId: undefined, callLength: undefined };
+  return {
+    duration: 0,
+    participantA: undefined,
+    participantB: undefined,
+    requestId: undefined,
+    callLength: undefined,
+  };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +119,7 @@ const checkParticipant = async (event: VideoCallEvent) => {
           const time = await timeOperator({ start: true, payload });
           event.CallDuration = time.countDown;
           event.participantB = participant;
-          console.log("both participants joined");
+          console.log('both participants joined');
           return event;
         }
         await endVideoCallRoom(event.RoomSid);
@@ -119,10 +131,10 @@ const checkParticipant = async (event: VideoCallEvent) => {
     const participant = event.ParticipantIdentity as string;
     const roomName = event.RoomName;
     //extract the requestId and call length from room name
-    const first = roomName.indexOf("/");
-    const last = roomName.lastIndexOf("/");
+    const first = roomName.indexOf('/');
+    const last = roomName.lastIndexOf('/');
     const requestId = parseInt(roomName.substring(first + 1, last));
-    const n = roomName.lastIndexOf(":");
+    const n = roomName.lastIndexOf(':');
     const callLength = parseInt(roomName.substring(n + 1));
 
     // const regexCallLength = event.RoomName.match(/:::([\s\S]*)$/);
@@ -138,7 +150,7 @@ const checkParticipant = async (event: VideoCallEvent) => {
       startTime: undefined,
     };
     redis.set(payload.roomSid, JSON.stringify(payload));
-    console.log("first participant joined");
+    console.log('first participant joined');
     event.CallDuration = 0;
     event.participantA = participant;
     return event;
@@ -160,18 +172,18 @@ const processCallEvent = () => {
   return {
     processCall: async (event: VideoCallEvent) => {
       console.log(`procesing call event with statusCallBack: ${event.StatusCallbackEvent}`);
-      if (event.StatusCallbackEvent === "participant-connected") {
+      if (event.StatusCallbackEvent === 'participant-connected') {
         const storedEvent = await checkParticipant(event);
         return storedEvent;
       }
-      if (event.StatusCallbackEvent === "participant-disconnected") {
+      if (event.StatusCallbackEvent === 'participant-disconnected') {
         const time = await timeOperator({ event });
         event.CallDuration = time.countDown;
         event.participantA = time.participantA;
         event.participantB = time.participantB;
         return event;
       }
-      if (event.StatusCallbackEvent === "room-ended") {
+      if (event.StatusCallbackEvent === 'room-ended') {
         const operator = await timeOperator({ event });
         const requestId = operator.requestId;
         if (!requestId) return;
@@ -194,7 +206,7 @@ const processCallEvent = () => {
         });
         await redis.del(event.RoomSid);
 
-        console.log("call session terminated");
+        console.log('call session terminated');
       }
       return null;
     },

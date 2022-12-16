@@ -1,6 +1,7 @@
-import express from "express";
+import express from 'express';
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get('/', (req, _) => {
   const payload = req.body;
+  console.log(payload);
 });

@@ -1,14 +1,8 @@
-   
 {
   "compilerOptions": {
     "target": "es2021",
     "module": "commonjs",
-    "lib": [
-      "dom",
-      "es6",
-      "es2019",
-      "esnext.asynciterable"
-    ],
+    "lib": ["dom", "es6", "es2019", "esnext.asynciterable"],
     "sourceMap": true,
     "outDir": "./dist",
     "moduleResolution": "node",
@@ -29,11 +23,6 @@
     "baseUrl": ".",
     "isolatedModules": true
   },
-  "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    "./src/**/*.tsx",
-    "./src/**/*.ts",
-    "src/lib/env.d.ts"]
+  "exclude": ["node_modules"],
+  "include": ["./src/**/*.tsx", "./src/**/*.ts", "src/lib/env.d.ts"]
 }

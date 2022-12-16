@@ -1,10 +1,10 @@
-import eventManager from "../../../services/call/twilio/eventsManager";
-import { CachedCallEventPayload, UpdateCallDurationArgs } from "../../../types";
-import { VideoCallEvent } from "../../../utils/graphqlTypes";
-import { Job } from "bullmq";
-import redisClient from "../../../redis/client";
-import { callDuration } from "../../../utils/helpers";
-import { endVideoCallRoom } from "../../../services/call/calls";
+import eventManager from '../../../services/call/twilio/eventsManager';
+import { CachedCallEventPayload, UpdateCallDurationArgs } from '../../../types';
+import { VideoCallEvent } from '../../../utils/graphqlTypes';
+import { Job } from 'bullmq';
+import redisClient from '../../../redis/client';
+import { callDuration } from '../../../utils/helpers';
+import { endVideoCallRoom } from '../../../services/call/calls';
 
 const redis = redisClient;
 
@@ -27,9 +27,9 @@ const updateClientCallDuration = async ({ roomSid }: UpdateCallDurationArgs) => 
     participantA: payload.participantA,
     participantB: payload.participantB,
     CallDuration: duration,
-    StatusCallbackEvent: "",
+    StatusCallbackEvent: '',
   };
-  console.log("call duration updated from job queue worker");
+  console.log('call duration updated from job queue worker');
   eventManager().publishVideoCallEvent(event);
   if (duration <= 0) await endVideoCallRoom(payload.roomSid);
   return;

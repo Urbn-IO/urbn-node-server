@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
-import { Redis } from "ioredis";
-import { createCategoriesLoader } from "./utils/categoriesLoader";
-import { createCelebsLoader } from "./utils/celebsLoader";
-import { RedisPubSub } from "graphql-redis-subscriptions";
-import { VideoCallEvent } from "./utils/graphqlTypes";
+import { Request, Response } from 'express';
+import { Redis } from 'ioredis';
+import { createCategoriesLoader } from '../utils/categoriesLoader';
+import { createCelebsLoader } from '../utils/celebsLoader';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { VideoCallEvent } from '../utils/graphqlTypes';
 
 export type AppContext = {
   req: Request;
@@ -14,7 +14,7 @@ export type AppContext = {
   celebsLoader: ReturnType<typeof createCelebsLoader>;
 };
 
-declare module "express-session" {
+declare module 'express-session' {
   export interface SessionData {
     userId: string;
   }
@@ -33,6 +33,7 @@ export interface VideoOutput {
   workFlowId: string | undefined;
   hlsUrl: string | undefined;
   thumbnailUrl: string | undefined;
+  lowResPlaceholderUrl: string | undefined;
   mp4Url: string | undefined;
   srcVideo: string | undefined;
   datePublished: string | undefined;
@@ -58,20 +59,10 @@ export interface OAuth {
   email?: string;
 }
 
-interface ImageProcessorQueueOutputBase {
-  userId: string;
-  status?: "success" | "failed";
-}
-
-export interface ImageProcessorQueueOutput
-  extends ImageProcessorQueueOutputBase {
-  normalisedThumbnail?: string;
-  normalisedImage?: string;
-  normalisedPlaceholder?: string;
-  normalisedLowResPlaceholder?: string;
+export interface ImageProcessorQueueOutput {
+  userId?: string;
+  status?: 'success' | 'failed';
   thumbnail?: string;
-  image?: string;
-  placeholder?: string;
   lowResPlaceholder?: string;
 }
 
@@ -127,27 +118,29 @@ export type CallLogInput = {
   elapsedDuration?: number;
 };
 
+export type PartialWithRequired<T, K extends keyof T> = Pick<T, K> & Partial<T>;
+
 export enum NotificationPriority {
   HIGH,
   NORMAL,
 }
 
 export enum RequestStatus {
-  PENDING = "pending",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  VALIDATING = "validating",
-  PROCESSING = "processing",
-  FAILED = "failed",
-  FULFILLED = "fulfilled",
-  UNFULFILLED = "unfulfilled",
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  VALIDATING = 'validating',
+  PROCESSING = 'processing',
+  FAILED = 'failed',
+  FULFILLED = 'fulfilled',
+  UNFULFILLED = 'unfulfilled',
 }
 
 export enum RequestType {
-  SHOUTOUT = "shoutout",
-  INSTANT_SHOUTOUT = "instant_shoutout",
-  CALL_TYPE_A = "call_type_A",
-  CALL_TYPE_B = "call_type_B",
+  SHOUTOUT = 'shoutout',
+  INSTANT_SHOUTOUT = 'instant_shoutout',
+  CALL_TYPE_A = 'call_type_A',
+  CALL_TYPE_B = 'call_type_B',
 }
 
 export enum CallType {
@@ -156,22 +149,23 @@ export enum CallType {
 }
 
 export enum SubscriptionTopics {
-  VIDEO_CALL = "video_call",
-  CALL_STATUS = "call_status",
-  NEW_CARD = "new_card",
-  TEST_TOPIC = "test",
+  VIDEO_CALL = 'video_call',
+  CALL_STATUS = 'call_status',
+  NEW_CARD = 'new_card',
+  TEST_TOPIC = 'test',
 }
 
 export enum NotificationRouteCode {
-  RESPONSE = "0", // notification to display response to client UI
-  RECEIVED_REQUEST = "1", // notification to route the client to the received requests view
-  PROFILE_SHOUTOUT = "2", //  notification to route the client to the user profile
-  DEFAULT = "10", //default route
+  RESPONSE = '0', // notification to display response to client UI
+  RECEIVED_REQUEST = '1', // notification to route the client to the received requests view
+  PROFILE_SHOUTOUT = '2', //  notification to route the client to the user profile
+  DEFAULT = '10', //default route
 }
 
 export enum ContentType {
-  SHOUTOUT,
-  MOMENT,
+  SHOUTOUT = 'shoutout',
+  BANNER = 'banner',
+  MOMENT = 'moment',
 }
 
 export enum DayOfTheWeek {
@@ -185,15 +179,15 @@ export enum DayOfTheWeek {
 }
 
 export enum PlatformOptions {
-  IOS = "IOS",
-  ANDROID = "ANDROID",
-  WEB = "WEB BROWSER",
+  IOS = 'IOS',
+  ANDROID = 'ANDROID',
+  WEB = 'WEB BROWSER',
 }
 
 export enum EmailTemplates {
-  ConfirmEmailTemplate = "ConfirmEmailTemplate",
-  ResetPasswordTemplate = "ResetPasswordTemplate",
-  SecurityAlertTemplate = "SecurityAlertTemplate",
+  ConfirmEmailTemplate = 'ConfirmEmailTemplate',
+  ResetPasswordTemplate = 'ResetPasswordTemplate',
+  SecurityAlertTemplate = 'SecurityAlertTemplate',
 }
 
 export enum EmailSubject {
@@ -203,22 +197,22 @@ export enum EmailSubject {
 }
 
 export enum SignInMethod {
-  BASIC = "BASIC_AUTH",
-  OAUTH = "OAUTH",
+  BASIC = 'BASIC_AUTH',
+  OAUTH = 'OAUTH',
 }
 
 export enum PaymentStatus {
-  SUCCESS = "success",
-  FAILED = "failed",
+  SUCCESS = 'success',
+  FAILED = 'failed',
 }
 
 export enum PaymentGateway {
-  PAYSTACK = "paystack",
+  PAYSTACK = 'paystack',
 }
 
 export enum Currency {
-  NAIRA = "NGN",
-  GH_CEDIS = "GHS",
-  SA_RAND = "ZAR",
-  US_DOLLARS = "USD",
+  NAIRA = 'NGN',
+  GH_CEDIS = 'GHS',
+  SA_RAND = 'ZAR',
+  US_DOLLARS = 'USD',
 }

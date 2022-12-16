@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -9,14 +9,14 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import CacheControl from "../cache/cacheControl";
-import { CardAuthorization } from "./CardAuthorization";
-import { Celebrity } from "./Celebrity";
-import { Shoutout } from "./Shoutout";
-import { CacheScope } from "apollo-server-types";
-import { SignInMethod } from "../types";
-import { Wallet } from "./Wallet";
+} from 'typeorm';
+import CacheControl from '../cache/cacheControl';
+import { CardAuthorization } from './CardAuthorization';
+import { Celebrity } from './Celebrity';
+import { Shoutout } from './Shoutout';
+import { CacheScope } from 'apollo-server-types';
+import { SignInMethod } from '../types';
+import { Wallet } from './Wallet';
 
 @ObjectType()
 @Entity()
@@ -25,7 +25,7 @@ export class User extends BaseEntity {
   id: number;
 
   @Field()
-  @Column({ unique: true, type: "uuid" })
+  @Column({ unique: true, type: 'uuid' })
   userId: string;
 
   @Field()
@@ -40,18 +40,18 @@ export class User extends BaseEntity {
   password: string;
 
   @Field(() => String)
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @Field(() => String)
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
   @Column()
   sessionKey: string;
 
   @Field(() => SignInMethod)
-  @Column({ type: "enum", enum: SignInMethod, default: SignInMethod.BASIC })
+  @Column({ type: 'enum', enum: SignInMethod, default: SignInMethod.BASIC })
   authMethod: SignInMethod;
 
   @Field(() => Celebrity, { nullable: true })

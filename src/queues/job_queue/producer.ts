@@ -1,6 +1,6 @@
-import { JobsOptions, Queue, QueueScheduler } from "bullmq";
-import { config } from "../../constants";
-import redisClient from "../../redis/client";
+import { JobsOptions, Queue, QueueScheduler } from 'bullmq';
+import { config } from '../../constants';
+import redisClient from '../../redis/client';
 
 const redis = redisClient;
 new QueueScheduler(config.CALL_QUEUE_NAME, { connection: redis });
@@ -44,7 +44,12 @@ export const destroyRepeatableJob = async (queue: Queue<any, any, string>, jobId
   if (key) await queue.removeRepeatableByKey(key);
 };
 
-export const addJob = async <T>(queue: Queue<any, any, string>, jobName: string, data: T, jobOptions?: JobsOptions) => {
+export const addJob = async <T>(
+  queue: Queue<any, any, string>,
+  jobName: string,
+  data: T,
+  jobOptions?: JobsOptions
+) => {
   await queue.add(jobName, data, jobOptions);
   console.log(`${jobName} was added`);
 };
