@@ -27,7 +27,7 @@ import { AppDataSource } from '../db';
 import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
 import { changeRequestState } from '../request/manage';
 import createhashString from '../utils/createHashString';
-import { getSignedVideoMetadata } from '../utils/uploadSigner';
+import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 
 @Resolver()
 export class RequestsResolver {

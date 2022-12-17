@@ -2,8 +2,8 @@ import crypto from 'crypto';
 import dayjs from 'dayjs';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { config } from '../constants';
-import { PartialWithRequired } from '../types';
+import { config } from '../../constants';
+import { PartialWithRequired } from '../../types';
 import { Signer } from './cloudFront';
 import {
   ImageUpload,
@@ -11,7 +11,7 @@ import {
   ImageUploadResponse,
   VideoMetadata,
   VideoUploadResponse,
-} from './graphqlTypes';
+} from '../../utils/graphqlTypes';
 
 const staticImageDist = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_DOMAIN;
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
@@ -40,7 +40,7 @@ export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
   const keys = [key, metadataKey];
   const urls = keys.map((key) => {
     const signedUrl = staticImageSigner.getSignedUrl({
-      url: `${staticImageDist}/upload/${key}`,
+      url: `https://${staticImageDist}/upload/${key}`,
       expires: Math.floor((Date.now() + duration) / 1000),
     });
     return signedUrl;
@@ -61,9 +61,9 @@ export const getSignedVideoMetadata = (
   const userId = customMetadata.userId;
   if (!userId) throw new Error('An error occured');
   const ownedBy = customMetadata.owner ? customMetadata.owner : userId;
-  const duration = 1000 * 30; // 30 secs
+  const duration = 1000 * 60; // 60 secs
   const randomNumber = Math.random().toString();
-  const datetime = dayjs().format('DD-MM-YYYYTHH:mm:ss');
+  const datetime = dayjs().format('DD-MM-YYYYTHH-mm-ss');
   const hash = crypto
     .createHash('md5')
     .update(datetime + randomNumber)
@@ -78,7 +78,7 @@ export const getSignedVideoMetadata = (
   const keys = [videoKey, metadataKey];
   const urls = keys.map((key) => {
     const signedUrl = vodSigner.getSignedUrl({
-      url: `${vodDist}/upload/${key}`,
+      url: `https://${vodDist}/upload/${key}`,
       expires: Math.floor((Date.now() + duration) / 1000),
     });
     return signedUrl;

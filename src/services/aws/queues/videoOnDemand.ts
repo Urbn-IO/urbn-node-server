@@ -18,13 +18,12 @@ const consumerOptions: ConsumerOptions = {
       const body = JSON.parse(x.Body as string);
       const mediaInfo = JSON.parse(body.srcMediainfo);
       const durationInSeconds = mediaInfo.container.duration;
-      return {
+      const data: any = {
         durationInSeconds,
         workFlowId: body.guid,
         hlsUrl: body.hlsUrl,
         thumbnailUrl: body.thumbNailsUrls[0],
         lowResPlaceholderUrl: body.lowResPlaceholderUrl,
-        mp4Url: body.mp4Urls[0],
         srcVideo: body.srcVideo,
         datePublished: body.endTime,
         userId: body.customMetadata.userId,
@@ -33,12 +32,14 @@ const consumerOptions: ConsumerOptions = {
         requestId: body.customMetadata.requestId,
         contentType: body.customMetadata.contentType,
       };
+
+      if (body.mp4Urls) data.mp4Url = body.mp4Urls[0];
+      return data;
     });
     const banners: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.BANNER);
     const shoutouts: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
-
-    if (banners.length > 0) saveVideoBanner(banners);
-    if (shoutouts.length > 0) saveShoutout(shoutouts);
+    if (banners.length > 0) await saveVideoBanner(banners);
+    if (shoutouts.length > 0) await saveShoutout(shoutouts);
   },
 };
 

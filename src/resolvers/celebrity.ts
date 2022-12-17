@@ -22,7 +22,7 @@ import {
 } from '../utils/graphqlTypes';
 import { hashRow } from '../utils/hashRow';
 import { attachInstantShoutoutPrice } from '../utils/helpers';
-import { getSignedImageMetadata, getSignedVideoMetadata } from '../utils/uploadSigner';
+import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 
 @Resolver()
 export class CelebrityResolver {
