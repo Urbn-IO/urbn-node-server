@@ -3,20 +3,9 @@ import { User } from '../entities/User';
 import { AppContext, EmailSubject, SignInMethod } from '../types';
 import argon2 from 'argon2';
 import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
-import {
-  DeviceInfoInput,
-  GenericResponse,
-  UserInputs,
-  UserInputsLogin,
-  UserResponse,
-} from '../utils/graphqlTypes';
+import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from '../utils/graphqlTypes';
 import { v4 } from 'uuid';
-import {
-  APP_SESSION_PREFIX,
-  CONFIRM_EMAIL_PREFIX,
-  SESSION_COOKIE_NAME,
-  RESET_PASSWORD_PREFIX,
-} from '../constants';
+import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, SESSION_COOKIE_NAME, RESET_PASSWORD_PREFIX } from '../constants';
 import { isAuthenticated } from '../middleware/isAuthenticated';
 import sendMail from '../services/mail/manager';
 import { createDeepLink } from '../services/deep_links/dynamicLinks';
@@ -182,10 +171,7 @@ export class UserResolver {
 
   @Mutation(() => GenericResponse)
   @UseMiddleware(isAuthenticated)
-  async updateEmail(
-    @Arg('token') token: string,
-    @Ctx() { req, redis }: AppContext
-  ): Promise<GenericResponse> {
+  async updateEmail(@Arg('token') token: string, @Ctx() { req, redis }: AppContext): Promise<GenericResponse> {
     const userId = req.session.userId;
     const key = CONFIRM_EMAIL_PREFIX + token;
     const email = await redis.get(key);
@@ -217,8 +203,7 @@ export class UserResolver {
         errorMessage: 'Invalid email address format, you might have a typo',
       };
     const user = await User.findOne({ where: { email: email } });
-    if (!user || user.authMethod === SignInMethod.OAUTH)
-      return { errorMessage: 'This email isn’t registered yet' };
+    if (!user || user.authMethod === SignInMethod.OAUTH) return { errorMessage: 'This email isn’t registered yet' };
     const token = v4();
     const name = user.displayName;
     const link = `${this.baseUrl}/reset-password/${token}`;

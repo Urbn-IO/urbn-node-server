@@ -26,7 +26,8 @@ export const sendPushKitNotification = (tokens: string[], requestId: number, cal
   if (__prod__) {
     host = process.env.APNS_PROD_URL;
   } else {
-    host = process.env.APNS_DEV_URL;
+    // host = process.env.APNS_DEV_URL;
+    host = process.env.APNS_PROD_URL;
   }
 
   tokens.forEach(async (x) => {

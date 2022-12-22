@@ -31,7 +31,6 @@ import sqsImageConsumer from './services/aws/queues/imageProcessing';
 const app = express();
 const httpServer = createServer(app);
 const redis = redisClient;
-
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
   initializeApp(firebaseConfig);
@@ -165,11 +164,21 @@ const main = async () => {
       celebsLoader: createCelebsLoader(),
     }),
     formatError: (err: GraphQLError) => {
-      if (err.originalError instanceof ApolloError) {
-        return err;
+      const errorCode = err.extensions.code;
+      if (errorCode === 'GRAPHQL_VALIDATION_FAILED' || errorCode === 'BAD_USER_INPUT') {
+        return new GraphQLError(err.message);
       }
-      const message = err.message;
-      return new GraphQLError(message);
+      if (errorCode === 'INTERNAL_SERVER_ERROR') {
+        const validationErrors = err.extensions.exception.validationErrors;
+        if (validationErrors) {
+          const constraints = validationErrors[0].constraints;
+          const keys = Object.keys(constraints);
+          const message = constraints[keys[0]];
+          return new GraphQLError(message);
+        }
+      }
+
+      return err;
     },
   });
   await apolloServer.start();

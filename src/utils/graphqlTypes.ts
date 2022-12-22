@@ -71,7 +71,7 @@ export class CelebrityApplicationInputs {
   @Field({ nullable: true })
   facebook?: string;
 
-  @IsPhoneNumber()
+  @IsPhoneNumber(undefined, { message: 'Provide a valid phone number' })
   @Field({ nullable: true })
   phoneNumber?: string;
 }
