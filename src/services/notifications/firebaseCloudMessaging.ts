@@ -1,10 +1,4 @@
-import {
-  AndroidConfig,
-  ApnsConfig,
-  getMessaging,
-  MulticastMessage,
-  Notification,
-} from 'firebase-admin/messaging';
+import { AndroidConfig, ApnsConfig, getMessaging, MulticastMessage, Notification } from 'firebase-admin/messaging';
 import tokensManager from './tokensManager';
 
 export const propagateMessage = async (

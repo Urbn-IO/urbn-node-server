@@ -1,10 +1,10 @@
-import { IsDate, IsEmail, Length, Max, Min, IsPhoneNumber } from 'class-validator';
-import { User } from '../entities/User';
-import { InputType, Field, ObjectType, Int, registerEnumType } from 'type-graphql';
-import { Categories } from '../entities/Categories';
-import { CardAuthorization } from '../entities/CardAuthorization';
-import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from '../types';
+import { IsDate, IsEmail, IsPhoneNumber, Length, Max, Min } from 'class-validator';
+import { Field, InputType, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from '../constants';
+import { CardAuthorization } from '../entities/CardAuthorization';
+import { Categories } from '../entities/Categories';
+import { User } from '../entities/User';
+import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from '../types';
 
 registerEnumType(CallType, {
   name: 'CallType',

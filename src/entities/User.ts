@@ -1,3 +1,4 @@
+import { CacheScope } from 'apollo-server-types';
 import { Field, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -11,11 +12,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
+import { SignInMethod } from '../types';
 import { CardAuthorization } from './CardAuthorization';
 import { Celebrity } from './Celebrity';
 import { Shoutout } from './Shoutout';
-import { CacheScope } from 'apollo-server-types';
-import { SignInMethod } from '../types';
 import { Wallet } from './Wallet';
 
 @ObjectType()

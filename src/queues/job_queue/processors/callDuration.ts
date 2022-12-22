@@ -1,10 +1,10 @@
+import { Job } from 'bullmq';
+import redisClient from '../../../redis/client';
+import { endVideoCallRoom } from '../../../services/call/calls';
 import eventManager from '../../../services/call/twilio/eventsManager';
 import { CachedCallEventPayload, UpdateCallDurationArgs } from '../../../types';
 import { VideoCallEvent } from '../../../utils/graphqlTypes';
-import { Job } from 'bullmq';
-import redisClient from '../../../redis/client';
 import { callDuration } from '../../../utils/helpers';
-import { endVideoCallRoom } from '../../../services/call/calls';
 
 const redis = redisClient;
 

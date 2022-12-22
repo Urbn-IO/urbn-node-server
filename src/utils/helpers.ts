@@ -1,9 +1,9 @@
-import dayjs from 'dayjs';
-import isoWeek from 'dayjs/plugin/isoWeek';
+import connectRedis from 'connect-redis';
 import cookie from 'cookie';
 import cookieParser from 'cookie-parser';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
 import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from '../constants';
-import connectRedis from 'connect-redis';
 import { Celebrity } from '../entities/Celebrity';
 import { DayOfTheWeek } from '../types';
 
@@ -31,11 +31,7 @@ export const getSessionContext = async (cookieString: string, store: connectRedi
     });
 };
 
-export const reserveVideoCallScheduleTimeSlot = async (
-  celebrity: string,
-  slotId: string,
-  day: DayOfTheWeek
-) => {
+export const reserveVideoCallScheduleTimeSlot = async (celebrity: string, slotId: string, day: DayOfTheWeek) => {
   const celeb = await Celebrity.findOne({
     where: { userId: celebrity },
     select: ['availableTimeSlots'],

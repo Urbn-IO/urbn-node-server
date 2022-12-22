@@ -41,15 +41,11 @@ export const updateRequestAndNotify = async (metadata: TransactionsMetadata, suc
         .update({ status })
         .where({ customer })
         .andWhere({ reference: metadata.requestRef })
-        .returning(
-          'id, customer, celebrity, "celebrityAlias", "callRequestBegins", "requestExpires", "requestType"'
-        )
+        .returning('id, customer, celebrity, "celebrityAlias", "callRequestBegins", "requestExpires", "requestType"')
         .execute()
     ).raw[0]) as Requests;
     const requestType =
-      request.requestType === RequestType.SHOUTOUT || RequestType.INSTANT_SHOUTOUT
-        ? 'shoutout'
-        : 'video call';
+      request.requestType === RequestType.SHOUTOUT || RequestType.INSTANT_SHOUTOUT ? 'shoutout' : 'video call';
     if (success) {
       //automagically check and update state of request on expiration
       await processExpiredRequest(request);

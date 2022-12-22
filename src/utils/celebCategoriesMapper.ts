@@ -1,13 +1,9 @@
-import { upsertCategorySearchItem } from '../services/search/addSearchItem';
 import { Categories } from '../entities/Categories';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
+import { upsertCategorySearchItem } from '../services/search/addSearchItem';
 
-export async function celebCategoriesMapper(
-  userId: string,
-  categoryIds: number[],
-  customCats: string[] | null
-) {
+export async function celebCategoriesMapper(userId: string, categoryIds: number[], customCats: string[] | null) {
   const customCategories = await createCustomCategory(customCats);
   const celebCategoryMap = [];
   if (customCategories) {

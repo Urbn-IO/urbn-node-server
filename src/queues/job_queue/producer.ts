@@ -44,12 +44,7 @@ export const destroyRepeatableJob = async (queue: Queue<any, any, string>, jobId
   if (key) await queue.removeRepeatableByKey(key);
 };
 
-export const addJob = async <T>(
-  queue: Queue<any, any, string>,
-  jobName: string,
-  data: T,
-  jobOptions?: JobsOptions
-) => {
+export const addJob = async <T>(queue: Queue<any, any, string>, jobName: string, data: T, jobOptions?: JobsOptions) => {
   await queue.add(jobName, data, jobOptions);
   console.log(`${jobName} was added`);
 };

@@ -1,7 +1,7 @@
 import DataLoader from 'dataloader';
-import { Celebrity } from '../entities/Celebrity';
 import { In } from 'typeorm';
 import { CelebCategories } from '../entities/CelebCategories';
+import { Celebrity } from '../entities/Celebrity';
 
 const batchCelebs = async (catIds: readonly number[]) => {
   const categoryCelebrities = await CelebCategories.find({

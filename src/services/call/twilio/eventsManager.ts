@@ -1,6 +1,8 @@
-import publish from '../../../utils/publish';
-import redisClient from '../../../redis/client';
+import { RepeatOptions } from 'bullmq';
+import { logCallSession } from '../../../logging/call';
 import { addJob, callStatusQueue, destroyRepeatableJob } from '../../../queues/job_queue/producer';
+import redisClient from '../../../redis/client';
+import { changeRequestState } from '../../../request/manage';
 import {
   CachedCallEventPayload,
   CallTimerOptions,
@@ -10,10 +12,8 @@ import {
 } from '../../../types';
 import { VideoCallEvent } from '../../../utils/graphqlTypes';
 import { callDuration } from '../../../utils/helpers';
-import { RepeatOptions } from 'bullmq';
-import { changeRequestState } from '../../../request/manage';
+import publish from '../../../utils/publish';
 import { endVideoCallRoom } from '../calls';
-import { logCallSession } from '../../../logging/call';
 
 const redis = redisClient;
 

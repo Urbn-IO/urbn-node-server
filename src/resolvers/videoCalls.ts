@@ -12,11 +12,11 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { isAuthenticated } from '../middleware/isAuthenticated';
-import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
-import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
-import { validateRecipient, validateRequestor } from '../utils/requestValidations';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
+import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
+import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
+import { validateRecipient, validateRequestor } from '../utils/requestValidations';
 
 @Resolver()
 export class VideoCallResolver {

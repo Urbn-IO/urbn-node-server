@@ -8,6 +8,7 @@ import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
 import { User } from '../entities/User';
+import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 import { isAuthenticated } from '../middleware/isAuthenticated';
 import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
 import { upsertCelebritySearchItem } from '../services/search/addSearchItem';
@@ -22,7 +23,6 @@ import {
 } from '../utils/graphqlTypes';
 import { hashRow } from '../utils/hashRow';
 import { attachInstantShoutoutPrice } from '../utils/helpers';
-import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 
 @Resolver()
 export class CelebrityResolver {

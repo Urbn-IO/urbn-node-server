@@ -1,5 +1,5 @@
-import { AppContext } from '../types';
 import { MiddlewareFn } from 'type-graphql';
+import { AppContext } from '../types';
 
 export const isAuthenticated: MiddlewareFn<AppContext> = ({ context }, next) => {
   if (!context.req.session.userId) {

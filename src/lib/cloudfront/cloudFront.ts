@@ -141,10 +141,7 @@ export class Signer {
     const signatureHash = options.policy
       ? signWithCustomPolicy(options.policy, this.keyPairId, this.privateKey)
       : options.expires
-      ? (signWithCannedPolicy(resource, options.expires, this.keyPairId, this.privateKey) as Record<
-          string,
-          any
-        >)
+      ? (signWithCannedPolicy(resource, options.expires, this.keyPairId, this.privateKey) as Record<string, any>)
       : {};
 
     parsedUrl.search = '';
@@ -155,8 +152,7 @@ export class Signer {
       }
     }
 
-    const signedUrl =
-      determineScheme(options.url) === 'rtmp' ? getRtmpUrl(parsedUrl.toString()) : parsedUrl.toString();
+    const signedUrl = determineScheme(options.url) === 'rtmp' ? getRtmpUrl(parsedUrl.toString()) : parsedUrl.toString();
 
     return signedUrl;
   }

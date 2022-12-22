@@ -1,10 +1,10 @@
-import CacheControl from '../cache/cacheControl';
-import { AppContext } from '../types';
+import { CacheScope } from 'apollo-server-types';
 import { Ctx, Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Celebrity } from './Celebrity';
+import CacheControl from '../cache/cacheControl';
+import { AppContext } from '../types';
 import { CelebCategories } from './CelebCategories';
-import { CacheScope } from 'apollo-server-types';
+import { Celebrity } from './Celebrity';
 @ObjectType()
 @Entity()
 @CacheControl({ maxAge: 300, scope: CacheScope.Public })

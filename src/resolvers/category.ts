@@ -1,11 +1,11 @@
-import { isAuthenticated } from '../middleware/isAuthenticated';
-import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
-import { Categories } from '../entities/Categories';
-import { CategoryResponse } from '../utils/graphqlTypes';
-import { upsertCategorySearchItem } from '../services/search/addSearchItem';
-import { AppDataSource } from '../db';
-import CacheControl from '../cache/cacheControl';
 import { CacheScope } from 'apollo-server-types';
+import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import CacheControl from '../cache/cacheControl';
+import { AppDataSource } from '../db';
+import { Categories } from '../entities/Categories';
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { upsertCategorySearchItem } from '../services/search/addSearchItem';
+import { CategoryResponse } from '../utils/graphqlTypes';
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })

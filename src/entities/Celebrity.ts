@@ -1,19 +1,19 @@
+import { CacheScope } from 'apollo-server-types';
+import { Ctx, Field, Int, ObjectType } from 'type-graphql';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
   BaseEntity,
-  OneToMany,
+  Column,
   CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
-import { Ctx, Field, Int, ObjectType } from 'type-graphql';
-import { CelebCategories } from './CelebCategories';
 import { AppContext } from '../types';
-import { Categories } from './Categories';
-import { CacheScope } from 'apollo-server-types';
 import { CallSlots } from '../utils/graphqlTypes';
+import { Categories } from './Categories';
+import { CelebCategories } from './CelebCategories';
 
 @ObjectType()
 @Entity()

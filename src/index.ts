@@ -1,32 +1,35 @@
+import { KeyvAdapter } from '@apollo/utils.keyvadapter';
+import KeyvRedis from '@keyv/redis';
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+import { ApolloServer } from 'apollo-server-express';
+import responseCachePlugin from 'apollo-server-plugin-response-cache';
+import connectRedis from 'connect-redis';
+import cors from 'cors';
 import 'dotenv-safe/config.js';
 import express from 'express';
-import cors from 'cors';
 import session from 'express-session';
-import connectRedis from 'connect-redis';
-import payment from './services/payments/paystack/webhook';
-import video from './services/call/twilio/webhook';
-import search from './api/typeSense';
-import firebaseConfig from './firebaseConfig';
-import sqsVODConsumer from './services/aws/queues/videoOnDemand';
-import redisClient from './redis/client';
-import pubsub from './pubsub';
-import responseCachePlugin from 'apollo-server-plugin-response-cache';
-import initializeWorkers from './queues/job_queue';
-import { ApolloServer } from 'apollo-server-express';
-import { buildSchema } from 'type-graphql';
-import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
-import { createCategoriesLoader } from './utils/categoriesLoader';
-import { createCelebsLoader } from './utils/celebsLoader';
 import { initializeApp } from 'firebase-admin/app';
-import { resolvers } from './register';
-import { WebSocketServer } from 'ws';
+import { GraphQLError } from 'graphql';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { createServer } from 'http';
-import { ApolloError, ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
-import { getSessionContext } from './utils/helpers';
+import Keyv from 'keyv';
+import { buildSchema } from 'type-graphql';
+import { WebSocketServer } from 'ws';
+import search from './api/typeSense';
+import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
 import { AppDataSource } from './db';
-import { GraphQLError } from 'graphql';
+import firebaseConfig from './firebaseConfig';
+import pubsub from './pubsub';
+import initializeWorkers from './queues/job_queue';
+import redisClient from './redis/client';
+import { resolvers } from './register';
 import sqsImageConsumer from './services/aws/queues/imageProcessing';
+import sqsVODConsumer from './services/aws/queues/videoOnDemand';
+import video from './services/call/twilio/webhook';
+import payment from './services/payments/paystack/webhook';
+import { createCategoriesLoader } from './utils/categoriesLoader';
+import { createCelebsLoader } from './utils/celebsLoader';
+import { getSessionContext } from './utils/helpers';
 
 const app = express();
 const httpServer = createServer(app);
@@ -121,10 +124,12 @@ const main = async () => {
     wsServer
   );
 
+  const keyvRedis = new KeyvRedis(redis as never);
+
   const apolloServer = new ApolloServer({
     schema,
     introspection: !__prod__,
-    cache: 'bounded',
+    cache: new KeyvAdapter(new Keyv({ store: keyvRedis, namespace: 'cached-query' })),
     csrfPrevention: true,
     plugins: [
       //response caching

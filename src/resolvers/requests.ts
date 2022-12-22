@@ -1,5 +1,15 @@
-import { Celebrity } from '../entities/Celebrity';
 import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Brackets } from 'typeorm';
+import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
+import { AppDataSource } from '../db';
+import { Celebrity } from '../entities/Celebrity';
+import { Requests } from '../entities/Requests';
+import { User } from '../entities/User';
+import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { changeRequestState } from '../request/manage';
+import { sendInstantNotification } from '../services/notifications/handler';
+import paymentManager from '../services/payments/payments';
 import {
   AppContext,
   CallType,
@@ -9,25 +19,15 @@ import {
   RequestStatus,
   RequestType,
 } from '../types';
-import { Requests } from '../entities/Requests';
-import { isAuthenticated } from '../middleware/isAuthenticated';
-import { Brackets } from 'typeorm';
+import createhashString from '../utils/createHashString';
 import {
   GenericResponse,
   ShoutoutRequestInput,
   VideoCallRequestInputs,
   VideoUploadResponse,
 } from '../utils/graphqlTypes';
-import { User } from '../entities/User';
-import { validateRecipient } from '../utils/requestValidations';
-import { sendInstantNotification } from '../services/notifications/handler';
 import { getNextAvailableDate } from '../utils/helpers';
-import paymentManager from '../services/payments/payments';
-import { AppDataSource } from '../db';
-import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
-import { changeRequestState } from '../request/manage';
-import createhashString from '../utils/createHashString';
-import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
+import { validateRecipient } from '../utils/requestValidations';
 
 @Resolver()
 export class RequestsResolver {

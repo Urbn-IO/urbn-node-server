@@ -1,8 +1,8 @@
+import { CacheScope } from 'apollo-server-types';
 import { Query, Resolver } from 'type-graphql';
 import CacheControl from '../cache/cacheControl';
 import { INSTANT_SHOUTOUT_RATE } from '../constants';
 import { Extras } from '../utils/graphqlTypes';
-import { CacheScope } from 'apollo-server-types';
 
 @Resolver()
 export class ExtrasResolver {

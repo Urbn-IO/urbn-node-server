@@ -1,5 +1,5 @@
-import { addToken, deleteTokens, getTokens, getServiceCallTokens } from './notificationTokenManager';
 import { DeviceInfoInput } from '../../utils/graphqlTypes';
+import { addToken, deleteTokens, getServiceCallTokens, getTokens } from './notificationTokenManager';
 
 // export default class TokensManager {
 //   addNotificationToken(userId: string, deviceId: string, token: string) {

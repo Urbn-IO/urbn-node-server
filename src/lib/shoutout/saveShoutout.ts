@@ -1,10 +1,10 @@
-import { NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
+import { In } from 'typeorm';
+import { AppDataSource } from '../../db';
+import { Requests } from '../../entities/Requests';
 import { Shoutout } from '../../entities/Shoutout';
 import { User } from '../../entities/User';
-import { In } from 'typeorm';
 import { sendInstantNotification } from '../../services/notifications/handler';
-import { Requests } from '../../entities/Requests';
-import { AppDataSource } from '../../db';
+import { NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
 
 const saveShoutout = async (data: VideoOutput[]) => {
   try {

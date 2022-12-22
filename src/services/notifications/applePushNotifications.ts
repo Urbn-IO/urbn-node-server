@@ -1,9 +1,9 @@
-import { __prod__ } from '../../constants';
-import jwt from 'jsonwebtoken';
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import http2 from 'http2';
+import jwt from 'jsonwebtoken';
+import { join } from 'path';
 import { v4 } from 'uuid';
+import { __prod__ } from '../../constants';
 export const sendPushKitNotification = (tokens: string[], requestId: number, callerName: string) => {
   let host: string;
   const pathToKey = join(__dirname, '../../../keys/AuthKey_3334434673.p8');

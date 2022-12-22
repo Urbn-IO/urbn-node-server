@@ -1,5 +1,5 @@
 import { Field } from 'type-graphql';
-import { Entity, BaseEntity, PrimaryGeneratedColumn, Index, Column, CreateDateColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { Currency, PaymentGateway, PaymentStatus } from '../types';
 
 @Entity()

@@ -1,10 +1,10 @@
-import { CelebCategories } from '../entities/CelebCategories';
 import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from 'type-graphql';
-import { AppContext } from '../types';
+import { AppDataSource } from '../db';
+import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { isAuthenticated } from '../middleware/isAuthenticated';
+import { AppContext } from '../types';
 import { celebCategoriesMapper } from '../utils/celebCategoriesMapper';
-import { AppDataSource } from '../db';
 
 @Resolver()
 export class UserCategoriesResolver {

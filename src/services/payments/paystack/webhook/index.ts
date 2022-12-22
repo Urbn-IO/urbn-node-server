@@ -1,12 +1,12 @@
 import crypto from 'crypto';
 import express from 'express';
-import { saveTransaction } from '../../transactions';
-import { reserveVideoCallScheduleTimeSlot } from '../../../../utils/helpers';
-import { saveCardPaystack } from '../../saveCard';
-import { SubscriptionTopics, TransactionsMetadata } from '../../../../types';
-import publish from '../../../../utils/publish';
-import { VerifyCardResponse } from '../../../../utils/graphqlTypes';
 import { updateRequestAndNotify } from '../../../../request/manage';
+import { SubscriptionTopics, TransactionsMetadata } from '../../../../types';
+import { VerifyCardResponse } from '../../../../utils/graphqlTypes';
+import { reserveVideoCallScheduleTimeSlot } from '../../../../utils/helpers';
+import publish from '../../../../utils/publish';
+import { saveCardPaystack } from '../../saveCard';
+import { saveTransaction } from '../../transactions';
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 

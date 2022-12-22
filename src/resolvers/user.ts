@@ -1,17 +1,17 @@
-import tokensManager from '../services/notifications/tokensManager';
-import { User } from '../entities/User';
-import { AppContext, EmailSubject, SignInMethod } from '../types';
 import argon2 from 'argon2';
-import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
-import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from '../utils/graphqlTypes';
-import { v4 } from 'uuid';
-import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, SESSION_COOKIE_NAME, RESET_PASSWORD_PREFIX } from '../constants';
-import { isAuthenticated } from '../middleware/isAuthenticated';
-import sendMail from '../services/mail/manager';
-import { createDeepLink } from '../services/deep_links/dynamicLinks';
 import { isEmail, length } from 'class-validator';
-import { getUserOAuth } from '../services/auth/oauth';
+import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { v4 } from 'uuid';
+import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, RESET_PASSWORD_PREFIX, SESSION_COOKIE_NAME } from '../constants';
 import { AppDataSource } from '../db';
+import { User } from '../entities/User';
+import { isAuthenticated } from '../middleware/isAuthenticated';
+import { getUserOAuth } from '../services/auth/oauth';
+import { createDeepLink } from '../services/deep_links/dynamicLinks';
+import sendMail from '../services/mail/manager';
+import tokensManager from '../services/notifications/tokensManager';
+import { AppContext, EmailSubject, SignInMethod } from '../types';
+import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from '../utils/graphqlTypes';
 
 @Resolver()
 export class UserResolver {

@@ -1,21 +1,11 @@
+import { Arg, Ctx, Int, Mutation, Resolver, ResolverFilterData, Root, Subscription, UseMiddleware } from 'type-graphql';
+import { AppDataSource } from '../db';
+import { CardAuthorization } from '../entities/CardAuthorization';
+import { User } from '../entities/User';
 import { isAuthenticated } from '../middleware/isAuthenticated';
-import {
-  Arg,
-  Ctx,
-  Int,
-  Mutation,
-  Resolver,
-  ResolverFilterData,
-  Root,
-  Subscription,
-  UseMiddleware,
-} from 'type-graphql';
+import paymentManager from '../services/payments/payments';
 import { AppContext, SubscriptionTopics } from '../types';
 import { InitializeCardResponse, VerifyCardResponse } from '../utils/graphqlTypes';
-import { User } from '../entities/User';
-import paymentManager from '../services/payments/payments';
-import { CardAuthorization } from '../entities/CardAuthorization';
-import { AppDataSource } from '../db';
 
 @Resolver()
 export class CardsResolver {

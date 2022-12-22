@@ -4,7 +4,6 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { config } from '../../constants';
 import { PartialWithRequired } from '../../types';
-import { Signer } from './cloudFront';
 import {
   ImageUpload,
   ImageUploadMetadata,
@@ -12,6 +11,7 @@ import {
   VideoMetadata,
   VideoUploadResponse,
 } from '../../utils/graphqlTypes';
+import { Signer } from './cloudFront';
 
 const staticImageDist = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_DOMAIN;
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
