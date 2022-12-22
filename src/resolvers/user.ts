@@ -62,43 +62,41 @@ export class UserResolver {
     const session = APP_SESSION_PREFIX + req.session.id;
     const key = await redis.exists(session);
     const email = userInput.email;
-    if (key === 0) {
-      const user = await AppDataSource.getRepository(User)
-        .createQueryBuilder('user')
-        .leftJoinAndSelect('user.shoutouts', 'shoutouts')
-        .leftJoinAndSelect('user.celebrity', 'celebrity')
-        .leftJoinAndSelect('user.cards', 'cards')
-        .where('user.email = :email', { email })
-        .getOne();
+    if (key !== 0) return { errorMessage: "You're already logged in" };
+    const user = await AppDataSource.getRepository(User)
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.shoutouts', 'shoutouts')
+      .leftJoinAndSelect('user.celebrity', 'celebrity')
+      .leftJoinAndSelect('user.cards', 'cards')
+      .where('user.email = :email', { email })
+      .getOne();
 
-      if (!user) return { errorMessage: 'Wrong Email or Password' };
-      if (!user.password)
-        return {
-          errorMessage: 'Wrong login method, login using another method',
-        };
-      const verifiedPassword = await argon2.verify(user.password, userInput.password);
-      if (!verifiedPassword) return { errorMessage: 'Wrong Email or Password' };
-      await redis.del(user.sessionKey);
-      await User.update(user.id, {
-        sessionKey: session,
-      });
-      await tokensManager().addNotificationToken(user.userId, device);
-      const token = v4();
-      const link = `${this.baseUrl}/reset-password/${token}`;
-      const url = await createDeepLink(link);
-      if (!url) return { errorMessage: 'An unexpected error occured' };
-      await redis.set(RESET_PASSWORD_PREFIX + token, user.email, 'EX', 3600 * 24); //link expires in one day
-      await sendMail({
-        email: [user.email],
-        name: user.displayName,
-        url,
-        subject: EmailSubject.SECURITY,
-        sourcePlatform: device.platform,
-      });
-      req.session.userId = user.userId; //log user in
-      return { user };
-    }
-    return { errorMessage: "You're already logged in" };
+    if (!user) return { errorMessage: 'Wrong Email or Password' };
+    if (!user.password)
+      return {
+        errorMessage: 'Wrong login method, login using another method',
+      };
+    const verifiedPassword = await argon2.verify(user.password, userInput.password);
+    if (!verifiedPassword) return { errorMessage: 'Wrong Email or Password' };
+    await redis.del(user.sessionKey);
+    await User.update(user.id, {
+      sessionKey: session,
+    });
+    await tokensManager().addNotificationToken(user.userId, device);
+    const token = v4();
+    const link = `${this.baseUrl}/reset-password/${token}`;
+    const url = await createDeepLink(link);
+    if (!url) return { errorMessage: 'An unexpected error occured' };
+    await redis.set(RESET_PASSWORD_PREFIX + token, user.email, 'EX', 3600 * 24); //link expires in one day
+    await sendMail({
+      email: [user.email],
+      name: user.displayName,
+      url,
+      subject: EmailSubject.SECURITY,
+      sourcePlatform: device.platform,
+    });
+    req.session.userId = user.userId; //log user in
+    return { user };
   }
 
   @Mutation(() => UserResponse)
@@ -109,38 +107,36 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const session = APP_SESSION_PREFIX + req.session.id;
     const key = await redis.exists(session);
-    if (key === 0) {
-      const auth = await getUserOAuth(uid);
-      console.log('auth is: ', auth);
-      if (auth === null) return { errorMessage: "Couldn't authenticate your account" };
-      let user = await User.findOne({
-        where: {
-          email: auth.email?.toLowerCase(),
-        },
-        relations: ['shoutouts', 'celebrity', 'cards'],
-      });
-      if (user) {
-        await redis.del(user.sessionKey);
-        await User.update(user.id, {
-          sessionKey: session,
-        });
-        await tokensManager().addNotificationToken(user.userId, device);
-        req.session.userId = user.userId;
-        return { user };
-      }
-      const id = v4();
-      user = await User.create({
-        displayName: auth.displayName,
-        email: auth.email,
-        userId: id,
+    if (key !== 0) return { errorMessage: "You're already logged in" };
+    const auth = await getUserOAuth(uid);
+    console.log('auth is: ', auth);
+    if (auth === null) return { errorMessage: "Couldn't authenticate your account" };
+    let user = await User.findOne({
+      where: {
+        email: auth.email?.toLowerCase(),
+      },
+      relations: ['shoutouts', 'celebrity', 'cards'],
+    });
+    if (user) {
+      await redis.del(user.sessionKey);
+      await User.update(user.id, {
         sessionKey: session,
-        authMethod: SignInMethod.OAUTH,
-      }).save();
+      });
       await tokensManager().addNotificationToken(user.userId, device);
-      req.session.userId = id;
+      req.session.userId = user.userId;
       return { user };
     }
-    return { errorMessage: "You're already logged in" };
+    const id = v4();
+    user = await User.create({
+      displayName: auth.displayName,
+      email: auth.email,
+      userId: id,
+      sessionKey: session,
+      authMethod: SignInMethod.OAUTH,
+    }).save();
+    await tokensManager().addNotificationToken(user.userId, device);
+    req.session.userId = id;
+    return { user };
   }
 
   @Mutation(() => GenericResponse)
