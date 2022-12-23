@@ -53,9 +53,9 @@ export class RequestsResolver {
         errorMessage: "We don't have this card anymore, try adding it again or try another",
       };
 
-    const email = user.user_email;
-    const customerDisplayName = user.user_displayName;
-    const cardAuth = user.cards_authorizationCode;
+    const email = user.user_email as string;
+    const customerDisplayName = input.for ? input.for : (user.user_displayName as string);
+    const cardAuth = user.cards_authorizationCode as string;
 
     const celeb = await Celebrity.findOne({ where: { id: celebId } });
     if (!celeb) return { errorMessage: 'This celebrity is no longer available' };

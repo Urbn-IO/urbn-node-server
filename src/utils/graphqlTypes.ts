@@ -223,7 +223,7 @@ export class DeviceInfoInput {
 export class ShoutoutRequestInput {
   @Field(() => Int)
   celebId: number;
-  @Length(15, 250, {
+  @Length(15, 300, {
     message: '$property field should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
@@ -233,6 +233,8 @@ export class ShoutoutRequestInput {
   @IsDate()
   @Field()
   requestExpiration: Date;
+  @Field({ nullable: true })
+  for?: string;
 }
 @InputType()
 export class TimeSlot {
