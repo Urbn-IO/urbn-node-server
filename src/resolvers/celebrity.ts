@@ -1,5 +1,5 @@
 import { CacheScope } from 'apollo-server-types';
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
 import { CELEB_PREREGISTRATION_PREFIX } from '../constants';
@@ -9,7 +9,6 @@ import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
 import { User } from '../entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
 import { upsertCelebritySearchItem } from '../services/search/addSearchItem';
 import { AppContext, ContentType } from '../types';
@@ -27,7 +26,7 @@ import { attachInstantShoutoutPrice } from '../utils/helpers';
 @Resolver()
 export class CelebrityResolver {
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async celebApplication(
     @Arg('input') input: CelebrityApplicationInputs,
     @Ctx() { req, redis }: AppContext
@@ -69,7 +68,7 @@ export class CelebrityResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async onBoardCeleb(@Ctx() { req }: AppContext, @Arg('data') data: OnboardCelebrityInputs): Promise<GenericResponse> {
     const userId = req.session.userId as string;
     data.isNew = false;
@@ -108,7 +107,7 @@ export class CelebrityResolver {
 
   //update celeb details
   @Mutation(() => GenericResponse, { nullable: true })
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async updateCelebDetails(
     @Arg('data') data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
@@ -157,7 +156,7 @@ export class CelebrityResolver {
   }
 
   // @Mutation(() => Boolean)
-  // @UseMiddleware(isAuthenticated)
+  // @Authorized()
   // async updateVideoCallTimeSlots(
   //   @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
   //   @Ctx() { req }: AppContext
@@ -250,7 +249,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => ImageUploadResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   getImageUploadMetadata(@Ctx() { req }: AppContext): ImageUploadResponse {
     const userId = req.session.userId as string;
     const data = getSignedImageMetadata(userId);
@@ -258,7 +257,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => VideoUploadResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   getVideoBannerUploadMetadata(@Ctx() { req }: AppContext): VideoUploadResponse {
     const userId = req.session.userId as string;
     const data = getSignedVideoMetadata({

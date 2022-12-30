@@ -1,7 +1,6 @@
 import { isEmail } from 'class-validator';
-import { Arg, Mutation, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Mutation, Resolver } from 'type-graphql';
 import { Shoutout } from '../entities/Shoutout';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { createDeepLink } from '../services/deep_links/dynamicLinks';
 import sendMail from '../services/mail/manager';
 import { EmailSubject } from '../types';
@@ -10,7 +9,7 @@ import { GenericResponse } from '../utils/graphqlTypes';
 @Resolver()
 export class ShoutoutResolver {
   @Mutation()
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async emailShoutout(
     @Arg('shoutoutId') shoutoutId: number,
     @Arg('recipient') email: string

@@ -1,15 +1,14 @@
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
 import { AppDataSource } from '../db';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { AppContext } from '../types';
 import { celebCategoriesMapper } from '../utils/celebCategoriesMapper';
 
 @Resolver()
 export class UserCategoriesResolver {
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async mapCelebToCategories(
     @Arg('categoryIds', () => [Number]) categoryIds: number[],
     @Arg('customCategories', () => [String], { nullable: true })
@@ -22,7 +21,7 @@ export class UserCategoriesResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async detachCelebFromCategories(
     @Arg('categoryIds', () => [Number]) categoryIds: number[],
     @Ctx() { req }: AppContext

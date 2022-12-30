@@ -1,5 +1,6 @@
 import {
   Arg,
+  Authorized,
   Ctx,
   Int,
   Mutation,
@@ -9,10 +10,8 @@ import {
   ResolverFilterData,
   Root,
   Subscription,
-  UseMiddleware,
 } from 'type-graphql';
 import { Requests } from '../entities/Requests';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
 import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
@@ -22,7 +21,7 @@ import { validateRequestor } from '../utils/requestValidations';
 @Resolver()
 export class VideoCallResolver {
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async initiateVideoCall(@Arg('requestId', () => Int) requestId: number, @Ctx() { req }: AppContext) {
     const userId = req.session.userId as string;
     const request = await validateRequestor(userId, requestId);
@@ -35,7 +34,7 @@ export class VideoCallResolver {
   }
 
   @Mutation(() => CallTokenResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async acceptVideoCall(
     @Arg('requestId', () => Int) requestId: number,
     @PubSub(SubscriptionTopics.VIDEO_CALL)

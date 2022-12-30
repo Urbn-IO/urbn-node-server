@@ -16,6 +16,7 @@ import Keyv from 'keyv';
 import { buildSchema } from 'type-graphql';
 import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
+import { customAuthChecker } from './auth/customAuthChecker';
 import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
 import { AppDataSource } from './db';
 import firebaseConfig from './firebaseConfig';
@@ -96,6 +97,7 @@ const main = async () => {
       stopAtFirstError: true,
       validationError: { target: false },
     },
+    authChecker: customAuthChecker,
     dateScalarMode: 'isoDate',
     pubSub: pubsub,
   });

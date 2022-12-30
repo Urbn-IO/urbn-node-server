@@ -1,9 +1,8 @@
 import { CacheScope } from 'apollo-server-types';
-import { Arg, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Int, Mutation, Query, Resolver } from 'type-graphql';
 import CacheControl from '../cache/cacheControl';
 import { AppDataSource } from '../db';
 import { Categories } from '../entities/Categories';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { upsertCategorySearchItem } from '../services/search/addSearchItem';
 import { CategoryResponse } from '../utils/graphqlTypes';
 @Resolver()
@@ -53,7 +52,7 @@ export class CategoryResolver {
     return await queryBuilder.getMany();
   }
   @Mutation(() => CategoryResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async createCategory(
     @Arg('name') name: string,
     @Arg('recommendable') recommendable: boolean
@@ -76,7 +75,7 @@ export class CategoryResolver {
   }
 
   @Mutation(() => Categories, { nullable: true })
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async updateCategory(@Arg('id', () => Int) id: number, @Arg('name') name: string): Promise<Categories | boolean> {
     const category = await Categories.findOne({ where: { id } });
     if (!category) {

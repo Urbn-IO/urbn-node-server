@@ -1,11 +1,10 @@
 import argon2 from 'argon2';
 import { isEmail, length } from 'class-validator';
-import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { v4 } from 'uuid';
 import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, RESET_PASSWORD_PREFIX, SESSION_COOKIE_NAME } from '../constants';
 import { AppDataSource } from '../db';
 import { User } from '../entities/User';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { getUserOAuth } from '../services/auth/oauth';
 import { createDeepLink } from '../services/deep_links/dynamicLinks';
 import sendMail from '../services/mail/manager';
@@ -166,7 +165,7 @@ export class UserResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async updateEmail(@Arg('token') token: string, @Ctx() { req, redis }: AppContext): Promise<GenericResponse> {
     const userId = req.session.userId;
     const key = CONFIRM_EMAIL_PREFIX + token;
@@ -268,7 +267,7 @@ export class UserResolver {
 
   //resolver for an already logged in user to change (update) their password
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async updatePassword(
     @Arg('oldPassword') oldPassword: string,
     @Arg('newPassword') newPassword: string,
@@ -305,7 +304,7 @@ export class UserResolver {
 
   //logout user
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async logout(@Ctx() { req, res }: AppContext): Promise<unknown> {
     const userId = req.session.userId;
     if (userId) {
@@ -327,7 +326,7 @@ export class UserResolver {
 
   //validate user by password
   @Query(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async validateUser(@Arg('password') password: string, @Ctx() { req }: AppContext) {
     const userId = req.session.userId;
     const user = await User.findOne({
@@ -342,7 +341,7 @@ export class UserResolver {
 
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
-  @UseMiddleware(isAuthenticated)
+  @Authorized('boy')
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     const userId = req.session.userId;
     const user = await AppDataSource.getRepository(User)

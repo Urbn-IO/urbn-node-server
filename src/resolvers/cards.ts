@@ -1,8 +1,7 @@
-import { Arg, Ctx, Int, Mutation, Resolver, ResolverFilterData, Root, Subscription, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Ctx, Int, Mutation, Resolver, ResolverFilterData, Root, Subscription } from 'type-graphql';
 import { AppDataSource } from '../db';
 import { CardAuthorization } from '../entities/CardAuthorization';
 import { User } from '../entities/User';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import paymentManager from '../services/payments/payments';
 import { AppContext, SubscriptionTopics } from '../types';
 import { InitializeCardResponse, VerifyCardResponse } from '../utils/graphqlTypes';
@@ -10,7 +9,7 @@ import { InitializeCardResponse, VerifyCardResponse } from '../utils/graphqlType
 @Resolver()
 export class CardsResolver {
   @Mutation(() => InitializeCardResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async addCard(@Ctx() { req }: AppContext): Promise<InitializeCardResponse> {
     let defaultCard = false;
     const userId = req.session.userId as string;
@@ -53,7 +52,7 @@ export class CardsResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async setDefaultCard(@Arg('id', () => Int) id: number, @Ctx() { req }: AppContext): Promise<boolean> {
     const userId = req.session.userId;
     try {

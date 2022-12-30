@@ -1,4 +1,4 @@
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
+import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
 import { AppDataSource } from '../db';
@@ -6,7 +6,6 @@ import { Celebrity } from '../entities/Celebrity';
 import { Requests } from '../entities/Requests';
 import { User } from '../entities/User';
 import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
-import { isAuthenticated } from '../middleware/isAuthenticated';
 import { changeRequestState } from '../request/manage';
 import { sendInstantNotification } from '../services/notifications/handler';
 import paymentManager from '../services/payments/payments';
@@ -32,7 +31,7 @@ import { validateRecipient } from '../utils/requestValidations';
 @Resolver()
 export class RequestsResolver {
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async createShoutoutRequest(
     @Arg('input') input: ShoutoutRequestInput,
     @Arg('cardId', () => Int) cardId: number,
@@ -107,7 +106,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async createVideoCallRequest(
     @Arg('input') input: VideoCallRequestInputs,
     @Arg('cardId', () => Int) cardId: number,
@@ -247,7 +246,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => VideoUploadResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async fulfilShoutoutRequest(
     @Arg('requestId', () => Int) requestId: number,
     @Ctx() { req }: AppContext
@@ -283,7 +282,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async fulfilCallRequest(@Arg('requestId') requestId: number): Promise<GenericResponse> {
     // resolver celeb uses to fulfil a call request
     try {
@@ -324,7 +323,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async respondToRequest(@Arg('requestId') requestId: number, @Arg('status') status: string): Promise<GenericResponse> {
     if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
@@ -356,7 +355,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async sentRequests(
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
@@ -380,7 +379,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async receivedRequests(
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
@@ -407,7 +406,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @UseMiddleware(isAuthenticated)
+  @Authorized()
   async acceptedRequests(
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
