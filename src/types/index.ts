@@ -100,7 +100,7 @@ export type CallTimerOptions = {
 
 export type SendEmailInputType = {
   name?: string;
-  email: string[];
+  emailAddresses: string[];
   ccTo?: string[];
   subject: EmailSubject;
   url: string;
@@ -184,7 +184,7 @@ export enum PlatformOptions {
   WEB = 'WEB BROWSER',
 }
 
-export enum EmailTemplates {
+export enum EmailTemplate {
   ConfirmEmailTemplate = 'ConfirmEmailTemplate',
   ResetPasswordTemplate = 'ResetPasswordTemplate',
   SecurityAlertTemplate = 'SecurityAlertTemplate',

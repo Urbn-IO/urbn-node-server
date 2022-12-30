@@ -108,7 +108,6 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
           const begin = time;
           const end = dayjs(time).add(1, 'hour').toDate();
           const minSlots = generateMinutes(begin, end);
-          console.log('min slots: ', minSlots);
           const hrslots: CallSlotHrs = {
             start: dateToFormattedString(begin),
             end: dateToFormattedString(end),
@@ -117,7 +116,6 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
 
           arr.push(hrslots);
         }
-        console.log('hour slots: ', arr);
         return arr;
       })(),
     });

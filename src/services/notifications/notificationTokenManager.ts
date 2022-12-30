@@ -1,11 +1,12 @@
 import { In } from 'typeorm';
 import { AppDataSource } from '../../db';
 import { NotificationToken } from '../../entities/NotificationToken';
+import { PlatformOptions } from '../../types';
 
 export const addToken = async (
   userId: string,
   deviceId: string,
-  platform: string,
+  platform: PlatformOptions,
   notificationToken: string,
   pushkitToken?: string
 ): Promise<string> => {
@@ -56,12 +57,13 @@ export const getServiceCallTokens = async (userId: string[]) => {
     const tokens: string[] = [];
     const pushkitTokens: string[] = [];
     tokenObj.forEach(async (x) => {
-      if (x.devicePlatform === 'ios') {
+      if (x.devicePlatform === PlatformOptions.IOS) {
         pushkitTokens.push(x.pushkitToken as string);
       } else {
         tokens.push(x.notificationToken);
       }
     });
+    console.log('pushkit tokens: ', pushkitTokens);
     return { tokens, pushkitTokens };
   }
   return {};

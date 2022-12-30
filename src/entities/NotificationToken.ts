@@ -19,7 +19,7 @@ export class NotificationToken extends BaseEntity {
 
   @Field()
   @Column({ type: 'enum', enum: PlatformOptions })
-  devicePlatform: string;
+  devicePlatform: PlatformOptions;
 
   @Field({ nullable: true })
   @Column({ nullable: true })

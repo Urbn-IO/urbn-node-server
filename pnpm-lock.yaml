@@ -47,7 +47,7 @@ specifiers:
   graphql: ^15.8.0
   graphql-redis-subscriptions: ^2.5.0
   graphql-ws: ^5.10.0
-  ioredis: ^5.2.2
+  ioredis: ^5.2.4
   jsonwebtoken: ^8.5.1
   keyv: ^4.5.2
   lodash: ^4.17.21
@@ -99,7 +99,7 @@ dependencies:
   graphql: 15.8.0
   graphql-redis-subscriptions: 2.5.0_nsv4zbviaf54hk5nfhl4slig7i
   graphql-ws: 5.10.0_graphql@15.8.0
-  ioredis: 5.2.2
+  ioredis: 5.2.4
   jsonwebtoken: 8.5.1
   keyv: 4.5.2
   lodash: 4.17.21
@@ -111,7 +111,7 @@ dependencies:
   sqs-consumer-v3: 1.0.0_h46isw2yvnpp6um25wpmqzh4tu
   twilio: 3.80.1
   type-graphql: 1.1.1_v2revtygxcm7xrdg2oz3ssohfu
-  typeorm: 0.3.7_5ct4nacf3ax67ysxzlarhfba3e
+  typeorm: 0.3.7_nt7erypf7gh4bm5u5m4r3qfopa
   typesense: 1.4.0_@babel+runtime@7.18.9
   uuid: 8.3.2
   ws: 8.8.1
@@ -3541,23 +3541,6 @@ packages:
       - supports-color
     dev: false
 
-  /ioredis/5.2.2:
-    resolution: {integrity: sha512-wryKc1ur8PcCmNwfcGkw5evouzpbDXxxkMkzPK8wl4xQfQf7lHe11Jotell5ikMVAtikXJEu/OJVaoV51BggRQ==}
-    engines: {node: '>=12.22.0'}
-    dependencies:
-      '@ioredis/commands': 1.2.0
-      cluster-key-slot: 1.1.0
-      debug: 4.3.4
-      denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
-      redis-errors: 1.2.0
-      redis-parser: 3.0.0
-      standard-as-callback: 2.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /ioredis/5.2.4:
     resolution: {integrity: sha512-qIpuAEt32lZJQ0XyrloCRdlEdUUNGG9i0UOk6zgzK6igyudNWqEBxfH6OlbnOOoBBvr1WB02mm8fR55CnikRng==}
     engines: {node: '>=12.22.0'}
@@ -4965,7 +4948,7 @@ packages:
       mime-types: 2.1.35
     dev: false
 
-  /typeorm/0.3.7_5ct4nacf3ax67ysxzlarhfba3e:
+  /typeorm/0.3.7_nt7erypf7gh4bm5u5m4r3qfopa:
     resolution: {integrity: sha512-MsPJeP6Zuwfe64c++l80+VRqpGEGxf0CkztIEnehQ+CMmQPSHjOnFbFxwBuZ2jiLqZTjLk2ZqQdVF0RmvxNF3Q==}
     engines: {node: '>= 12.9.0'}
     hasBin: true
@@ -5032,7 +5015,7 @@ packages:
       debug: 4.3.4
       dotenv: 16.0.1
       glob: 7.2.3
-      ioredis: 5.2.2
+      ioredis: 5.2.4
       js-yaml: 4.1.0
       mkdirp: 1.0.4
       pg: 8.7.3

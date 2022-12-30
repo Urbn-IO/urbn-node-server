@@ -5,7 +5,6 @@ import { join } from 'path';
 import { v4 } from 'uuid';
 import { __prod__ } from '../../constants';
 export const sendPushKitNotification = (tokens: string[], requestId: number, callerName: string) => {
-  let host: string;
   const pathToKey = join(__dirname, '../../../keys/AuthKey_3334434673.p8');
   const key = readFileSync(pathToKey, 'utf8');
   const time = Math.round(new Date().getTime() / 1000);
@@ -23,12 +22,7 @@ export const sendPushKitNotification = (tokens: string[], requestId: number, cal
     }
   );
 
-  if (__prod__) {
-    host = process.env.APNS_PROD_URL;
-  } else {
-    // host = process.env.APNS_DEV_URL;
-    host = process.env.APNS_PROD_URL;
-  }
+  const host = __prod__ ? process.env.APNS_PROD_URL : process.env.APNS_DEV_URL;
 
   tokens.forEach(async (x) => {
     try {

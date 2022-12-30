@@ -234,6 +234,9 @@ export class ShoutoutRequestInput {
   @Field()
   requestExpiration: Date;
   @Field({ nullable: true })
+  @Length(2, 20, {
+    message: '$property field should be between $constraint1 and $constraint2 characters inclusive in length',
+  })
   for?: string;
 }
 @InputType()

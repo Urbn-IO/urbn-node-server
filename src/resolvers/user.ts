@@ -89,7 +89,7 @@ export class UserResolver {
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(RESET_PASSWORD_PREFIX + token, user.email, 'EX', 3600 * 24); //link expires in one day
     await sendMail({
-      email: [user.email],
+      emailAddresses: [user.email],
       name: user.displayName,
       url,
       subject: EmailSubject.SECURITY,
@@ -158,7 +158,7 @@ export class UserResolver {
     const url = await createDeepLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(CONFIRM_EMAIL_PREFIX + token, email, 'EX', 3600 * 24); //link expires in one day
-    await sendMail({ email: [email], url, subject: EmailSubject.CONFIRM });
+    await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM });
 
     return {
       success: `Check the inbox of ${email}, we've sent you an email on the next steps to take`,
@@ -207,7 +207,7 @@ export class UserResolver {
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(RESET_PASSWORD_PREFIX + token, email, 'EX', 3600); //link expires in one hour
     await sendMail({
-      email: [email],
+      emailAddresses: [email],
       name,
       url,
       subject: EmailSubject.RESET,

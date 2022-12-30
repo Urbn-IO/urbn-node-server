@@ -11,7 +11,7 @@ const saveVideoBanner = async (data: VideoOutput[]) => {
       return;
     }
 
-    const celebObj = data.map((x) => {
+    const celebArr = data.map((x) => {
       const celeb = celebs.find((y) => y.userId === x.userId) as Celebrity;
       celeb.videoBanner = x.hlsUrl;
       celeb.placeholder = x.thumbnailUrl;
@@ -19,7 +19,7 @@ const saveVideoBanner = async (data: VideoOutput[]) => {
 
       return celeb;
     });
-    await Celebrity.save(celebObj);
+    await Celebrity.save(celebArr);
   } catch (err) {
     console.error(err);
     return;

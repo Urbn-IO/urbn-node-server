@@ -47,4 +47,5 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CardsResolver,
   VideoCallResolver,
   ExtrasResolver,
+  // ShoutoutResolver,
 ];

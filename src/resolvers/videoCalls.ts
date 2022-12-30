@@ -11,12 +11,13 @@ import {
   Subscription,
   UseMiddleware,
 } from 'type-graphql';
+import { Requests } from '../entities/Requests';
 import { isAuthenticated } from '../middleware/isAuthenticated';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
 import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
 import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
-import { validateRecipient, validateRequestor } from '../utils/requestValidations';
+import { validateRequestor } from '../utils/requestValidations';
 
 @Resolver()
 export class VideoCallResolver {
@@ -43,7 +44,13 @@ export class VideoCallResolver {
   ): Promise<CallTokenResponse> {
     const userId = req.session.userId;
     const celebrity = userId as string;
-    const request = await validateRecipient(celebrity, requestId);
+    // const request = await validateRecipient(celebrity, requestId);
+    const request = await Requests.findOne({
+      where: {
+        id: requestId,
+      },
+    });
+
     if (request) {
       const user = request.customer;
       const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
