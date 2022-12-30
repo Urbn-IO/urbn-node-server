@@ -14,7 +14,7 @@ import {
 import { Requests } from '../entities/Requests';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
-import { AppContext, RequestStatus, SubscriptionTopics } from '../types';
+import { AppContext, RequestStatus, Roles, SubscriptionTopics } from '../types';
 import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
 import { validateRequestor } from '../utils/requestValidations';
 
@@ -34,7 +34,7 @@ export class VideoCallResolver {
   }
 
   @Mutation(() => CallTokenResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async acceptVideoCall(
     @Arg('requestId', () => Int) requestId: number,
     @PubSub(SubscriptionTopics.VIDEO_CALL)

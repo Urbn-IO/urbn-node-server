@@ -7,11 +7,12 @@ import { AppDataSource } from '../db';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
+import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
 import { upsertCelebritySearchItem } from '../services/search/addSearchItem';
-import { AppContext, ContentType } from '../types';
+import { AppContext, ContentType, Roles } from '../types';
 import {
   CelebrityApplicationInputs,
   GenericResponse,
@@ -96,6 +97,11 @@ export class CelebrityResolver {
         .returning('*')
         .execute();
 
+      const user = await User.findOne({ where: { userId } });
+      if (user) {
+        await Role.create({ user, role: Roles.CELEBRITY }).save();
+      }
+
       return {
         success: `You're set! Time to make someone's dreams come through ⭐️`,
       };
@@ -107,7 +113,7 @@ export class CelebrityResolver {
 
   //update celeb details
   @Mutation(() => GenericResponse, { nullable: true })
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async updateCelebDetails(
     @Arg('data') data: UpdateCelebrityInputs,
     @Ctx() { req }: AppContext
@@ -154,20 +160,6 @@ export class CelebrityResolver {
       return { errorMessage: 'An Error Occured' };
     }
   }
-
-  // @Mutation(() => Boolean)
-  // @Authorized()
-  // async updateVideoCallTimeSlots(
-  //   @Arg("schedule", () => [CallScheduleInput]) schedule: CallScheduleInput[],
-  //   @Ctx() { req }: AppContext
-  // ) {
-  //   const userId = req.session.userId;
-  //   const celeb = await Celebrity.findOne({ where: { userId }, select: ["id"] });
-  //   if (celeb && schedule.length > 0) {
-  //     const result = await updateCallSlot(celeb.id, schedule);
-  //     return result;
-  //   } else return false;
-  // }
 
   @Query(() => [Celebrity], { nullable: true })
   @CacheControl({ maxAge: 300, scope: CacheScope.Public })
@@ -249,7 +241,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => ImageUploadResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   getImageUploadMetadata(@Ctx() { req }: AppContext): ImageUploadResponse {
     const userId = req.session.userId as string;
     const data = getSignedImageMetadata(userId);
@@ -257,7 +249,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => VideoUploadResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   getVideoBannerUploadMetadata(@Ctx() { req }: AppContext): VideoUploadResponse {
     const userId = req.session.userId as string;
     const data = getSignedVideoMetadata({

@@ -4,6 +4,7 @@ import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { v4 } from 'uuid';
 import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, RESET_PASSWORD_PREFIX, SESSION_COOKIE_NAME } from '../constants';
 import { AppDataSource } from '../db';
+import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getUserOAuth } from '../services/auth/oauth';
 import { createDeepLink } from '../services/deep_links/dynamicLinks';
@@ -30,6 +31,10 @@ export class UserResolver {
     const id = v4();
     await redis.del(key);
     try {
+      // const role = new Role();
+      // role.roles.push(Roles.USER);
+      // await AppDataSource.manager.save(role);
+
       const user = await User.create({
         displayName: userInput.displayName,
         email,
@@ -37,6 +42,8 @@ export class UserResolver {
         userId: id,
         sessionKey: APP_SESSION_PREFIX + req.session.id,
       }).save();
+
+      await Role.create({ user }).save();
       await tokensManager().addNotificationToken(user.userId, device);
       req.session.userId = id; //keep a new user logged in
       return { user };
@@ -125,6 +132,7 @@ export class UserResolver {
       req.session.userId = user.userId;
       return { user };
     }
+
     const id = v4();
     user = await User.create({
       displayName: auth.displayName,
@@ -133,6 +141,9 @@ export class UserResolver {
       sessionKey: session,
       authMethod: SignInMethod.OAUTH,
     }).save();
+
+    await Role.create({ user }).save();
+
     await tokensManager().addNotificationToken(user.userId, device);
     req.session.userId = id;
     return { user };
@@ -341,7 +352,7 @@ export class UserResolver {
 
   //fetch current logged in user
   @Query(() => UserResponse, { nullable: true })
-  @Authorized('boy')
+  @Authorized()
   async loggedInUser(@Ctx() { req }: AppContext): Promise<UserResponse> {
     const userId = req.session.userId;
     const user = await AppDataSource.getRepository(User)

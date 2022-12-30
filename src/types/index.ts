@@ -120,6 +120,11 @@ export type CallLogInput = {
 
 export type PartialWithRequired<T, K extends keyof T> = Pick<T, K> & Partial<T>;
 
+export enum Roles {
+  USER,
+  CELEBRITY,
+}
+
 export enum NotificationPriority {
   HIGH,
   NORMAL,

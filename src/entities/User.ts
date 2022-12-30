@@ -15,6 +15,7 @@ import CacheControl from '../cache/cacheControl';
 import { SignInMethod } from '../types';
 import { CardAuthorization } from './CardAuthorization';
 import { Celebrity } from './Celebrity';
+import { Role } from './Role';
 import { Shoutout } from './Shoutout';
 import { Wallet } from './Wallet';
 
@@ -70,6 +71,9 @@ export class User extends BaseEntity {
   })
   @JoinColumn()
   wallet?: Wallet;
+
+  @OneToMany(() => Role, (role) => role.user, { cascade: true })
+  userRoles: Role[];
 
   @Field(() => [Shoutout], { nullable: true })
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user)

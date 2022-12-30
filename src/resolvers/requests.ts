@@ -17,6 +17,7 @@ import {
   NotificationRouteCode,
   RequestStatus,
   RequestType,
+  Roles,
 } from '../types';
 import createhashString from '../utils/createHashString';
 import {
@@ -246,12 +247,12 @@ export class RequestsResolver {
   }
 
   @Mutation(() => VideoUploadResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async fulfilShoutoutRequest(
     @Arg('requestId', () => Int) requestId: number,
     @Ctx() { req }: AppContext
   ): Promise<VideoUploadResponse> {
-    // resolver celeb uses to fulfil a call request
+    // resolver celeb uses to fulfil a shoutout request
     const userId = req.session.userId as string; //
     try {
       const request = await validateRecipient(userId, requestId);
@@ -282,7 +283,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async fulfilCallRequest(@Arg('requestId') requestId: number): Promise<GenericResponse> {
     // resolver celeb uses to fulfil a call request
     try {
@@ -323,7 +324,7 @@ export class RequestsResolver {
   }
 
   @Mutation(() => GenericResponse)
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async respondToRequest(@Arg('requestId') requestId: number, @Arg('status') status: string): Promise<GenericResponse> {
     if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
@@ -379,7 +380,7 @@ export class RequestsResolver {
   }
 
   @Query(() => [Requests])
-  @Authorized()
+  @Authorized(Roles.CELEBRITY)
   async receivedRequests(
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,

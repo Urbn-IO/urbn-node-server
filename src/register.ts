@@ -7,6 +7,7 @@ import { Celebrity } from './entities/Celebrity';
 import { CelebrityApplications } from './entities/CelebrityApplications';
 import { NotificationToken } from './entities/NotificationToken';
 import { Requests } from './entities/Requests';
+import { Role } from './entities/Role';
 import { Shoutout } from './entities/Shoutout';
 import { Transactions } from './entities/Transactions';
 import { User } from './entities/User';
@@ -35,6 +36,7 @@ export const entities = [
   Wallet,
   WalletTransactions,
   CelebrityApplications,
+  Role,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
