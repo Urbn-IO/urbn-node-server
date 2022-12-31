@@ -7,7 +7,6 @@ import { RequestStatus, RequestType } from '../types';
 @Index(['customer', 'celebrity'])
 @Index(['customer', 'reference'])
 export class Requests extends BaseEntity {
-  @Field()
   @PrimaryGeneratedColumn()
   id: number;
 
