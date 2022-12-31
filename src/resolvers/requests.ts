@@ -27,7 +27,6 @@ import {
   VideoUploadResponse,
 } from '../utils/graphqlTypes';
 import { getNextAvailableDate } from '../utils/helpers';
-import { validateRecipient } from '../utils/requestValidations';
 
 @Resolver()
 export class RequestsResolver {
@@ -249,33 +248,29 @@ export class RequestsResolver {
   @Mutation(() => VideoUploadResponse)
   @Authorized(Roles.CELEBRITY)
   async fulfilShoutoutRequest(
-    @Arg('requestId', () => Int) requestId: number,
+    @Arg('reference') reference: string,
     @Ctx() { req }: AppContext
   ): Promise<VideoUploadResponse> {
     // resolver celeb uses to fulfil a shoutout request
     const userId = req.session.userId as string; //
     try {
-      const request = await validateRecipient(userId, requestId);
-      if (request) {
-        if (request.status !== RequestStatus.ACCEPTED) {
-          throw new Error('Invalid request state for this operation');
-        }
-        const owner = request.customer;
-        const celebAlias = request.celebrityAlias;
-        const data = getSignedVideoMetadata({
-          customMetadata: {
-            requestId,
-            userId,
-            alias: celebAlias,
-            owner,
-            contentType: ContentType.SHOUTOUT,
-          },
-        });
-        await changeRequestState(requestId, RequestStatus.PROCESSING); // change this implementation, request state should be changed once video has uploaded, i.e inside the video on demand workflow
-        return data;
-      } else {
-        return { errorMessage: 'Unauthorized action' };
+      const request = await Requests.findOne({ where: { reference } });
+      if (!request) return { errorMessage: 'Unauthorized action' };
+      if (request.status !== RequestStatus.ACCEPTED) {
+        throw new Error('Unable to access this request!');
       }
+      const celebAlias = request.celebrityAlias;
+      const data = getSignedVideoMetadata({
+        customMetadata: {
+          requestId: request.id,
+          userId,
+          alias: celebAlias,
+          owner: request.customer,
+          contentType: ContentType.SHOUTOUT,
+        },
+      });
+      await changeRequestState(request.id, RequestStatus.PROCESSING); // change this implementation, request state should be changed once video has uploaded, i.e inside the video on demand workflow
+      return data;
     } catch (err) {
       console.error(err);
       return { errorMessage: 'Error fulfilling request, Try again later' };
@@ -284,23 +279,22 @@ export class RequestsResolver {
 
   @Mutation(() => GenericResponse)
   @Authorized(Roles.CELEBRITY)
-  async fulfilCallRequest(@Arg('requestId') requestId: number): Promise<GenericResponse> {
+  async fulfilCallRequest(@Arg('reference') reference: string): Promise<GenericResponse> {
     // resolver celeb uses to fulfil a call request
     try {
       const request = (await (
         await Requests.createQueryBuilder()
           .update({ status: RequestStatus.PROCESSING })
-          .where({ id: requestId })
+          .where({ reference })
           .returning('celebrity, "callSlotId"')
           .execute()
       ).raw[0]) as Requests;
-      // const callScheduleTreeRepo = AppDataSource.getTreeRepository(CallScheduleBase);
-      // await callScheduleTreeRepo.update(request.callSlotId, { available: true });
+
       const celeb = await Celebrity.findOne({
         where: {
           userId: request.celebrity,
         },
-        select: ['id', 'availableTimeSlots'],
+        select: ['availableTimeSlots'],
       });
       if (celeb) {
         const slotId = request.callSlotId;
@@ -325,13 +319,13 @@ export class RequestsResolver {
 
   @Mutation(() => GenericResponse)
   @Authorized(Roles.CELEBRITY)
-  async respondToRequest(@Arg('requestId') requestId: number, @Arg('status') status: string): Promise<GenericResponse> {
+  async respondToRequest(@Arg('reference') reference: string, @Arg('status') status: string): Promise<GenericResponse> {
     if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
         const request = await (
           await Requests.createQueryBuilder()
             .update({ status })
-            .where({ id: requestId })
+            .where({ reference })
             .returning('customer, "requestType", "celebrityAlias"')
             .execute()
         ).raw[0];

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { join } from 'path';
 import { v4 } from 'uuid';
 import { __prod__ } from '../../constants';
-export const sendPushKitNotification = (tokens: string[], requestId: number, callerName: string) => {
+export const sendPushKitNotification = (tokens: string[], reference: string, callerName: string) => {
   const pathToKey = join(__dirname, '../../../keys/AuthKey_3334434673.p8');
   const key = readFileSync(pathToKey, 'utf8');
   const time = Math.round(new Date().getTime() / 1000);
@@ -35,7 +35,7 @@ export const sendPushKitNotification = (tokens: string[], requestId: number, cal
         aps: { alert: 'Urbn Call' },
         id: uuid,
         nameCaller: callerName,
-        handle: requestId.toString(),
+        handle: reference,
         isVideo: true,
       };
       const headers = {

@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -18,6 +19,7 @@ import { CelebCategories } from './CelebCategories';
 @ObjectType()
 @Entity()
 @CacheControl({ maxAge: 300, scope: CacheScope.Public })
+@Index(['userId', 'availableTimeSlots'])
 export class Celebrity extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()

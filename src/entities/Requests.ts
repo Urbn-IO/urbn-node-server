@@ -11,7 +11,8 @@ export class Requests extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Field()
+  @Column({ unique: true })
   reference: string;
 
   @Field()

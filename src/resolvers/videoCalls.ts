@@ -2,7 +2,6 @@ import {
   Arg,
   Authorized,
   Ctx,
-  Int,
   Mutation,
   Publisher,
   PubSub,
@@ -16,27 +15,23 @@ import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
 import { AppContext, RequestStatus, Roles, SubscriptionTopics } from '../types';
 import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
-import { validateRequestor } from '../utils/requestValidations';
 
 @Resolver()
 export class VideoCallResolver {
   @Mutation(() => Boolean)
   @Authorized()
-  async initiateVideoCall(@Arg('requestId', () => Int) requestId: number, @Ctx() { req }: AppContext) {
-    const userId = req.session.userId as string;
-    const request = await validateRequestor(userId, requestId);
-    if (request) {
-      if (request.status !== RequestStatus.ACCEPTED) return false;
-      await sendCallNotification(request.celebrity, requestId, request.customerDisplayName);
-      return true;
-    }
-    return false;
+  async initiateVideoCall(@Arg('reference') reference: string) {
+    const request = await Requests.findOne({ where: { reference } });
+    if (!request) return false;
+    if (request.status !== RequestStatus.ACCEPTED) return false;
+    await sendCallNotification(request.celebrity, reference, request.customerDisplayName);
+    return true;
   }
 
   @Mutation(() => CallTokenResponse)
   @Authorized(Roles.CELEBRITY)
   async acceptVideoCall(
-    @Arg('requestId', () => Int) requestId: number,
+    @Arg('reference') reference: string,
     @PubSub(SubscriptionTopics.VIDEO_CALL)
     publish: Publisher<CallTokenResponse>,
     @Ctx() { req }: AppContext
@@ -44,25 +39,20 @@ export class VideoCallResolver {
     const userId = req.session.userId;
     const celebrity = userId as string;
     // const request = await validateRecipient(celebrity, requestId);
-    const request = await Requests.findOne({
-      where: {
-        id: requestId,
-      },
-    });
+    const request = await Requests.findOne({ where: { reference } });
 
-    if (request) {
-      const user = request.customer;
-      const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
-      if (callRoomName) {
-        const [callToken, userCallToken] = getVideoCallToken([celebrity, user], callRoomName);
-        publish({ token: userCallToken, roomName: callRoomName, user });
-        return { token: callToken, roomName: callRoomName };
-      }
-      return {
-        errorMessage: 'An error occured while trying to create video call session',
-      };
+    if (!request) return { errorMessage: 'Unauthorized call request' };
+
+    const user = request.customer;
+    const callRoomName = await createVideoCallRoom(request.id, request.callDurationInSeconds);
+    if (callRoomName) {
+      const [callToken, userCallToken] = getVideoCallToken([celebrity, user], callRoomName);
+      publish({ token: userCallToken, roomName: callRoomName, user });
+      return { token: callToken, roomName: callRoomName };
     }
-    return { errorMessage: 'Unauthorized call request' };
+    return {
+      errorMessage: 'An error occured while trying to create video call session',
+    };
   }
 
   @Subscription({
