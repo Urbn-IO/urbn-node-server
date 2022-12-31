@@ -406,8 +406,8 @@ export class CustomVideoMetadata {
   @Field({ nullable: true })
   alias?: string;
 
-  @Field(() => Int, { nullable: true })
-  requestId?: number;
+  @Field({ nullable: true })
+  reference?: string;
 }
 
 @ObjectType()

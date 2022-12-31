@@ -262,7 +262,7 @@ export class RequestsResolver {
       const celebAlias = request.celebrityAlias;
       const data = getSignedVideoMetadata({
         customMetadata: {
-          requestId: request.id,
+          reference,
           userId,
           alias: celebAlias,
           owner: request.customer,

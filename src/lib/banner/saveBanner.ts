@@ -2,7 +2,7 @@ import { In } from 'typeorm';
 import { Celebrity } from '../../entities/Celebrity';
 import { VideoOutput } from '../../types';
 
-const saveVideoBanner = async (data: VideoOutput[]) => {
+const saveVideoBanner = async (data: Partial<VideoOutput>[]) => {
   try {
     const userIds = data.map((x) => x.userId);
     const celebs = await Celebrity.find({ where: { userId: In(userIds) } });

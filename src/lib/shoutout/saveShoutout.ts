@@ -6,7 +6,7 @@ import { User } from '../../entities/User';
 import { sendInstantNotification } from '../../services/notifications/handler';
 import { NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
 
-const saveShoutout = async (data: VideoOutput[]) => {
+const saveShoutout = async (data: Partial<VideoOutput>[]) => {
   try {
     const shoutouts: Shoutout[] = [];
     const ownerIds = data.map((x) => x.owner);
@@ -33,11 +33,11 @@ const saveShoutout = async (data: VideoOutput[]) => {
     });
 
     await Shoutout.save(shoutouts);
-    const requestIds = data.map((x) => x.requestId) as string[];
+    const references = data.map((x) => x.reference) as string[];
     await AppDataSource.createQueryBuilder()
       .update(Requests)
       .set({ status: RequestStatus.FULFILLED })
-      .where('id In (:...requestIds)', { requestIds })
+      .where('reference In (:...references)', { references })
       .execute();
 
     sendInstantNotification(

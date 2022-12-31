@@ -10,6 +10,7 @@ import {
   Root,
   Subscription,
 } from 'type-graphql';
+import { CALL_RETRY_PREFIX } from '../constants';
 import { Requests } from '../entities/Requests';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
@@ -20,7 +21,15 @@ import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
 export class VideoCallResolver {
   @Mutation(() => Boolean)
   @Authorized()
-  async initiateVideoCall(@Arg('reference') reference: string) {
+  async initiateVideoCall(@Arg('reference') reference: string, @Ctx() { redis }: AppContext) {
+    const val = await redis.get(CALL_RETRY_PREFIX + reference);
+    if (val) {
+      let retries = parseInt(val);
+      if (retries !== 3) {
+        retries++;
+        await redis.set(CALL_RETRY_PREFIX + reference, retries.toString());
+      }
+    }
     const request = await Requests.findOne({ where: { reference } });
     if (!request) return false;
     if (request.status !== RequestStatus.ACCEPTED) return false;

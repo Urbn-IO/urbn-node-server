@@ -18,7 +18,7 @@ const consumerOptions: ConsumerOptions = {
       const body = JSON.parse(x.Body as string);
       const mediaInfo = JSON.parse(body.srcMediainfo);
       const durationInSeconds = mediaInfo.container.duration;
-      const data: any = {
+      const data: Partial<VideoOutput> = {
         durationInSeconds,
         workFlowId: body.guid,
         hlsUrl: body.hlsUrl,
@@ -29,15 +29,15 @@ const consumerOptions: ConsumerOptions = {
         userId: body.customMetadata.userId,
         owner: body.customMetadata.owner,
         alias: body.customMetadata.alias,
-        requestId: body.customMetadata.requestId,
+        reference: body.customMetadata.reference,
         contentType: body.customMetadata.contentType,
       };
 
       if (body.mp4Urls) data.mp4Url = body.mp4Urls[0];
       return data;
     });
-    const banners: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.BANNER);
-    const shoutouts: VideoOutput[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
+    const banners: Partial<VideoOutput>[] = payload.filter((x) => x.contentType === ContentType.BANNER);
+    const shoutouts: Partial<VideoOutput>[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
     if (banners.length > 0) await saveVideoBanner(banners);
     if (shoutouts.length > 0) await saveShoutout(shoutouts);
   },

@@ -5,6 +5,7 @@ export const VIDE_CALL_PREFIX = 'urbn_video_room:';
 export const RESET_PASSWORD_PREFIX = 'reset-password:';
 export const CONFIRM_EMAIL_PREFIX = 'confirm-email:';
 export const CELEB_PREREGISTRATION_PREFIX = 'celeb-prereg:';
+export const CALL_RETRY_PREFIX = 'call-retries:';
 export const VIDEO_CALL_TYPE_A_DURATION = 180;
 export const VIDEO_CALL_TYPE_B_DURATION = 300;
 export const INSTANT_SHOUTOUT_RATE = 2.0;

@@ -40,9 +40,9 @@ export interface VideoOutput {
   durationInSeconds: string | undefined;
   userId: string | undefined;
   owner: string | undefined;
-  requestId: string | undefined;
+  reference: string | undefined;
   alias: string | undefined;
-  contentType: number | undefined;
+  contentType: ContentType | undefined;
 }
 
 export interface EmailBaseInput {
