@@ -19,6 +19,7 @@ import { UserCategoriesResolver } from './resolvers/celebCategories';
 import { CelebrityResolver } from './resolvers/celebrity';
 import { ExtrasResolver } from './resolvers/extras';
 import { RequestsResolver } from './resolvers/requests';
+import { ShoutoutResolver } from './resolvers/shoutout';
 import { UserResolver } from './resolvers/user';
 import { VideoCallResolver } from './resolvers/videoCalls';
 
@@ -49,5 +50,5 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   CardsResolver,
   VideoCallResolver,
   ExtrasResolver,
-  // ShoutoutResolver,
+  ShoutoutResolver,
 ];

@@ -279,46 +279,6 @@ export class RequestsResolver {
 
   @Mutation(() => GenericResponse)
   @Authorized(Roles.CELEBRITY)
-  async fulfilCallRequest(@Arg('reference') reference: string): Promise<GenericResponse> {
-    // resolver celeb uses to fulfil a call request
-    try {
-      const request = (await (
-        await Requests.createQueryBuilder()
-          .update({ status: RequestStatus.PROCESSING })
-          .where({ reference })
-          .returning('celebrity, "callSlotId"')
-          .execute()
-      ).raw[0]) as Requests;
-
-      const celeb = await Celebrity.findOne({
-        where: {
-          userId: request.celebrity,
-        },
-        select: ['availableTimeSlots'],
-      });
-      if (celeb) {
-        const slotId = request.callSlotId;
-        const availableTimeSlots = celeb.availableTimeSlots;
-        loop: for (const x of availableTimeSlots) {
-          for (const y of x.hourSlots) {
-            for (const z of y.minSlots) {
-              if (z.id === slotId) {
-                z.available = true;
-                break loop;
-              }
-            }
-          }
-        }
-        await Celebrity.update({ userId: request.celebrity }, { availableTimeSlots });
-      }
-    } catch (err) {
-      return { errorMessage: 'Error fulfilling request, Try again later' };
-    }
-    return { success: 'Request successfully fulfilled' };
-  }
-
-  @Mutation(() => GenericResponse)
-  @Authorized(Roles.CELEBRITY)
   async respondToRequest(@Arg('reference') reference: string, @Arg('status') status: string): Promise<GenericResponse> {
     if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
