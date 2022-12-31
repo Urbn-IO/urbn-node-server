@@ -9,7 +9,7 @@ import { GenericResponse } from '../utils/graphqlTypes';
 
 @Resolver()
 export class ShoutoutResolver {
-  @Mutation()
+  @Mutation(() => GenericResponse)
   @Authorized()
   async emailShoutout(
     @Arg('shoutoutId') shoutoutId: number,
