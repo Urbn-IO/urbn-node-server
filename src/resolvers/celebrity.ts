@@ -53,11 +53,11 @@ export class CelebrityResolver {
       await CelebrityApplications.create({
         email: user.email,
         userId: user.userId,
-        alias: input.alias,
-        facebook: input.facebook,
-        instagram: input.instagram,
-        twitter: input.twitter,
-        phoneNumber: input.phoneNumber,
+        alias: input.alias.trim(),
+        facebook: input.facebook?.trim(),
+        instagram: input.instagram?.trim(),
+        twitter: input.twitter?.trim(),
+        phoneNumber: input.phoneNumber?.trim(),
       }).save();
       await redis.set(CELEB_PREREGISTRATION_PREFIX + userId, userId as string, 'EX', 3600 * 24 * 7);
       return {
@@ -134,9 +134,7 @@ export class CelebrityResolver {
     }
 
     if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
-      console.log('...callSchedule input data: ', data.callScheduleSlots);
       data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
-      console.log('...availableTimeSlots: ', data.availableTimeSlots);
       delete data.callScheduleSlots;
     }
 

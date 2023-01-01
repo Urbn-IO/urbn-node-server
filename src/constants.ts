@@ -1,3 +1,4 @@
+export const APP_BASE_URL = 'https://geturbn.io';
 export const __prod__ = process.env.Node_ENV === 'production';
 export const SESSION_COOKIE_NAME = 'urbn_session';
 export const APP_SESSION_PREFIX = 'session:';
@@ -6,6 +7,8 @@ export const RESET_PASSWORD_PREFIX = 'reset-password:';
 export const CONFIRM_EMAIL_PREFIX = 'confirm-email:';
 export const CELEB_PREREGISTRATION_PREFIX = 'celeb-prereg:';
 export const CALL_RETRY_PREFIX = 'call-retries:';
+export const APP_MAIN_DYNAMIC_URL_PREFIX = 'https://blink.geturbn.io';
+export const APP_CELEBRITY_DYNAMIC_URL_PREFIX = 'https://celebrity.geturbn.io';
 export const VIDEO_CALL_TYPE_A_DURATION = 180;
 export const VIDEO_CALL_TYPE_B_DURATION = 300;
 export const INSTANT_SHOUTOUT_RATE = 2.0;

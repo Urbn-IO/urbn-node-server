@@ -505,6 +505,14 @@ export class CallSlots extends CallSlotBase {
 }
 
 @ObjectType()
+export class InitiateVideoCallResponse {
+  @Field(() => Int, { nullable: true })
+  attempts?: number;
+  @Field({ nullable: true })
+  errorMessage?: string;
+}
+
+@ObjectType()
 export class Extras {
   @Field()
   bannerMain: string;

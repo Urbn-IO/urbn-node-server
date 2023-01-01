@@ -23,6 +23,10 @@ export class Celebrity extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  profileUrl?: string;
+
   @Field()
   @Column({ default: true })
   isNew: boolean;

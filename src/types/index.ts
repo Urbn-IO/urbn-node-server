@@ -65,7 +65,12 @@ export interface ImageProcessorQueueOutput {
   thumbnail?: string;
   lowResPlaceholder?: string;
 }
-
+export interface CallRetriesState {
+  attempts: number;
+  expiry: number;
+  celebrity: string;
+  customerDisplayName: string;
+}
 export type TransactionsMetadata = {
   userId: string;
   requestRef?: string;
@@ -131,14 +136,14 @@ export enum NotificationPriority {
 }
 
 export enum RequestStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-  VALIDATING = 'validating',
-  PROCESSING = 'processing',
-  FAILED = 'failed',
-  FULFILLED = 'fulfilled',
-  UNFULFILLED = 'unfulfilled',
+  PENDING = 'Pending',
+  ACCEPTED = 'Accepted',
+  REJECTED = 'Rejected',
+  VALIDATING = 'Validating',
+  PROCESSING = 'Processing',
+  FAILED = 'Failed',
+  FULFILLED = 'Fulfilled',
+  UNFULFILLED = 'Unfulfilled',
 }
 
 export enum RequestType {

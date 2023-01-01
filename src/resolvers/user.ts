@@ -2,12 +2,18 @@ import argon2 from 'argon2';
 import { isEmail, length } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { v4 } from 'uuid';
-import { APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, RESET_PASSWORD_PREFIX, SESSION_COOKIE_NAME } from '../constants';
+import {
+  APP_BASE_URL,
+  APP_SESSION_PREFIX,
+  CONFIRM_EMAIL_PREFIX,
+  RESET_PASSWORD_PREFIX,
+  SESSION_COOKIE_NAME,
+} from '../constants';
 import { AppDataSource } from '../db';
 import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getUserOAuth } from '../services/auth/oauth';
-import { createDeepLink } from '../services/deep_links/dynamicLinks';
+import { createDynamicLink } from '../services/deep_links/dynamicLinks';
 import sendMail from '../services/mail/manager';
 import tokensManager from '../services/notifications/tokensManager';
 import { AppContext, EmailSubject, SignInMethod } from '../types';
@@ -15,7 +21,7 @@ import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResp
 
 @Resolver()
 export class UserResolver {
-  baseUrl = process.env.APP_BASE_URL;
+  baseUrl = APP_BASE_URL;
   //create User resolver
   @Mutation(() => UserResponse)
   async createUser(
@@ -91,7 +97,7 @@ export class UserResolver {
     await tokensManager().addNotificationToken(user.userId, device);
     const token = v4();
     const link = `${this.baseUrl}/reset-password/${token}`;
-    const url = await createDeepLink(link);
+    const url = await createDynamicLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(RESET_PASSWORD_PREFIX + token, user.email, 'EX', 3600 * 24); //link expires in one day
     await sendMail({
@@ -165,7 +171,7 @@ export class UserResolver {
     email = email.toLowerCase();
     const token = v4();
     const link = `${this.baseUrl}/${route}/${token}`;
-    const url = await createDeepLink(link);
+    const url = await createDynamicLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(CONFIRM_EMAIL_PREFIX + token, email, 'EX', 3600 * 24); //link expires in one day
     await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM });
@@ -213,7 +219,7 @@ export class UserResolver {
     const token = v4();
     const name = user.displayName;
     const link = `${this.baseUrl}/reset-password/${token}`;
-    const url = await createDeepLink(link);
+    const url = await createDynamicLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(RESET_PASSWORD_PREFIX + token, email, 'EX', 3600); //link expires in one hour
     await sendMail({

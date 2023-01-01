@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import {
   Arg,
   Authorized,
@@ -14,27 +15,60 @@ import { CALL_RETRY_PREFIX } from '../constants';
 import { Requests } from '../entities/Requests';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
-import { AppContext, RequestStatus, Roles, SubscriptionTopics } from '../types';
-import { CallTokenResponse, VideoCallEvent } from '../utils/graphqlTypes';
+import { AppContext, CallRetriesState, RequestStatus, Roles, SubscriptionTopics } from '../types';
+import { CallTokenResponse, InitiateVideoCallResponse, VideoCallEvent } from '../utils/graphqlTypes';
 
 @Resolver()
 export class VideoCallResolver {
-  @Mutation(() => Boolean)
+  @Mutation(() => InitiateVideoCallResponse)
   @Authorized()
-  async initiateVideoCall(@Arg('reference') reference: string, @Ctx() { redis }: AppContext) {
-    const val = await redis.get(CALL_RETRY_PREFIX + reference);
-    if (val) {
-      let retries = parseInt(val);
-      if (retries !== 3) {
-        retries++;
-        await redis.set(CALL_RETRY_PREFIX + reference, retries.toString());
-      }
+  async initiateVideoCall(
+    @Arg('reference') reference: string,
+    @Ctx() { redis }: AppContext
+  ): Promise<InitiateVideoCallResponse> {
+    let request;
+    let expiry;
+    let data: Partial<CallRetriesState> = {};
+    let attempts;
+    const res = await redis.get(CALL_RETRY_PREFIX + reference);
+
+    switch (res) {
+      //first call attempt
+      case null:
+        request = await Requests.findOne({ where: { reference } });
+        if (!request) return { errorMessage: 'An error occured!' };
+        if (request.status !== RequestStatus.ACCEPTED) return { errorMessage: 'This request is no longer valid!' };
+        expiry = dayjs(request.requestExpires).unix();
+        data = {
+          attempts: 1,
+          expiry,
+          celebrity: request.celebrity,
+          customerDisplayName: request.customerDisplayName,
+        };
+        await redis.set(CALL_RETRY_PREFIX + reference, JSON.stringify(data), 'EXAT', expiry);
+        await sendCallNotification(request.celebrity, reference, request.customerDisplayName);
+        return { attempts: data.attempts };
+      // subsequent call attempts
+      default:
+        data = JSON.parse(res);
+        attempts = data.attempts;
+        expiry = data.expiry;
+        if (!attempts || !expiry || !data.celebrity || !data.customerDisplayName) {
+          return { errorMessage: 'An error occured' };
+        }
+        //User can only retry a call 3 times
+        if (attempts === 3) {
+          return {
+            errorMessage:
+              'You have exceeded the max amount of call attempts! Your request will be expired and you will be refunded ',
+          };
+        }
+        attempts++;
+        data.attempts = attempts;
+        await redis.set(CALL_RETRY_PREFIX + reference, JSON.stringify(data), 'EXAT', expiry);
+        await sendCallNotification(data.celebrity, reference, data.customerDisplayName);
+        return { attempts };
     }
-    const request = await Requests.findOne({ where: { reference } });
-    if (!request) return false;
-    if (request.status !== RequestStatus.ACCEPTED) return false;
-    await sendCallNotification(request.celebrity, reference, request.customerDisplayName);
-    return true;
   }
 
   @Mutation(() => CallTokenResponse)
@@ -45,8 +79,8 @@ export class VideoCallResolver {
     publish: Publisher<CallTokenResponse>,
     @Ctx() { req }: AppContext
   ): Promise<CallTokenResponse> {
-    const userId = req.session.userId;
-    const celebrity = userId as string;
+    const userId = req.session.userId as string;
+    const celebrity = userId;
     // const request = await validateRecipient(celebrity, requestId);
     const request = await Requests.findOne({ where: { reference } });
 

@@ -2,7 +2,7 @@ import { isEmail } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
 import { AppDataSource } from '../db';
 import { User } from '../entities/User';
-import { createDeepLink } from '../services/deep_links/dynamicLinks';
+import { createDynamicLink } from '../services/deep_links/dynamicLinks';
 import sendMail from '../services/mail/manager';
 import { AppContext, EmailSubject } from '../types';
 import { GenericResponse } from '../utils/graphqlTypes';
@@ -36,7 +36,7 @@ export class ShoutoutResolver {
     const thumbnail = shoutout.thumbnailUrl;
     const link = `${viewerUrl}?hls=${hls}&mp4=${mp4}&thumbnail=${thumbnail}`;
 
-    const url = await createDeepLink(link, false);
+    const url = await createDynamicLink(link, false);
     if (!url) return { errorMessage: 'An error ouccred, try agin later' };
 
     await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM });
