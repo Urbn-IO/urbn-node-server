@@ -68,6 +68,7 @@ export interface ImageProcessorQueueOutput {
 export interface CallRetriesState {
   attempts: number;
   expiry: number;
+  requestId: number;
   celebrity: string;
   customerDisplayName: string;
 }

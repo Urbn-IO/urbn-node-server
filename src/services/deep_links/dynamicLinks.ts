@@ -11,11 +11,9 @@ export const createDynamicLink = async (
   prefix: 'main' | 'celeb' = 'main',
   socialMetaTagInfo?: SocialMetaTagInfo
 ) => {
-  let suffix: Suffix;
   const urlPrefix = prefix === 'main' ? APP_MAIN_DYNAMIC_URL_PREFIX : APP_CELEBRITY_DYNAMIC_URL_PREFIX;
   const firebaseDynamicLinks = new FirebaseDynamicLinks(process.env.FIREBASE_WEBAPI_KEY);
-  if (complex) suffix = { option: 'UNGUESSABLE' };
-  else suffix = { option: 'SHORT' };
+  const suffix: Suffix = complex ? { option: 'UNGUESSABLE' } : { option: 'SHORT' };
 
   try {
     const { shortLink, previewLink } = await firebaseDynamicLinks.createLink({

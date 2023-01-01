@@ -13,6 +13,7 @@ import {
 } from 'type-graphql';
 import { CALL_RETRY_PREFIX } from '../constants';
 import { Requests } from '../entities/Requests';
+import { changeRequestState } from '../request/manage';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
 import { sendCallNotification } from '../services/notifications/handler';
 import { AppContext, CallRetriesState, RequestStatus, Roles, SubscriptionTopics } from '../types';
@@ -42,6 +43,7 @@ export class VideoCallResolver {
         data = {
           attempts: 1,
           expiry,
+          requestId: request.id,
           celebrity: request.celebrity,
           customerDisplayName: request.customerDisplayName,
         };
@@ -53,11 +55,12 @@ export class VideoCallResolver {
         data = JSON.parse(res);
         attempts = data.attempts;
         expiry = data.expiry;
-        if (!attempts || !expiry || !data.celebrity || !data.customerDisplayName) {
+        if (!attempts || !expiry || !data.celebrity || !data.customerDisplayName || !data.requestId) {
           return { errorMessage: 'An error occured' };
         }
         //User can only retry a call 3 times
-        if (attempts === 3) {
+        if (attempts >= 3) {
+          await changeRequestState(data.requestId, RequestStatus.UNFULFILLED);
           return {
             errorMessage:
               'You have exceeded the max amount of call attempts! Your request will be expired and you will be refunded ',
