@@ -1,8 +1,9 @@
+import { ApolloServer } from '@apollo/server';
+import responseCachePlugin from '@apollo/server-plugin-response-cache';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import KeyvRedis from '@keyv/redis';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
-import { ApolloServer } from 'apollo-server-express';
-import responseCachePlugin from 'apollo-server-plugin-response-cache';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
 import 'dotenv-safe/config.js';
@@ -20,14 +21,17 @@ import { customAuthChecker } from './auth/customAuthChecker';
 import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
 import { AppDataSource } from './db';
 import firebaseConfig from './firebaseConfig';
+import { snsChecker } from './middleware/snsChecker';
 import pubsub from './pubsub';
 import initializeWorkers from './queues/job_queue';
 import redisClient from './redis/client';
 import { resolvers } from './register';
+import sns from './services/aws/email/api';
 import sqsImageConsumer from './services/aws/queues/imageProcessing';
 import sqsVODConsumer from './services/aws/queues/videoOnDemand';
 import video from './services/call/twilio/webhook';
 import payment from './services/payments/paystack/webhook';
+import { AppContext } from './types';
 import { createCategoriesLoader } from './utils/categoriesLoader';
 import { createCelebsLoader } from './utils/celebsLoader';
 import { getSessionContext } from './utils/helpers';
@@ -58,6 +62,13 @@ const main = async () => {
     prefix: APP_SESSION_PREFIX,
   });
   app.use(
+    express.urlencoded({
+      extended: true,
+    })
+  );
+  app.use(express.json());
+
+  app.use(
     session({
       name: SESSION_COOKIE_NAME,
       store,
@@ -72,13 +83,8 @@ const main = async () => {
       resave: false,
     })
   );
-  app.use(
-    express.urlencoded({
-      extended: true,
-    })
-  );
-  app.use(express.json());
-  app.set('trust proxy', !__prod__);
+
+  // app.set('trust proxy', !__prod__);
   app.use(
     cors({
       origin: ['https://studio.apollographql.com', 'http://localhost:8000', 'https://geturbn.io'],
@@ -90,6 +96,7 @@ const main = async () => {
   app.use('/paystack', payment);
   app.use('/search', search);
   app.use('/request-state', search);
+  app.use('/sns', snsChecker, sns);
 
   const schema = await buildSchema({
     resolvers,
@@ -115,7 +122,7 @@ const main = async () => {
       context: async ({ extra }) => {
         const sess = await getSessionContext(extra.request.headers.cookie as string, store);
         if (!sess?.userId) {
-          throw new Error('Users not logged in');
+          throw new Error('User not logged in');
         }
         return { userId: sess.userId };
       },
@@ -128,7 +135,7 @@ const main = async () => {
 
   const keyvRedis = new KeyvRedis(redis as never);
 
-  const apolloServer = new ApolloServer({
+  const apolloServer = new ApolloServer<AppContext>({
     schema,
     introspection: !__prod__,
     cache: new KeyvAdapter(new Keyv({ store: keyvRedis, namespace: 'cached-query' })),
@@ -162,34 +169,26 @@ const main = async () => {
         },
       },
     ],
-    context: ({ req, res }) => ({
-      req,
-      res,
-      redis,
-      pubsub,
-      categoriesLoader: createCategoriesLoader(),
-      celebsLoader: createCelebsLoader(),
-    }),
-    formatError: (err: GraphQLError) => {
-      const errorCode = err.extensions.code;
-      if (errorCode === 'GRAPHQL_VALIDATION_FAILED' || errorCode === 'BAD_USER_INPUT') {
-        return new GraphQLError(err.message);
-      }
-      if (errorCode === 'INTERNAL_SERVER_ERROR') {
-        const validationErrors = err.extensions.exception.validationErrors;
-        if (validationErrors) {
-          const constraints = validationErrors[0].constraints;
-          const keys = Object.keys(constraints);
-          const message = constraints[keys[0]];
-          return new GraphQLError(message);
-        }
-      }
-
-      return err;
+    formatError: (formatError) => {
+      return new GraphQLError(formatError.message);
     },
   });
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app, cors: false });
+
+  app.use(
+    '/graphql',
+    expressMiddleware(apolloServer, {
+      context: async ({ req, res }) => ({
+        req,
+        res,
+        redis,
+        pubsub,
+        categoriesLoader: createCategoriesLoader(),
+        celebsLoader: createCelebsLoader(),
+      }),
+    })
+  );
+
   httpServer.listen(Port, () => {
     console.log('Production Environment: ', __prod__);
     console.log(`server running on port ${Port} 🚀🚀`);

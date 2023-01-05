@@ -1,4 +1,5 @@
 export const APP_BASE_URL = 'https://geturbn.io';
+export const SHOUTOUT_PLAYER_URL = 'https://player.geturbn.io';
 export const __prod__ = process.env.Node_ENV === 'production';
 export const SESSION_COOKIE_NAME = 'urbn_session';
 export const APP_SESSION_PREFIX = 'session:';

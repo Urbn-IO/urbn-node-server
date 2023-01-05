@@ -1,9 +1,10 @@
 import { isEmail } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
+import { SHOUTOUT_PLAYER_URL } from '../constants';
 import { AppDataSource } from '../db';
 import { User } from '../entities/User';
+import sendMail from '../services/aws/email/manager';
 import { createDynamicLink } from '../services/deep_links/dynamicLinks';
-import sendMail from '../services/mail/manager';
 import { AppContext, EmailSubject } from '../types';
 import { GenericResponse } from '../utils/graphqlTypes';
 
@@ -19,7 +20,7 @@ export class ShoutoutResolver {
     const userId = req.session.userId as string;
     if (!isEmail(email)) return { errorMessage: 'Provide a valid email address' };
 
-    const viewerUrl = 'https://urbn-video-player.vercel.app';
+    const viewerUrl = SHOUTOUT_PLAYER_URL;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder('user')
       .select(['user.id'])

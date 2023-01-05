@@ -13,8 +13,8 @@ import { AppDataSource } from '../db';
 import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getUserOAuth } from '../services/auth/oauth';
+import sendMail from '../services/aws/email/manager';
 import { createDynamicLink } from '../services/deep_links/dynamicLinks';
-import sendMail from '../services/mail/manager';
 import tokensManager from '../services/notifications/tokensManager';
 import { AppContext, EmailSubject, SignInMethod } from '../types';
 import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from '../utils/graphqlTypes';
@@ -100,13 +100,16 @@ export class UserResolver {
     const url = await createDynamicLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(RESET_PASSWORD_PREFIX + token, user.email, 'EX', 3600 * 24); //link expires in one day
-    await sendMail({
-      emailAddresses: [user.email],
-      name: user.displayName,
-      url,
-      subject: EmailSubject.SECURITY,
-      sourcePlatform: device.platform,
-    });
+    if (user.isEmailActive) {
+      await sendMail({
+        emailAddresses: [user.email],
+        name: user.displayName,
+        url,
+        subject: EmailSubject.SECURITY,
+        sourcePlatform: device.platform,
+      });
+    }
+
     req.session.userId = user.userId; //log user in
     return { user };
   }

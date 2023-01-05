@@ -1,4 +1,3 @@
-import { CacheScope } from 'apollo-server-types';
 import { Field, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -12,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
-import { SignInMethod } from '../types';
+import { CacheControlScope, SignInMethod } from '../types';
 import { CardAuthorization } from './CardAuthorization';
 import { Celebrity } from './Celebrity';
 import { Role } from './Role';
@@ -36,6 +35,9 @@ export class User extends BaseEntity {
   @Field()
   @Column({ unique: true })
   email: string;
+
+  @Column({ default: true })
+  isEmailActive: boolean;
 
   @Column({ nullable: true })
   password: string;
@@ -64,7 +66,7 @@ export class User extends BaseEntity {
   celebrity?: Celebrity;
 
   @Field({ nullable: true })
-  @CacheControl({ maxAge: 60, scope: CacheScope.Private })
+  @CacheControl({ maxAge: 60, scope: CacheControlScope.PRIVATE })
   @OneToOne(() => Wallet, {
     nullable: true,
     cascade: true,

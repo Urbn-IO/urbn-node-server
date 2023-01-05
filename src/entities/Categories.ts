@@ -1,4 +1,3 @@
-import { CacheScope } from 'apollo-server-types';
 import { Ctx, Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
@@ -7,7 +6,7 @@ import { CelebCategories } from './CelebCategories';
 import { Celebrity } from './Celebrity';
 @ObjectType()
 @Entity()
-@CacheControl({ maxAge: 300, scope: CacheScope.Public })
+@CacheControl({ maxAge: 300 })
 export class Categories extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()

@@ -92,7 +92,7 @@ export class RequestsResolver {
       celebrityThumbnail: celeb.thumbnail as string,
       requestType,
       amount: transactionAmount,
-      description: input.description,
+      description: input.description.trim(),
       requestExpires: input.requestExpiration,
     };
     const result = await Requests.create(request).save();

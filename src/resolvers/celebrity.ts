@@ -1,4 +1,3 @@
-import { CacheScope } from 'apollo-server-types';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
@@ -27,7 +26,7 @@ import { attachInstantShoutoutPrice } from '../utils/helpers';
 @Resolver()
 export class CelebrityResolver {
   @Mutation(() => GenericResponse)
-  @Authorized()
+  // @Authorized()
   async celebApplication(
     @Arg('input') input: CelebrityApplicationInputs,
     @Ctx() { req, redis }: AppContext
@@ -160,7 +159,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity], { nullable: true })
-  @CacheControl({ maxAge: 300, scope: CacheScope.Public })
+  @CacheControl({ maxAge: 300 })
   async celebrities(
     @Arg('celebId', () => Int, { nullable: true }) celebId: number,
     @Arg('limit', () => Int, { nullable: true }) limit: number,
@@ -204,7 +203,7 @@ export class CelebrityResolver {
   }
 
   @Query(() => [Celebrity])
-  @CacheControl({ maxAge: 3600, scope: CacheScope.Public })
+  @CacheControl({ maxAge: 3600 })
   async similarToCelebrity(@Arg('celebId') celebId: number, @Arg('limit', () => Int) limit: number) {
     const maxLimit = Math.min(8, limit);
     try {

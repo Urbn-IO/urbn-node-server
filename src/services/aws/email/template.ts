@@ -1,6 +1,6 @@
 import { SendTemplatedEmailCommandInput } from '@aws-sdk/client-ses';
-import { addJob, mailQueue } from '../../queues/job_queue/producer';
-import { EmailBaseInput, EmailTemplate } from '../../types';
+import { addJob, mailQueue } from '../../../queues/job_queue/producer';
+import { EmailBaseInput, EmailTemplate } from '../../../types';
 
 const sendTemplatedMail = async (
   source: string,

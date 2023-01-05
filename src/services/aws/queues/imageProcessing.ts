@@ -1,7 +1,7 @@
 import { Consumer, ConsumerOptions } from 'sqs-consumer-v3';
 import handler from '../../../lib/imageQueueHandlers/queueHandler';
 import { ImageProcessorQueueOutput } from '../../../types';
-import { sqsClient } from '../clients/sqs/client';
+import { sqsClient } from '../clients/sqs';
 
 const queueUrl = process.env.AWS_SQS_IMAGE_PROCESSOR_QUEUE_URL;
 const consumerOptions: ConsumerOptions = {

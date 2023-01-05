@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { EmailBaseInput, EmailSubject, EmailTemplate, SendEmailInputType } from '../../types';
+import { EmailBaseInput, EmailSubject, EmailTemplate, SendEmailInputType } from '../../../types';
 import sendTemplatedMail from './template';
 dayjs.extend(utc);
 

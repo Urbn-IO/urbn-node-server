@@ -227,3 +227,8 @@ export enum Currency {
   SA_RAND = 'ZAR',
   US_DOLLARS = 'USD',
 }
+
+export enum CacheControlScope {
+  PUBLIC,
+  PRIVATE,
+}

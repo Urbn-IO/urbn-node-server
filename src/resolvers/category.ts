@@ -1,4 +1,3 @@
-import { CacheScope } from 'apollo-server-types';
 import { Arg, Authorized, Int, Mutation, Query, Resolver } from 'type-graphql';
 import CacheControl from '../cache/cacheControl';
 import { AppDataSource } from '../db';
@@ -8,7 +7,7 @@ import { CategoryResponse } from '../utils/graphqlTypes';
 @Resolver()
 export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
-  @CacheControl({ maxAge: 300, scope: CacheScope.Public })
+  @CacheControl({ maxAge: 300 })
   async getCategories(
     @Arg('categoryId', () => Int, { nullable: true }) id: number,
     @Arg('name', { nullable: true }) name: string,

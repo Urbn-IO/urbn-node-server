@@ -1,5 +1,10 @@
-import { CacheHint } from 'apollo-server-types';
 import { Directive } from 'type-graphql';
+import { CacheControlScope } from '../types';
+
+interface CacheHint {
+  maxAge: number;
+  scope?: CacheControlScope;
+}
 
 function CacheControl({ maxAge, scope }: CacheHint) {
   if (!maxAge && !scope) {

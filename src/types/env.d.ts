@@ -2,8 +2,6 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       APP_NAME: string;
-      APP_BASE_URL: string;
-      APP_DYNAMIC_URL_PREFIX: string;
       APP_LOGO_URL: string;
       APP_BUNDLE_NAME: string;
       AWS_VOD_STACK_NAME: string;
