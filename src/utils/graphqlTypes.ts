@@ -3,6 +3,7 @@ import { Field, InputType, Int, ObjectType, registerEnumType } from 'type-graphq
 import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from '../constants';
 import { CardAuthorization } from '../entities/CardAuthorization';
 import { Categories } from '../entities/Categories';
+import { Featured } from '../entities/Featured';
 import { User } from '../entities/User';
 import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from '../types';
 
@@ -515,18 +516,10 @@ export class InitiateVideoCallResponse {
   @Field({ nullable: true })
   errorMessage?: string;
 }
-
 @ObjectType()
-export class Extras {
-  @Field()
-  bannerMain: string;
-
-  @Field()
-  bannerSecondary: string;
-
-  @Field()
-  bannerDescription: string;
-
-  @Field()
-  instantShoutoutRate: number;
+export class FeaturedResponse {
+  @Field(() => Featured, { nullable: true })
+  featured?: Featured;
+  @Field({ nullable: true })
+  errorMessage?: string;
 }

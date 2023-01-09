@@ -5,6 +5,7 @@ import { Categories } from './entities/Categories';
 import { CelebCategories } from './entities/CelebCategories';
 import { Celebrity } from './entities/Celebrity';
 import { CelebrityApplications } from './entities/CelebrityApplications';
+import { Featured } from './entities/Featured';
 import { NotificationToken } from './entities/NotificationToken';
 import { Requests } from './entities/Requests';
 import { Role } from './entities/Role';
@@ -17,7 +18,7 @@ import { CardsResolver } from './resolvers/cards';
 import { CategoryResolver } from './resolvers/category';
 import { UserCategoriesResolver } from './resolvers/celebCategories';
 import { CelebrityResolver } from './resolvers/celebrity';
-import { ExtrasResolver } from './resolvers/extras';
+import { ExtrasResolver } from './resolvers/featured';
 import { RequestsResolver } from './resolvers/requests';
 import { ShoutoutResolver } from './resolvers/shoutout';
 import { UserResolver } from './resolvers/user';
@@ -38,6 +39,7 @@ export const entities = [
   WalletTransactions,
   CelebrityApplications,
   Role,
+  Featured,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
