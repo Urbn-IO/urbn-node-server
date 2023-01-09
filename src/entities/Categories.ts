@@ -1,5 +1,5 @@
 import { Ctx, Field, Int, ObjectType } from 'type-graphql';
-import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
 import { AppContext } from '../types';
 import { CelebCategories } from './CelebCategories';
@@ -21,6 +21,7 @@ export class Categories extends BaseEntity {
   recommendable: boolean;
 
   @Field(() => Boolean)
+  @Index()
   @Column({ default: false })
   primary: boolean;
 

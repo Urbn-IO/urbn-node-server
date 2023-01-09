@@ -11,7 +11,7 @@ const consumerOptions: ConsumerOptions = {
   batchSize: 10,
   waitTimeSeconds: 20,
   visibilityTimeout: 120,
-  pollingWaitTimeMs: 120000,
+  pollingWaitTimeMs: 0,
   sqs: sqsClient,
   handleMessageBatch: async (messages) => {
     const payload = messages.map((x) => {
@@ -38,8 +38,8 @@ const consumerOptions: ConsumerOptions = {
     });
     const banners: Partial<VideoOutput>[] = payload.filter((x) => x.contentType === ContentType.BANNER);
     const shoutouts: Partial<VideoOutput>[] = payload.filter((x) => x.contentType === ContentType.SHOUTOUT);
-    if (banners.length > 0) await saveVideoBanner(banners);
-    if (shoutouts.length > 0) await saveShoutout(shoutouts);
+    if (banners.length > 0) saveVideoBanner(banners);
+    if (shoutouts.length > 0) saveShoutout(shoutouts);
   },
 };
 

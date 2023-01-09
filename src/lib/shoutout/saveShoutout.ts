@@ -1,5 +1,5 @@
 import { In } from 'typeorm';
-import { AppDataSource } from '../../db';
+import AppDataSource from '../../config/ormconfig';
 import { Requests } from '../../entities/Requests';
 import { Shoutout } from '../../entities/Shoutout';
 import { User } from '../../entities/User';

@@ -1,7 +1,7 @@
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
+import AppDataSource from '../config/ormconfig';
 import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
-import { AppDataSource } from '../db';
 import { Celebrity } from '../entities/Celebrity';
 import { Requests } from '../entities/Requests';
 import { User } from '../entities/User';
@@ -317,12 +317,20 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
-    const maxLimit = Math.min(9, limit);
+    const maxLimit = Math.min(10, limit);
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder('requests')
       .where('requests.customer = :userId', { userId })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('requests.status = :status', { status: RequestStatus.PROCESSING }).orWhere(
+            'requests.status = :status',
+            { status: RequestStatus.PENDING }
+          );
+        })
+      )
       .orderBy('requests.createdAt', 'DESC')
-      .take(maxLimit);
+      .limit(maxLimit);
 
     if (cursor) {
       queryBuilder.andWhere('requests."createdAt" < :cursor', {
@@ -341,14 +349,14 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
-    const maxLimit = Math.min(9, limit);
+    const maxLimit = Math.min(10, limit);
     const status = RequestStatus.PENDING;
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder('requests')
       .where('requests.celebrity = :userId', { userId })
       .andWhere('requests.status = :status', { status })
       .orderBy('requests.createdAt', 'DESC')
-      .take(maxLimit);
+      .limit(maxLimit);
 
     if (cursor) {
       queryBuilder.andWhere('requests."createdAt" < :cursor', {
@@ -368,7 +376,7 @@ export class RequestsResolver {
     @Ctx() { req }: AppContext
   ) {
     const userId = req.session.userId;
-    const maxLimit = Math.min(9, limit);
+    const maxLimit = Math.min(10, limit);
     const status = RequestStatus.ACCEPTED;
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder('requests')
@@ -381,7 +389,7 @@ export class RequestsResolver {
       )
       .andWhere('requests.status = :status', { status })
       .orderBy('requests.createdAt', 'DESC')
-      .take(maxLimit);
+      .limit(maxLimit);
 
     if (cursor) {
       queryBuilder.andWhere('requests."createdAt" < :cursor', {

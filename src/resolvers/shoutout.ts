@@ -1,7 +1,7 @@
 import { isEmail } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
+import AppDataSource from '../config/ormconfig';
 import { SHOUTOUT_PLAYER_URL } from '../constants';
-import { AppDataSource } from '../db';
 import { User } from '../entities/User';
 import sendMail from '../services/aws/email/manager';
 import { createDynamicLink } from '../services/deep_links/dynamicLinks';

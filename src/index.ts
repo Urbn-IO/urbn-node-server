@@ -18,8 +18,8 @@ import { buildSchema } from 'type-graphql';
 import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
 import { customAuthChecker } from './auth/customAuthChecker';
+import AppDataSource from './config/ormconfig';
 import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
-import { AppDataSource } from './db';
 import firebaseConfig from './firebaseConfig';
 import { snsChecker } from './middleware/snsChecker';
 import pubsub from './pubsub';
@@ -41,14 +41,8 @@ const httpServer = createServer(app);
 const redis = redisClient;
 const main = async () => {
   const Port = parseInt(process.env.PORT) || 4000;
+  AppDataSource;
   initializeApp(firebaseConfig);
-  await AppDataSource.initialize()
-    .then(() => {
-      console.log('Data Source has been initialized!');
-    })
-    .catch((err) => {
-      console.error('Error during Data Source initialization', err);
-    });
   // initializeSearch();
   initializeWorkers();
 
@@ -84,10 +78,10 @@ const main = async () => {
     })
   );
 
-  // app.set('trust proxy', !__prod__);
+  app.set('trust proxy', !__prod__);
   app.use(
     cors({
-      origin: ['https://studio.apollographql.com', 'http://localhost:8000', 'https://geturbn.io'],
+      origin: ['http://localhost:8000', 'https://geturbn.io'],
       credentials: true,
     })
   );
@@ -170,6 +164,9 @@ const main = async () => {
       },
     ],
     formatError: (formatError) => {
+      if (formatError.extensions?.code === 'UNAUTHENTICATED' || formatError.extensions?.code === 'UNAUTHORIZED') {
+        return formatError;
+      }
       return new GraphQLError(formatError.message);
     },
   });

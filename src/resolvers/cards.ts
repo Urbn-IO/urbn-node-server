@@ -1,5 +1,5 @@
 import { Arg, Authorized, Ctx, Int, Mutation, Resolver, ResolverFilterData, Root, Subscription } from 'type-graphql';
-import { AppDataSource } from '../db';
+import AppDataSource from '../config/ormconfig';
 import { CardAuthorization } from '../entities/CardAuthorization';
 import { User } from '../entities/User';
 import paymentManager from '../services/payments/payments';

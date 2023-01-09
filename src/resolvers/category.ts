@@ -1,54 +1,97 @@
 import { Arg, Authorized, Int, Mutation, Query, Resolver } from 'type-graphql';
 import CacheControl from '../cache/cacheControl';
-import { AppDataSource } from '../db';
+import AppDataSource from '../config/ormconfig';
 import { Categories } from '../entities/Categories';
+import { Celebrity } from '../entities/Celebrity';
 import { upsertCategorySearchItem } from '../services/search/addSearchItem';
 import { CategoryResponse } from '../utils/graphqlTypes';
 @Resolver()
 export class CategoryResolver {
+  @Query(() => CategoryResponse, { nullable: true })
+  @CacheControl({ maxAge: 300 })
+  async getCategoryById(
+    @Arg('categoryId', () => Int) id: number,
+    @Arg('limit', () => Int, {
+      description: 'Number of celebrities associated with category to be fetched per request. Max: 18',
+    })
+    limit: number,
+    @Arg('cursor', () => String, { nullable: true, description: 'Cursor pagination for celebrities in category' })
+    cursor?: string
+  ): Promise<CategoryResponse> {
+    const category = await Categories.findOne({ where: { id } });
+    if (!category) return { errorMessage: 'Category not found' };
+
+    const maxLimit = Math.min(18, limit);
+    const dateCursor = cursor ? new Date(parseInt(cursor)) : new Date();
+
+    const celebs = await AppDataSource.getRepository(Celebrity)
+      .createQueryBuilder('celebs')
+      .innerJoinAndSelect('celebs.categoriesConn', 'c', 'c.categoryId = :catId and celebs.createdAt < :cursor ', {
+        catId: category.id,
+        cursor: dateCursor,
+      })
+      .take(maxLimit)
+      .getMany();
+
+    //Look for a better solution
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    category.celebs = celebs;
+
+    return { category };
+  }
+
   @Query(() => [Categories], { nullable: true })
   @CacheControl({ maxAge: 300 })
   async getCategories(
-    @Arg('categoryId', () => Int, { nullable: true }) id: number,
-    @Arg('name', { nullable: true }) name: string,
-    @Arg('withCelebs', { defaultValue: false }) withCelebs: boolean,
-    @Arg('isPrimary', { defaultValue: false }) primary: boolean,
     @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string
+    @Arg('isPrimary', { defaultValue: false }) primary: boolean
   ) {
-    if (id) {
-      const category = await Categories.findOne({ where: { id } });
-      if (!category) return [];
-      return [category];
-    }
-    if (name) {
-      const category = await Categories.findOne({
-        where: { name },
-      });
-      if (!category) return [];
-      return [category];
-    }
-    const maxLimit = Math.min(18, limit);
-    const queryBuilder = AppDataSource.getRepository(Categories).createQueryBuilder('categories').limit(maxLimit);
     if (primary) {
-      queryBuilder.where('categories."primary" = :primary', { primary });
+      const categories = await Categories.find({
+        where: {
+          primary,
+        },
+      });
+
+      return categories;
     }
 
-    if (withCelebs) {
-      queryBuilder.leftJoinAndSelect('categories.celebConn', 'celebrity').andWhere('celebrity IS NOT NULL');
-    }
+    const maxLimit = Math.min(7, limit);
 
-    if (cursor) {
-      if (cursor !== '0') {
-        queryBuilder.andWhere('categories."createdAt" < :cursor', {
-          cursor: new Date(parseInt(cursor)),
-        });
-      }
-      queryBuilder.orderBy('categories.createdAt', 'DESC');
-    } else {
-      queryBuilder.orderBy('RANDOM()');
-    }
-    return await queryBuilder.getMany();
+    const cat = await AppDataSource.query(
+      `
+    SELECT "c".*, RANDOM() AS random
+    FROM "celeb_categories"
+    LEFT JOIN "categories" c
+    ON "c"."id" = "celeb_categories"."categoryId"
+    WHERE ("celeb_categories"."celebId" IS NOT NULL )
+    ORDER BY random
+    LIMIT $1
+    `,
+      [maxLimit]
+    );
+
+    const categoriesPromise = cat.map(async (x: { id: number; celebs: Celebrity[] }) => {
+      const celebs = await AppDataSource.getRepository(Celebrity)
+        .createQueryBuilder('celebs')
+        .innerJoinAndSelect('celebs.categoriesConn', 'c', 'c.categoryId = :catId ', {
+          catId: x.id,
+        })
+        .orderBy('RANDOM()')
+        .limit(16)
+        .getMany();
+
+      //Look for a better solution
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      x.celebs = celebs;
+      return x;
+    });
+
+    const categories = await Promise.all(categoriesPromise);
+
+    return categories;
   }
   @Mutation(() => CategoryResponse)
   @Authorized()

@@ -2,6 +2,7 @@ import argon2 from 'argon2';
 import { isEmail, length } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { v4 } from 'uuid';
+import AppDataSource from '../config/ormconfig';
 import {
   APP_BASE_URL,
   APP_SESSION_PREFIX,
@@ -9,7 +10,6 @@ import {
   RESET_PASSWORD_PREFIX,
   SESSION_COOKIE_NAME,
 } from '../constants';
-import { AppDataSource } from '../db';
 import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getUserOAuth } from '../services/auth/oauth';

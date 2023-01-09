@@ -1,8 +1,8 @@
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
+import AppDataSource from '../config/ormconfig';
 import { CELEB_PREREGISTRATION_PREFIX } from '../constants';
-import { AppDataSource } from '../db';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
@@ -26,7 +26,7 @@ import { attachInstantShoutoutPrice } from '../utils/helpers';
 @Resolver()
 export class CelebrityResolver {
   @Mutation(() => GenericResponse)
-  // @Authorized()
+  @Authorized()
   async celebApplication(
     @Arg('input') input: CelebrityApplicationInputs,
     @Ctx() { req, redis }: AppContext

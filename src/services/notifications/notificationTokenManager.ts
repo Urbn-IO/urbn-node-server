@@ -1,5 +1,5 @@
 import { In } from 'typeorm';
-import { AppDataSource } from '../../db';
+import AppDataSource from '../../config/ormconfig';
 import { NotificationToken } from '../../entities/NotificationToken';
 import { PlatformOptions } from '../../types';
 

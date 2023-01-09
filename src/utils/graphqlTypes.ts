@@ -99,6 +99,8 @@ export class OnboardCelebrityInputs {
   @Field(() => Int)
   shoutout: number;
 
+  instantShoutout: number;
+
   @Min(REQUEST_MIN_RATE, {
     message: 'Call rate must be more than $constraint1',
   })
@@ -161,6 +163,8 @@ export class UpdateCelebrityInputs {
   })
   @Field(() => Int, { nullable: true })
   shoutout: number;
+
+  instantShoutout: number;
 
   @Min(REQUEST_MIN_RATE, {
     message: 'Call rate must be more than $constraint1',

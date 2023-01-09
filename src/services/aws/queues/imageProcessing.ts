@@ -9,7 +9,7 @@ const consumerOptions: ConsumerOptions = {
   batchSize: 10,
   waitTimeSeconds: 20,
   visibilityTimeout: 120,
-  pollingWaitTimeMs: 120000,
+  pollingWaitTimeMs: 0,
   sqs: sqsClient,
   handleMessageBatch: async (messages) => {
     const payload = messages.map((x) => {
@@ -17,7 +17,7 @@ const consumerOptions: ConsumerOptions = {
       return body;
     });
 
-    await handler(payload);
+    handler(payload);
   },
 };
 

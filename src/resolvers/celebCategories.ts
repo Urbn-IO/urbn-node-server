@@ -1,5 +1,5 @@
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
-import { AppDataSource } from '../db';
+import AppDataSource from '../config/ormconfig';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { AppContext } from '../types';

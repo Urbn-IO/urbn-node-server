@@ -1,4 +1,4 @@
-import { AppDataSource } from '../../db';
+import AppDataSource from '../../config/ormconfig';
 import { User } from '../../entities/User';
 import { Wallet } from '../../entities/Wallet';
 import { WalletTransactions } from '../../entities/WalletTransactions';
