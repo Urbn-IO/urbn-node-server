@@ -33,7 +33,13 @@ export const customAuthChecker: AuthChecker<AppContext, Roles> = async ({ contex
     }
     const userRoles = user.userRoles.map((x) => x.role);
 
-    if (!roles.every((x) => userRoles.includes(x))) throw new Error('Access Denied!');
+    if (!roles.every((x) => userRoles.includes(x)))
+      throw new GraphQLError('Access Denied!', {
+        extensions: {
+          code: 'UNAUTHORIZED',
+          http: { status: 403 },
+        },
+      });
   }
 
   return true;
