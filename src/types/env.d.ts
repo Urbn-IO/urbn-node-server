@@ -2,16 +2,13 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       APP_NAME: string;
-      APP_LOGO_URL: string;
       APP_BUNDLE_NAME: string;
       AWS_VOD_STACK_NAME: string;
       AWS_STATIC_VIDEO_BUCKET: string;
       AWS_REGION: string;
       AWS_ACCESS_KEY: string;
       AWS_SECRET_ACCESS_KEY: string;
-      AWS_STATIC_IMAGE_DISTRIBUTION_DOMAIN: string;
       AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR: string;
-      AWS_VOD_STATIC_DISTRIBUTION_DOMAIN: string;
       AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR: string;
       AWS_SQS_VOD_QUEUE_URL: string;
       AWS_SQS_IMAGE_PROCESSOR_QUEUE_URL: string;
@@ -39,9 +36,6 @@ declare global {
       APNS_DEV_URL: string;
       APNS_PROD_URL: string;
       APNS_DEVICE_ENDPOINT: string;
-      URBN_CONTACT_MAIL: string;
-      URBN_SECURITY_MAIL: string;
-      APP_FLYER_SDK_DEV_KEY: string;
     }
   }
 }

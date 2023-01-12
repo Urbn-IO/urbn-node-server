@@ -19,7 +19,7 @@ import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
 import { customAuthChecker } from './auth/customAuthChecker';
 import AppDataSource from './config/ormconfig';
-import { APP_SESSION_PREFIX, SESSION_COOKIE_NAME, __prod__ } from './constants';
+import { APP_SESSION_PREFIX, INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME, __prod__ } from './constants';
 import firebaseConfig from './firebaseConfig';
 import { snsChecker } from './middleware/snsChecker';
 import pubsub from './pubsub';
@@ -174,6 +174,10 @@ const main = async () => {
 
   app.use(
     '/graphql',
+    (_, res, next) => {
+      res.setHeader('Instant-Shoutout-Rates', INSTANT_SHOUTOUT_RATE);
+      next();
+    },
     expressMiddleware(apolloServer, {
       context: async ({ req, res }) => ({
         req,
