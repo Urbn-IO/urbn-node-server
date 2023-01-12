@@ -1,12 +1,21 @@
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import utc from 'dayjs/plugin/utc';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import AppDataSource from '../config/ormconfig';
-import { INSTANT_SHOUTOUT_RATE, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from '../constants';
+import {
+  INSTANT_SHOUTOUT_RATE,
+  PREMIUM_VIDEO_CDN,
+  VIDEO_CALL_TYPE_A_DURATION,
+  VIDEO_CALL_TYPE_B_DURATION,
+} from '../constants';
 import { Celebrity } from '../entities/Celebrity';
 import { Requests } from '../entities/Requests';
 import { User } from '../entities/User';
 import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 import { changeRequestState } from '../request/manage';
+import sendMail from '../services/aws/email/manager';
 import { sendInstantNotification } from '../services/notifications/handler';
 import paymentManager from '../services/payments/payments';
 import {
@@ -14,6 +23,7 @@ import {
   CallType,
   ContentType,
   DayOfTheWeek,
+  EmailSubject,
   NotificationRouteCode,
   RequestStatus,
   RequestType,
@@ -26,7 +36,9 @@ import {
   VideoCallRequestInputs,
   VideoUploadResponse,
 } from '../utils/graphqlTypes';
-import { getNextAvailableDate } from '../utils/helpers';
+import { badEmailNotifier, getNextAvailableDate } from '../utils/helpers';
+dayjs.extend(utc);
+dayjs.extend(duration);
 
 @Resolver()
 export class RequestsResolver {
@@ -89,7 +101,6 @@ export class RequestsResolver {
       customerDisplayName,
       celebrity: celeb.userId,
       celebrityAlias: celeb.alias,
-      celebrityThumbnail: celeb.thumbnail as string,
       requestType,
       amount: transactionAmount,
       description: input.description.trim(),
@@ -261,6 +272,7 @@ export class RequestsResolver {
       }
       const celebAlias = request.celebrityAlias;
       const data = getSignedVideoMetadata({
+        cloudFront: PREMIUM_VIDEO_CDN,
         customMetadata: {
           reference,
           userId,
@@ -282,16 +294,11 @@ export class RequestsResolver {
   async respondToRequest(@Arg('reference') reference: string, @Arg('status') status: string): Promise<GenericResponse> {
     if (status === RequestStatus.ACCEPTED || status === RequestStatus.REJECTED) {
       try {
-        const request = await (
-          await Requests.createQueryBuilder()
-            .update({ status })
-            .where({ reference })
-            .returning('customer, "requestType", "celebrityAlias"')
-            .execute()
+        const request: Requests = await (
+          await Requests.createQueryBuilder().update({ status }).where({ reference }).returning('*').execute()
         ).raw[0];
 
-        console.log('.....request object: ', request);
-        const requestType = request.requestType === 'shoutout' ? 'shoutout' : 'video call';
+        const requestType = request.requestType === 'shoutout' ? 'Shoutout' : 'Video Call';
         const celebAlias = request.celebrityAlias;
         sendInstantNotification(
           [request.customer],
@@ -299,6 +306,37 @@ export class RequestsResolver {
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
           NotificationRouteCode.RESPONSE
         );
+        const customer = await User.findOne({
+          where: {
+            userId: request.customer,
+          },
+        });
+        if (customer) {
+          if (customer.isEmailActive) {
+            const subject =
+              status === RequestStatus.ACCEPTED ? EmailSubject.ACCEPTED_REQUEST : EmailSubject.DECLINED_REQUEST;
+            const expiration = dayjs(request.requestExpires as Date)
+              .utc()
+              .toString();
+
+            const duration =
+              requestType === 'Shoutout'
+                ? 'Not Applicable'
+                : `${dayjs.duration({ seconds: parseInt(request.callDurationInSeconds) }).asMinutes()} Minutes`;
+
+            sendMail({
+              emailAddresses: [customer.email],
+              subject,
+              name: customer.displayName,
+              celebAlias: celebAlias,
+              amount: request.amount,
+              currency: '₦',
+              requestType,
+              duration,
+              expiration,
+            });
+          } else badEmailNotifier([customer.userId]);
+        }
       } catch (err) {
         return {
           errorMessage: 'Error processing request, Try again later',

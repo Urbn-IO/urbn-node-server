@@ -45,15 +45,29 @@ export interface VideoOutput {
   contentType: ContentType | undefined;
 }
 
-export interface EmailBaseInput {
+export type SendEmailInputType = {
+  emailAddresses: string[];
+  subject: EmailSubject;
+  name?: string;
+  url?: string;
+  celebAlias?: string;
+  duration?: string;
+  expiration?: string;
+  amount?: string;
+  currency?: string;
+  requestType?: string;
+  gift?: string;
+  ccTo?: string[];
+  sourcePlatform?: PlatformOptions;
+};
+
+export interface EmailInput extends Omit<SendEmailInputType, 'emailAddresses' | 'subject' | 'ccTo'> {
   logo: string;
   year: string;
   contact: string;
-  name?: string;
-  url: string;
-  sourcePlatform?: string;
-  time?: string;
+  date?: string;
 }
+
 export interface OAuth {
   displayName?: string;
   email?: string;
@@ -104,14 +118,6 @@ export type CallTimerOptions = {
   roomName?: string;
 };
 
-export type SendEmailInputType = {
-  name?: string;
-  emailAddresses: string[];
-  ccTo?: string[];
-  subject: EmailSubject;
-  url: string;
-  sourcePlatform?: PlatformOptions;
-};
 export type UpdateCallDurationArgs = {
   roomSid: string;
 };
@@ -199,12 +205,22 @@ export enum EmailTemplate {
   ConfirmEmailTemplate = 'ConfirmEmailTemplate',
   ResetPasswordTemplate = 'ResetPasswordTemplate',
   SecurityAlertTemplate = 'SecurityAlertTemplate',
+  AcceptedRequestTemplate = 'AcceptedRequestTemplate',
+  DeclinedRequestTemplate = 'DeclinedRequestTemplate',
+  CelebrityVerifiedTemplate = 'CelebrityVerifiedTemplate',
+  GiftShoutoutTemplate = 'GiftShoutoutTemplate',
+  ShoutoutReceivedTemplate = 'ShoutoutReceivedTemplate',
 }
 
 export enum EmailSubject {
-  CONFIRM,
-  RESET,
-  SECURITY,
+  CONFIRM_EMAIL,
+  RESET_PASSWORD,
+  SECURITY_ALERT,
+  ACCEPTED_REQUEST,
+  DECLINED_REQUEST,
+  CELEBRITY_VERIFIED,
+  GIFT_SHOUTOUT,
+  SHOUTOUT_RECEIEVED,
 }
 
 export enum SignInMethod {

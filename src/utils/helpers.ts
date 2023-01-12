@@ -5,7 +5,10 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from '../constants';
 import { Celebrity } from '../entities/Celebrity';
-import { DayOfTheWeek } from '../types';
+import { sendInstantNotification } from '../services/notifications/handler';
+import { DayOfTheWeek, NotificationRouteCode } from '../types';
+
+//Rip funcs from here into more suitable places in future
 
 export const getNextAvailableDate = (day: number) => {
   dayjs.extend(isoWeek);
@@ -66,4 +69,14 @@ export const attachInstantShoutoutPrice = (celeb: Celebrity[]) => {
     if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_RATE;
   });
   return celeb;
+};
+
+//send push notifications for users with bounced or complaint emails warning them they cant receieve emails
+export const badEmailNotifier = (userIds: string[]) => {
+  sendInstantNotification(
+    userIds,
+    'Problems Sending you emails ⛔️',
+    `We are unable to send you emails! Update your email address on the app with a valid email and remove emails from us from your spam`,
+    NotificationRouteCode.DEFAULT
+  );
 };

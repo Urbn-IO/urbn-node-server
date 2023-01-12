@@ -5,7 +5,6 @@ import { RequestStatus, RequestType } from '../types';
 @ObjectType()
 @Entity()
 @Index(['customer', 'celebrity'])
-@Index(['customer', 'reference'])
 export class Requests extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -29,10 +28,6 @@ export class Requests extends BaseEntity {
   @Field()
   @Column()
   celebrityAlias: string;
-
-  @Field()
-  @Column()
-  celebrityThumbnail: string;
 
   @Field()
   @Column({ type: 'enum', enum: RequestType, default: RequestType.SHOUTOUT })

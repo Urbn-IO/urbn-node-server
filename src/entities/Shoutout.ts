@@ -7,17 +7,17 @@ import { User } from './User';
 export class Shoutout extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
-  id!: number;
+  id: number;
 
   @Column()
-  celebId!: string;
+  celebId: string;
 
   @Field()
   @Column()
-  celebAlias!: string;
+  celebAlias: string;
 
   @Column()
-  workFlowId!: string;
+  workFlowId: string;
 
   @Column()
   srcVideo: string;

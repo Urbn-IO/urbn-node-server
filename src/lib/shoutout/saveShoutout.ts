@@ -1,21 +1,34 @@
 import { In } from 'typeorm';
 import AppDataSource from '../../config/ormconfig';
+import { SHOUTOUT_PLAYER_URL } from '../../constants';
 import { Requests } from '../../entities/Requests';
 import { Shoutout } from '../../entities/Shoutout';
 import { User } from '../../entities/User';
+import sendMail from '../../services/aws/email/manager';
+import { createDynamicLink } from '../../services/deep_links/dynamicLinks';
 import { sendInstantNotification } from '../../services/notifications/handler';
-import { NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
+import { EmailSubject, NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
+import { badEmailNotifier } from '../../utils/helpers';
 
 const saveShoutout = async (data: Partial<VideoOutput>[]) => {
   try {
     const shoutouts: Shoutout[] = [];
+    const emailData: {
+      userId: string | undefined;
+      name: string | undefined;
+      email: string | undefined;
+      isEmailActive: boolean | undefined;
+      celebAlias: string | undefined;
+      url: string;
+    }[] = [];
+    const badEmailUsers: string[] = [];
     const ownerIds = data.map((x) => x.owner);
     const user = await User.find({ where: { userId: In(ownerIds) } });
     if (user.length === 0) {
       return;
     }
 
-    data.forEach((x) => {
+    data.forEach(async (x) => {
       const userObj = user.find((y) => y.userId === x.owner);
       const shoutOutObj = Shoutout.create({
         celebAlias: x.alias,
@@ -29,7 +42,21 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
         durationInSeconds: x.durationInSeconds,
         user: userObj,
       });
+
       shoutouts.push(shoutOutObj);
+
+      const link = `${SHOUTOUT_PLAYER_URL}?hls=${x.hlsUrl}&mp4=${x.mp4Url}&thumbnail=${x.thumbnailUrl}`;
+      const url = await createDynamicLink(link, false);
+      if (!url) return;
+      const data = {
+        userId: userObj?.userId,
+        name: userObj?.displayName,
+        email: userObj?.email,
+        isEmailActive: userObj?.isEmailActive,
+        celebAlias: x.alias,
+        url,
+      };
+      emailData.push(data);
     });
 
     await Shoutout.save(shoutouts);
@@ -46,6 +73,20 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
       'You have received a new shoutout video!',
       NotificationRouteCode.PROFILE_SHOUTOUT
     );
+
+    emailData.forEach((x) => {
+      if (x.isEmailActive === true) {
+        sendMail({
+          emailAddresses: [x.email as string],
+          subject: EmailSubject.SHOUTOUT_RECEIEVED,
+          name: x.name,
+          celebAlias: x.celebAlias,
+          url: x.url,
+        });
+      } else badEmailUsers.push(x.userId as string);
+    });
+
+    if (badEmailUsers.length > 0) badEmailNotifier(badEmailUsers);
   } catch (err) {
     console.error(err);
     return;

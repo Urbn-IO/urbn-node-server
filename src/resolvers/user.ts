@@ -105,7 +105,7 @@ export class UserResolver {
         emailAddresses: [user.email],
         name: user.displayName,
         url,
-        subject: EmailSubject.SECURITY,
+        subject: EmailSubject.SECURITY_ALERT,
         sourcePlatform: device.platform,
       });
     }
@@ -177,7 +177,7 @@ export class UserResolver {
     const url = await createDynamicLink(link);
     if (!url) return { errorMessage: 'An unexpected error occured' };
     await redis.set(CONFIRM_EMAIL_PREFIX + token, email, 'EX', 3600 * 24); //link expires in one day
-    await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM });
+    await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM_EMAIL });
 
     return {
       success: `Check the inbox of ${email}, we've sent you an email on the next steps to take`,
@@ -229,7 +229,7 @@ export class UserResolver {
       emailAddresses: [email],
       name,
       url,
-      subject: EmailSubject.RESET,
+      subject: EmailSubject.RESET_PASSWORD,
     });
 
     return {

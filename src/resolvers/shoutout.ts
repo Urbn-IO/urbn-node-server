@@ -1,7 +1,7 @@
 import { isEmail } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
 import AppDataSource from '../config/ormconfig';
-import { SHOUTOUT_PLAYER_URL } from '../constants';
+import { GIFT_GRAPHIC, SHOUTOUT_PLAYER_URL } from '../constants';
 import { User } from '../entities/User';
 import sendMail from '../services/aws/email/manager';
 import { createDynamicLink } from '../services/deep_links/dynamicLinks';
@@ -12,7 +12,7 @@ import { GenericResponse } from '../utils/graphqlTypes';
 export class ShoutoutResolver {
   @Mutation(() => GenericResponse)
   @Authorized()
-  async emailShoutout(
+  async giftShoutout(
     @Arg('shoutoutId') shoutoutId: number,
     @Arg('recipientEmail') email: string,
     @Ctx() { req }: AppContext
@@ -23,7 +23,6 @@ export class ShoutoutResolver {
     const viewerUrl = SHOUTOUT_PLAYER_URL;
     const user = await AppDataSource.getRepository(User)
       .createQueryBuilder('user')
-      .select(['user.id'])
       .leftJoinAndSelect('user.shoutouts', 'shoutouts')
       .where('user.userId = :userId', { userId })
       .getOne();
@@ -40,8 +39,15 @@ export class ShoutoutResolver {
     const url = await createDynamicLink(link, false);
     if (!url) return { errorMessage: 'An error ouccred, try agin later' };
 
-    await sendMail({ emailAddresses: [email], url, subject: EmailSubject.CONFIRM });
+    await sendMail({
+      emailAddresses: [email],
+      subject: EmailSubject.GIFT_SHOUTOUT,
+      name: user.displayName,
+      url,
+      celebAlias: shoutout.celebAlias,
+      gift: GIFT_GRAPHIC,
+    });
 
-    return { success: 'Email sent!' };
+    return { success: 'Gift sent!' };
   }
 }

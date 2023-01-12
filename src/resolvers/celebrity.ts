@@ -2,7 +2,7 @@ import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graph
 import { Brackets } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
 import AppDataSource from '../config/ormconfig';
-import { CELEB_PREREGISTRATION_PREFIX } from '../constants';
+import { CELEB_PREREGISTRATION_PREFIX, STATIC_VIDEO_CDN } from '../constants';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
@@ -251,7 +251,7 @@ export class CelebrityResolver {
     const userId = req.session.userId as string;
     const data = getSignedVideoMetadata({
       destBucket: process.env.AWS_STATIC_VIDEO_BUCKET,
-      cloudFront: process.env.AWS_VOD_STATIC_DISTRIBUTION_DOMAIN,
+      cloudFront: STATIC_VIDEO_CDN,
       jobTemplate: process.env.AWS_VOD_STACK_NAME + process.env.AWS_VOD_CUSTOM_JOB_TEMPLATE,
       customMetadata: {
         userId,

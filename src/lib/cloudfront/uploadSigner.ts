@@ -1,8 +1,7 @@
 import crypto from 'crypto';
-import dayjs from 'dayjs';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { config } from '../../constants';
+import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from '../../constants';
 import { PartialWithRequired } from '../../types';
 import {
   ImageUpload,
@@ -13,9 +12,7 @@ import {
 } from '../../utils/graphqlTypes';
 import { Signer } from './cloudFront';
 
-const staticImageDist = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_DOMAIN;
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
-const vodDist = process.env.AWS_VOD_STATIC_DISTRIBUTION_DOMAIN;
 const vodKeyPairId = process.env.AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR;
 
 const pathToPrivateKey = join(config.APP_ROOT, '../keys/private_key.pem');
@@ -27,7 +24,7 @@ const vodSigner = new Signer(vodKeyPairId, privateKey);
 export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
   const duration = 1000 * 60; // 60 secs
   const randomNumber = Math.random().toString();
-  const datetime = dayjs().format('DD-MM-YYYY');
+  const datetime = Date.now();
   const hash = crypto
     .createHash('md5')
     .update(datetime + randomNumber)
@@ -40,7 +37,7 @@ export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
   const keys = [key, metadataKey];
   const urls = keys.map((key) => {
     const signedUrl = staticImageSigner.getSignedUrl({
-      url: `https://${staticImageDist}/upload/${key}`,
+      url: `https://${STATIC_IMAGE_CDN}/upload/${key}`,
       expires: Math.floor((Date.now() + duration) / 1000),
     });
     return signedUrl;
@@ -63,7 +60,7 @@ export const getSignedVideoMetadata = (
   const ownedBy = customMetadata.owner ? customMetadata.owner : userId;
   const duration = 1000 * 60; // 60 secs
   const randomNumber = Math.random().toString();
-  const datetime = dayjs().format('DD-MM-YYYYTHH-mm-ss');
+  const datetime = Date.now();
   const hash = crypto
     .createHash('md5')
     .update(datetime + randomNumber)
@@ -78,7 +75,7 @@ export const getSignedVideoMetadata = (
   const keys = [videoKey, metadataKey];
   const urls = keys.map((key) => {
     const signedUrl = vodSigner.getSignedUrl({
-      url: `https://${vodDist}/upload/${key}`,
+      url: `https://${STATIC_VIDEO_CDN}/upload/${key}`,
       expires: Math.floor((Date.now() + duration) / 1000),
     });
     return signedUrl;
