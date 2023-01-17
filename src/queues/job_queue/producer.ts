@@ -1,11 +1,11 @@
-import { JobsOptions, Queue, QueueScheduler } from 'bullmq';
+import { JobsOptions, Queue } from 'bullmq';
 import { config } from '../../constants';
 import redisClient from '../../redis/client';
 
 const redis = redisClient;
-new QueueScheduler(config.CALL_QUEUE_NAME, { connection: redis });
-new QueueScheduler(config.MAIL_QUEUE_NAME, { connection: redis });
-new QueueScheduler(config.MAIL_QUEUE_NAME, { connection: redis });
+// new QueueScheduler(config.CALL_QUEUE_NAME, { connection: redis });
+// new QueueScheduler(config.MAIL_QUEUE_NAME, { connection: redis });
+// new QueueScheduler(config.OPERATIONS_QUEUE_NAME, { connection: redis });
 
 export const callStatusQueue = new Queue(config.CALL_QUEUE_NAME, {
   connection: redis,

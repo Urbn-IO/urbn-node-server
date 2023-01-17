@@ -17,6 +17,8 @@ import Keyv from 'keyv';
 import { buildSchema } from 'type-graphql';
 import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
+import celebrityAlert from './api/webhooks/celebrityVerificationAlert';
+import requestState from './api/webhooks/request';
 import { customAuthChecker } from './auth/customAuthChecker';
 import AppDataSource from './config/ormconfig';
 import { APP_SESSION_PREFIX, INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME, __prod__ } from './constants';
@@ -78,7 +80,7 @@ const main = async () => {
     })
   );
 
-  app.set('trust proxy', !__prod__);
+  app.set('trust proxy', true);
   app.use(
     cors({
       origin: ['http://localhost:8000', 'https://geturbn.io'],
@@ -89,7 +91,8 @@ const main = async () => {
   app.use('/twilio', video);
   app.use('/paystack', payment);
   app.use('/search', search);
-  app.use('/request-state', search);
+  app.use('/update-request-state', requestState);
+  app.use('/verification-alert', celebrityAlert);
   app.use('/sns', snsChecker, sns);
 
   const schema = await buildSchema({

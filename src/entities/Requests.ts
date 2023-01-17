@@ -5,6 +5,7 @@ import { RequestStatus, RequestType } from '../types';
 @ObjectType()
 @Entity()
 @Index(['customer', 'celebrity'])
+@Index(['customer', 'reference'])
 export class Requests extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -49,6 +50,13 @@ export class Requests extends BaseEntity {
     default: RequestStatus.VALIDATING,
   })
   status: RequestStatus;
+
+  @Column({
+    type: 'enum',
+    enum: RequestStatus,
+    nullable: true,
+  })
+  prevStatus?: RequestStatus;
 
   @Index()
   @Column({ nullable: true })

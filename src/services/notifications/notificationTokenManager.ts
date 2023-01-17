@@ -32,7 +32,6 @@ export const addToken = async (
 
 export const getTokens = async (userId: string[]): Promise<string[]> => {
   try {
-    console.log('array of ids: ', userId);
     const tokenObj = await NotificationToken.find({
       where: { userId: In(userId) },
       select: ['notificationToken'],

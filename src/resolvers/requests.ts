@@ -14,7 +14,6 @@ import { Celebrity } from '../entities/Celebrity';
 import { Requests } from '../entities/Requests';
 import { User } from '../entities/User';
 import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
-import { changeRequestState } from '../request/manage';
 import sendMail from '../services/aws/email/manager';
 import { sendInstantNotification } from '../services/notifications/handler';
 import paymentManager from '../services/payments/payments';
@@ -87,16 +86,18 @@ export class RequestsResolver {
       ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
       : (celeb.shoutout * 100).toString();
 
-    const requestRef = createhashString([userId, celeb.userId, cardAuth]);
+    const reference = createhashString([userId, celeb.userId, cardAuth]);
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
       celebrity: celeb.userId,
-      requestRef,
+      reference,
     });
     if (!chargePayment) return { errorMessage: 'Payment Error! Try again' };
 
+    const requestExpires = new Date(dayjs(input.requestExpiration).utc(false).format());
+
     const request: Partial<Requests> = {
-      reference: requestRef,
+      reference,
       customer: userId,
       customerDisplayName,
       celebrity: celeb.userId,
@@ -104,7 +105,7 @@ export class RequestsResolver {
       requestType,
       amount: transactionAmount,
       description: input.description.trim(),
-      requestExpires: input.requestExpiration,
+      requestExpires,
     };
     const result = await Requests.create(request).save();
     if (result) {
@@ -209,12 +210,12 @@ export class RequestsResolver {
         ? (celeb.callTypeA * 100).toString()
         : (celeb.callTypeB * 100).toString();
 
-    const requestRef = createhashString([userId, celeb.userId, cardAuth, callSlotId]);
+    const reference = createhashString([userId, celeb.userId, cardAuth, callSlotId]);
 
     const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
       userId,
       celebrity: celeb.userId,
-      requestRef,
+      reference,
       availableSlotId: callSlotId,
       availableDay: input.selectedTimeSlot.day,
     });
@@ -233,7 +234,7 @@ export class RequestsResolver {
     const requestExpires = availableDay.add(5, 'minute');
 
     const request = {
-      reference: requestRef,
+      reference,
       customer: userId,
       customerDisplayName,
       celebrity: celeb.userId,
@@ -281,7 +282,6 @@ export class RequestsResolver {
           contentType: ContentType.SHOUTOUT,
         },
       });
-      await changeRequestState(request.id, RequestStatus.PROCESSING); // change this implementation, request state should be changed once video has uploaded, i.e inside the video on demand workflow
       return data;
     } catch (err) {
       console.error(err);
@@ -304,7 +304,7 @@ export class RequestsResolver {
           [request.customer],
           'Response Alert',
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
-          NotificationRouteCode.RESPONSE
+          NotificationRouteCode.DEFAULT
         );
         const customer = await User.findOne({
           where: {
@@ -361,10 +361,9 @@ export class RequestsResolver {
       .where('requests.customer = :userId', { userId })
       .andWhere(
         new Brackets((qb) => {
-          qb.where('requests.status = :status', { status: RequestStatus.PROCESSING }).orWhere(
-            'requests.status = :status',
-            { status: RequestStatus.PENDING }
-          );
+          qb.where('requests.status = :pendingStatus', { pendingStatus: RequestStatus.PENDING })
+            .orWhere('requests.status = :processingStatus', { processingStatus: RequestStatus.PROCESSING })
+            .orWhere('requests.status = :expiredStatus', { expiredStatus: RequestStatus.EXPIRED });
         })
       )
       .orderBy('requests.createdAt', 'DESC')
@@ -415,7 +414,6 @@ export class RequestsResolver {
   ) {
     const userId = req.session.userId;
     const maxLimit = Math.min(10, limit);
-    const status = RequestStatus.ACCEPTED;
     const queryBuilder = AppDataSource.getRepository(Requests)
       .createQueryBuilder('requests')
       .where(
@@ -425,7 +423,18 @@ export class RequestsResolver {
           }).orWhere('requests.customer = :userId', { userId });
         })
       )
-      .andWhere('requests.status = :status', { status })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('requests.status = :acceptedStatus', { acceptedStatus: RequestStatus.ACCEPTED }).orWhere(
+            new Brackets((qb) => {
+              qb.where('requests.status = :expiredStatus', { expiredStatus: RequestStatus.EXPIRED }).andWhere(
+                'requests.prevStatus = :prevStatus',
+                { prevStatus: RequestStatus.ACCEPTED }
+              );
+            })
+          );
+        })
+      )
       .orderBy('requests.createdAt', 'DESC')
       .limit(maxLimit);
 

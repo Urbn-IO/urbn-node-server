@@ -15,7 +15,7 @@ const handler = async (data: ImageProcessorQueueOutput[]) => {
       failedUserIds,
       'Failed upload alert 🚨',
       'One or more images you uploaded encountered an error during processing, re-upload your images or try again with other images ',
-      NotificationRouteCode.RESPONSE,
+      NotificationRouteCode.DEFAULT,
       NotificationPriority.HIGH
     );
   }

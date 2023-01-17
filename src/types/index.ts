@@ -88,7 +88,7 @@ export interface CallRetriesState {
 }
 export type TransactionsMetadata = {
   userId: string;
-  requestRef?: string;
+  reference?: string;
   celebrity?: string;
   //for card initilization
   email?: string;
@@ -151,6 +151,7 @@ export enum RequestStatus {
   FAILED = 'Failed',
   FULFILLED = 'Fulfilled',
   UNFULFILLED = 'Unfulfilled',
+  EXPIRED = 'Expired',
 }
 
 export enum RequestType {
@@ -173,10 +174,9 @@ export enum SubscriptionTopics {
 }
 
 export enum NotificationRouteCode {
-  RESPONSE = '0', // notification to display response to client UI
+  DEFAULT = '0', // notification to display response to client UI
   RECEIVED_REQUEST = '1', // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = '2', //  notification to route the client to the user profile
-  DEFAULT = '10', //default route
 }
 
 export enum ContentType {

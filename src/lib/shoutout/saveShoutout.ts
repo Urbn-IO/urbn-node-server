@@ -13,14 +13,6 @@ import { badEmailNotifier } from '../../utils/helpers';
 const saveShoutout = async (data: Partial<VideoOutput>[]) => {
   try {
     const shoutouts: Shoutout[] = [];
-    const emailData: {
-      userId: string | undefined;
-      name: string | undefined;
-      email: string | undefined;
-      isEmailActive: boolean | undefined;
-      celebAlias: string | undefined;
-      url: string;
-    }[] = [];
     const badEmailUsers: string[] = [];
     const ownerIds = data.map((x) => x.owner);
     const user = await User.find({ where: { userId: In(ownerIds) } });
@@ -28,7 +20,9 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
       return;
     }
 
-    data.forEach(async (x) => {
+    const userIds = user.map((x) => x.userId);
+
+    const emailData = data.map(async (x) => {
       const userObj = user.find((y) => y.userId === x.owner);
       const shoutOutObj = Shoutout.create({
         celebAlias: x.alias,
@@ -56,7 +50,7 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
         celebAlias: x.alias,
         url,
       };
-      emailData.push(data);
+      return data;
     });
 
     await Shoutout.save(shoutouts);
@@ -68,14 +62,17 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
       .execute();
 
     sendInstantNotification(
-      ownerIds as string[],
+      userIds,
       'You received a Shoutout! 🌟',
       'You have received a new shoutout video!',
       NotificationRouteCode.PROFILE_SHOUTOUT
     );
 
-    emailData.forEach((x) => {
-      if (x.isEmailActive === true) {
+    const emailDataResolved = await Promise.all(emailData);
+    const emailList = emailDataResolved.filter((x) => x);
+
+    emailList.forEach((x) => {
+      if (x?.isEmailActive === true) {
         sendMail({
           emailAddresses: [x.email as string],
           subject: EmailSubject.SHOUTOUT_RECEIEVED,
@@ -83,7 +80,7 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
           celebAlias: x.celebAlias,
           url: x.url,
         });
-      } else badEmailUsers.push(x.userId as string);
+      } else badEmailUsers.push(x?.userId as string);
     });
 
     if (badEmailUsers.length > 0) badEmailNotifier(badEmailUsers);

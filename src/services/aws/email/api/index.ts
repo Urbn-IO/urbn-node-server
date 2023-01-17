@@ -33,7 +33,7 @@ client.send(bounceSubscribeCommand).then(
     console.log(`Bounce SNS subscription set up successfully: ${JSON.stringify(data)}`);
   },
   (error) => {
-    throw new Error(`Unable to set up Bounce SNS subscription: ${error}`);
+    console.error(`Unable to set up Bounce SNS subscription: ${error}`);
   }
 );
 
@@ -42,7 +42,7 @@ client.send(complaintSubscribeCommand).then(
     console.log(`Complaint SNS subscription set up successfully: ${JSON.stringify(data)}`);
   },
   (error) => {
-    throw new Error(`Unable to set up Complaint SNS subscription: ${error}`);
+    console.error(`Unable to set up Complaint SNS subscription: ${error}`);
   }
 );
 const handleSnsNotification = async (req: Request) => {
