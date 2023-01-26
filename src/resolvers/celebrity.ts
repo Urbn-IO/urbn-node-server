@@ -2,7 +2,14 @@ import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graph
 import { Brackets } from 'typeorm';
 import CacheControl from '../cache/cacheControl';
 import AppDataSource from '../config/ormconfig';
-import { CELEB_PREREGISTRATION_PREFIX, STATIC_VIDEO_CDN } from '../constants';
+import {
+  ACCOUNT_NUMBER_PREFIX,
+  AWS_STATIC_VIDEO_BUCKET,
+  AWS_VOD_CUSTOM_JOB_TEMPLATE,
+  AWS_VOD_STACK_NAME,
+  CELEB_PREREGISTRATION_PREFIX,
+  STATIC_VIDEO_CDN,
+} from '../constants';
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
@@ -11,7 +18,7 @@ import { User } from '../entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
 import { upsertCelebritySearchItem } from '../services/search/addSearchItem';
-import { AppContext, ContentType, Roles } from '../types';
+import { AppContext, BankAccountCachedPayload, ContentType, Roles } from '../types';
 import {
   CelebrityApplicationInputs,
   GenericResponse,
@@ -21,7 +28,6 @@ import {
   VideoUploadResponse,
 } from '../utils/graphqlTypes';
 import { hashRow } from '../utils/hashRow';
-import { attachInstantShoutoutPrice } from '../utils/helpers';
 
 @Resolver()
 export class CelebrityResolver {
@@ -69,8 +75,12 @@ export class CelebrityResolver {
 
   @Mutation(() => GenericResponse)
   @Authorized()
-  async onBoardCeleb(@Ctx() { req }: AppContext, @Arg('data') data: OnboardCelebrityInputs): Promise<GenericResponse> {
+  async onBoardCeleb(
+    @Ctx() { req, redis }: AppContext,
+    @Arg('data') data: OnboardCelebrityInputs
+  ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
+
     data.isNew = false;
     if (data.acceptsCallTypeA === false && data.acceptsCallTypeB === false && data.acceptsShoutout === false) {
       return {
@@ -85,6 +95,15 @@ export class CelebrityResolver {
       data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
     }
     delete data.callScheduleSlots;
+
+    const key = ACCOUNT_NUMBER_PREFIX + userId;
+    const bankAccountInfoString = await redis.get(key);
+    if (!bankAccountInfoString) return { errorMessage: 'Enter your bank account number to get paid' };
+
+    const bankAccountInfo: BankAccountCachedPayload = JSON.parse(bankAccountInfoString);
+    data.accountName = bankAccountInfo.accountName;
+    data.accountNumber = bankAccountInfo.accountNumber;
+    data.bankCode = bankAccountInfo.bankCode;
 
     const hashString = hashRow(data);
     data.profileHash = hashString;
@@ -170,8 +189,8 @@ export class CelebrityResolver {
       if (!celeb) {
         return [];
       }
-      const celebArray = attachInstantShoutoutPrice([celeb]);
-      return celebArray;
+      // const celebArray = attachInstantShoutoutPrice([celeb]);
+      return [celeb];
     }
     const maxLimit = Math.min(18, limit);
 
@@ -195,9 +214,9 @@ export class CelebrityResolver {
       });
     }
     //
-    let celebs = await queryBuilder.getMany();
+    const celebs = await queryBuilder.getMany();
 
-    celebs = attachInstantShoutoutPrice(celebs);
+    // celebs = attachInstantShoutoutPrice(celebs);
 
     return celebs;
   }
@@ -250,9 +269,9 @@ export class CelebrityResolver {
   getVideoBannerUploadMetadata(@Ctx() { req }: AppContext): VideoUploadResponse {
     const userId = req.session.userId as string;
     const data = getSignedVideoMetadata({
-      destBucket: process.env.AWS_STATIC_VIDEO_BUCKET,
+      destBucket: AWS_STATIC_VIDEO_BUCKET,
       cloudFront: STATIC_VIDEO_CDN,
-      jobTemplate: process.env.AWS_VOD_STACK_NAME + process.env.AWS_VOD_CUSTOM_JOB_TEMPLATE,
+      jobTemplate: AWS_VOD_STACK_NAME + AWS_VOD_CUSTOM_JOB_TEMPLATE,
       customMetadata: {
         userId,
         contentType: ContentType.BANNER,

@@ -151,7 +151,7 @@ const checkParticipant = async (event: VideoCallEvent) => {
     };
     redis.set(payload.roomSid, JSON.stringify(payload));
     console.log('first participant joined');
-    event.CallDuration = 0;
+    event.CallDuration = callLength;
     event.participantA = participant;
     return event;
   } catch (err) {

@@ -1,11 +1,16 @@
 import { join } from 'path';
 import { DataSource } from 'typeorm';
+import { __prod__ } from '../constants';
 import { entities } from '../register';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
-  logging: true,
+  database: process.env.DATABASE_NAME,
+  host: process.env.DATABASE_HOST,
+  port: parseInt(process.env.DATABASE_PORT),
+  username: process.env.DATABASE_USERNAME,
+  password: process.env.DATABASE_PASSWORD,
+  logging: !__prod__,
   synchronize: true,
   migrations: [join(__dirname, './migrations/*')],
   entities,

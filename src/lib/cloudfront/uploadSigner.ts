@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from '../../constants';
 import { PartialWithRequired } from '../../types';
@@ -16,7 +16,9 @@ const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPA
 const vodKeyPairId = process.env.AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR;
 
 const pathToPrivateKey = join(config.APP_ROOT, '../keys/private_key.pem');
-const privateKey = readFileSync(pathToPrivateKey, 'utf8');
+const privateKey = existsSync(pathToPrivateKey)
+  ? readFileSync(pathToPrivateKey, 'utf8')
+  : (process.env.CLOUDFRONT_PRIVATE_KEY as string);
 
 const staticImageSigner = new Signer(staticImageDistKeyPairId, privateKey);
 const vodSigner = new Signer(vodKeyPairId, privateKey);

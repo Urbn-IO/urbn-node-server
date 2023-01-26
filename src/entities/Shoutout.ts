@@ -34,6 +34,10 @@ export class Shoutout extends BaseEntity {
   @Column()
   thumbnailUrl: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  shareUrl: string;
+
   @Field()
   @Column()
   durationInSeconds: string;

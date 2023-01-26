@@ -1,19 +1,20 @@
 import { Job } from 'bullmq';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { DeepPartial } from 'typeorm';
 import AppDataSource from '../config/ormconfig';
 import { Requests } from '../entities/Requests';
 import { addJob, operationsQueue } from '../queues/job_queue/producer';
 import { sendInstantNotification } from '../services/notifications/handler';
-import { NotificationRouteCode, RequestStatus, RequestType, TransactionsMetadata } from '../types';
+import { NotificationRouteCode, RequestStatus, RequestType, SubscriptionTopics } from '../types';
+import { VerifyPaymentResponse } from '../utils/graphqlTypes';
+import publish from '../utils/publish';
+dayjs.extend(utc);
 
-const processExpiredRequest = async (request: Requests) => {
-  let delay: number;
+const setupExpiration = async (request: Requests) => {
   //execute job at request expiration time for shoutout requests
-  if (request.requestType === RequestType.SHOUTOUT || request.requestType === RequestType.INSTANT_SHOUTOUT) {
-    delay = request.requestExpires.getTime() - Date.now();
-  }
-  //execute job 5 minutes after initial call time for call requests
-  else delay = request.callRequestBegins.getTime() + 300000 - Date.now();
+  const date = dayjs.utc(request.requestExpires); //request Expires is returned as a string for some reason, check why later
+  const delay = date.valueOf() - dayjs.utc().valueOf();
   await addJob(operationsQueue, 'requests-op', request, {
     attempts: 6,
     backoff: { type: 'fixed', delay: 30000 },
@@ -50,7 +51,6 @@ export const expireRequest = async (job: Job) => {
         });
       }
     } else if (status === RequestStatus.EXPIRED) {
-      console.log('Unfulfil job now');
       await changeRequestState(request.id, RequestStatus.UNFULFILLED);
     }
   } catch (err) {
@@ -65,7 +65,6 @@ export const changeRequestState = async (
   prevStatus?: RequestStatus | null
 ) => {
   try {
-    console.log('Updating request with Id: ', requestId);
     const result = await AppDataSource.query(
       `
     UPDATE Requests
@@ -83,35 +82,30 @@ export const changeRequestState = async (
   }
 };
 
-export const updateRequestAndNotify = async (metadata: TransactionsMetadata, success: boolean) => {
+export const updateRequestAndNotify = async (data: DeepPartial<Requests>, success: boolean) => {
   let userId: string, messageTitle: string, messageBody: string;
   let route: NotificationRouteCode;
-  const status = success ? RequestStatus.PENDING : RequestStatus.FAILED;
-  const customer = metadata.userId;
   try {
-    const request = (await (
-      await Requests.createQueryBuilder()
-        .update({ status })
-        .where({ customer })
-        .andWhere({ reference: metadata.reference })
-        .returning('*')
-        .execute()
-    ).raw[0]) as Requests;
-
     const requestType =
-      request.requestType === RequestType.SHOUTOUT || RequestType.INSTANT_SHOUTOUT ? 'shoutout' : 'video call';
+      data.requestType === RequestType.SHOUTOUT || RequestType.INSTANT_SHOUTOUT ? 'shoutout' : 'video call';
     if (success) {
+      const request = await Requests.save(data);
+      //notify client about successful payment
+      publish<VerifyPaymentResponse>(SubscriptionTopics.Verify_Payment, {
+        userId: request.customer,
+        status: true,
+      });
       //automagically check and update state of request on expiration
-      await processExpiredRequest(request);
+      await setupExpiration(request);
       //send notification
       userId = request.celebrity;
       messageTitle = 'New Request Alert! 🚨';
       messageBody = `You have received a new ${requestType} request`;
       route = NotificationRouteCode.RECEIVED_REQUEST;
     } else {
-      userId = request.customer;
+      userId = data.customer as string;
       messageTitle = `Failed ${requestType} Request 🛑`;
-      messageBody = `Your request to ${request.celebrity} failed due to an issue in processing your payment 😔`;
+      messageBody = `Your request to ${data.celebrity} failed due to an issue in processing your payment 😔`;
       route = NotificationRouteCode.DEFAULT;
     }
     await sendInstantNotification([userId], messageTitle, messageBody, route);

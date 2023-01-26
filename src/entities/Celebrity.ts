@@ -91,6 +91,15 @@ export class Celebrity extends BaseEntity {
   @Column('jsonb', { array: false, default: () => "'[]'", nullable: true })
   availableTimeSlots: CallSlots[];
 
+  @Column({ nullable: true })
+  accountName: string;
+
+  @Column({ nullable: true })
+  accountNumber: string;
+
+  @Column({ nullable: true })
+  bankCode: string;
+
   @Field({ nullable: true })
   @Column({ nullable: true })
   profileHash: string;

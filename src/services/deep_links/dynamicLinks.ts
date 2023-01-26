@@ -1,17 +1,28 @@
 import { FirebaseDynamicLinks } from 'firebase-dynamic-links';
 import { SocialMetaTagInfo, Suffix } from 'firebase-dynamic-links/lib/types/short-links-api';
-import { APP_CELEBRITY_DYNAMIC_URL_PREFIX, APP_MAIN_DYNAMIC_URL_PREFIX } from '../../constants';
+import {
+  APP_BUNDLE_NAME,
+  APP_CELEBRITY_DYNAMIC_URL_PREFIX,
+  APP_MAIN_DYNAMIC_URL_PREFIX,
+  APP_SHOUTOUT_DYNAMIC_URL_PREFIX,
+} from '../../constants';
 
-const appBundle = process.env.APP_BUNDLE_NAME;
+const appBundle = APP_BUNDLE_NAME;
 const appStoreId = process.env.APPLE_ID;
 
 export const createDynamicLink = async (
   url: string,
   complex = true,
-  prefix: 'main' | 'celeb' = 'main',
+  prefix: 'main' | 'celeb' | 'shoutout' = 'main',
   socialMetaTagInfo?: SocialMetaTagInfo
 ) => {
-  const urlPrefix = prefix === 'main' ? APP_MAIN_DYNAMIC_URL_PREFIX : APP_CELEBRITY_DYNAMIC_URL_PREFIX;
+  const urlPrefix =
+    prefix === 'main'
+      ? APP_MAIN_DYNAMIC_URL_PREFIX
+      : prefix === 'celeb'
+      ? APP_CELEBRITY_DYNAMIC_URL_PREFIX
+      : APP_SHOUTOUT_DYNAMIC_URL_PREFIX;
+
   const firebaseDynamicLinks = new FirebaseDynamicLinks(process.env.FIREBASE_WEBAPI_KEY);
   const suffix: Suffix = complex ? { option: 'UNGUESSABLE' } : { option: 'SHORT' };
 

@@ -3,7 +3,7 @@ import cookie from 'cookie';
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
-import { INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME } from '../constants';
+import { SESSION_COOKIE_NAME } from '../constants';
 import { Celebrity } from '../entities/Celebrity';
 import { sendInstantNotification } from '../services/notifications/handler';
 import { DayOfTheWeek, NotificationRouteCode } from '../types';
@@ -64,12 +64,12 @@ export const callDuration = (callLength: number, startTime: Date, currentTime: D
   return countDownDuration;
 };
 
-export const attachInstantShoutoutPrice = (celeb: Celebrity[]) => {
-  celeb.forEach((x) => {
-    if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_RATE;
-  });
-  return celeb;
-};
+// export const attachInstantShoutoutPrice = (celeb: Celebrity[]) => {
+//   celeb.forEach((x) => {
+//     if (x.acceptsInstantShoutout === true) x.instantShoutout = x.shoutout * INSTANT_SHOUTOUT_RATE;
+//   });
+//   return celeb;
+// };
 
 //send push notifications for users with bounced or complaint emails warning them they cant receieve emails
 export const badEmailNotifier = (userIds: string[]) => {

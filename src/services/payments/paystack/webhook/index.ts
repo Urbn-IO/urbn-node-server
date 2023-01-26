@@ -1,11 +1,8 @@
 import crypto from 'crypto';
 import express from 'express';
+import { Requests } from '../../../../entities/Requests';
 import { updateRequestAndNotify } from '../../../../request/manage';
-import { SubscriptionTopics, TransactionsMetadata } from '../../../../types';
-import { VerifyCardResponse } from '../../../../utils/graphqlTypes';
 import { reserveVideoCallScheduleTimeSlot } from '../../../../utils/helpers';
-import publish from '../../../../utils/publish';
-import { saveCardPaystack } from '../../saveCard';
 import { saveTransaction } from '../../transactions';
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
@@ -24,25 +21,13 @@ router.post('/', async (req, res) => {
     const status = payload.event === 'charge.success' ? true : false;
 
     const { data } = payload;
-    const metadata = data.metadata as TransactionsMetadata;
-    const userId = metadata.userId;
-    const celebrity = metadata.celebrity;
-    const availableSlotId = metadata.availableSlotId;
-    const day = metadata.availableDay;
+    const metadata = data.metadata;
 
-    if (String(metadata.newCard) === 'true') {
-      await saveCardPaystack(data);
-      publish<VerifyCardResponse>(SubscriptionTopics.NEW_CARD, {
-        userId,
-        status,
-      });
-      return;
-    }
+    const request: Partial<Requests> = metadata;
+    await updateRequestAndNotify(request, status);
 
-    updateRequestAndNotify(metadata, status);
-
-    if (celebrity && availableSlotId && day) {
-      reserveVideoCallScheduleTimeSlot(celebrity, availableSlotId, day);
+    if (metadata.celebrity && metadata.callSlotId && metadata.availableDay) {
+      reserveVideoCallScheduleTimeSlot(metadata.celebrity, metadata.callSlotId, metadata.availableDayz);
     }
     await saveTransaction(data);
   } catch (err) {

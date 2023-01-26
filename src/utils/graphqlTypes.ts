@@ -1,7 +1,6 @@
-import { IsDate, IsEmail, IsPhoneNumber, Length, Max, Min } from 'class-validator';
+import { IsDate, IsEmail, IsPhoneNumber, Length, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { Field, InputType, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { REQUEST_MAX_RATE, REQUEST_MIN_RATE } from '../constants';
-import { CardAuthorization } from '../entities/CardAuthorization';
 import { Categories } from '../entities/Categories';
 import { User } from '../entities/User';
 import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from '../types';
@@ -129,9 +128,10 @@ export class OnboardCelebrityInputs {
   callScheduleSlots?: CallScheduleInput[];
 
   availableTimeSlots: CallSlots[];
-
   isNew: boolean;
-
+  accountName: string;
+  accountNumber: string;
+  bankCode: string;
   profileHash: string;
   userId: string | undefined;
 }
@@ -277,13 +277,25 @@ export class CallScheduleInput {
   endTime: Date;
 }
 
-// @InputType()
-// export class CategoryIds {
-//   @Field(() => [Int])
-//   categoryId: number[];
-// }
+@InputType()
+export class AccountNumberInput {
+  @Field()
+  bankCode: string;
 
-//remove the field propery in future
+  @MinLength(10)
+  @MaxLength(10)
+  @Field()
+  accountNumber: string;
+}
+
+@ObjectType()
+export class VerifyAccountNumberResponse {
+  @Field({ nullable: true })
+  accountName?: string;
+
+  @Field({ nullable: true })
+  errorMessage?: string;
+}
 
 @ObjectType()
 export class UserResponse {
@@ -304,21 +316,9 @@ export class CategoryResponse {
 }
 
 @ObjectType()
-export class CardResponse {
-  @Field(() => [CardAuthorization], { nullable: true })
-  cards?: CardAuthorization[];
-
-  @Field({ nullable: true })
-  errorMessage?: string;
-}
-
-@ObjectType()
-export class InitializeCardResponse {
+export class RequestResponse {
   @Field(() => String, { nullable: true })
   authUrl?: string;
-
-  @Field(() => String, { nullable: true })
-  ref?: string;
 
   @Field({ nullable: true })
   errorMessage?: string;
@@ -356,7 +356,7 @@ export class CallTokenResponse {
   errorMessage?: string;
 }
 @ObjectType()
-export class VerifyCardResponse {
+export class VerifyPaymentResponse {
   @Field(() => Boolean)
   status: boolean;
 
@@ -512,6 +512,10 @@ export class CallSlots extends CallSlotBase {
 export class InitiateVideoCallResponse {
   @Field(() => Int, { nullable: true })
   attempts?: number;
+
+  @Field({ nullable: true })
+  celebThumbnail?: string;
+
   @Field({ nullable: true })
   errorMessage?: string;
 }

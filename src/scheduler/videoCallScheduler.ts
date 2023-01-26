@@ -1,73 +1,11 @@
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import createhashString from '../utils/createHashString';
 import { CallScheduleInput, CallSlotHrs, CallSlotMin, CallSlots } from '../utils/graphqlTypes';
-
-// const grandChildren: CallScheduleBase[] = [];
-// const children: CallScheduleBase[] = [];
-
-// const saveChild = (day: number, celebId: number) => {
-//   const entity = CallScheduleBase.create({
-//     celebId,
-//     day,
-//     children: grandChildren,
-//   });
-//   children.push(entity);
-//   grandChildren.length = 0;
-// };
-
-// const createSchedule = async (
-//   celebId: number,
-//   schedule: { day: DayOfTheWeek; startTime: string; endTime: string; derivedSchedule: CallScheduleInput[] }[]
-// ) => {
-//   try {
-//     const groupedSchedule = _.groupBy(schedule, (obj) => obj.day);
-//     const scheduleKeys = Object.keys(groupedSchedule);
-//     scheduleKeys.forEach((x) => {
-//       const grouped = groupedSchedule[x];
-//       for (let y = 0; y < grouped.length; y++) {
-//         const entity = CallScheduleBase.create({
-//           celebId,
-//           startTime: grouped[y].startTime,
-//           endTime: grouped[y].endTime,
-//           children: grouped[y].derivedSchedule,
-//         });
-//         grandChildren.push(entity);
-//         if (y === grouped.length - 1) saveChild(parseInt(x), celebId);
-//       }
-//     });
-
-//     const parentEntity = CallScheduleBase.create({
-//       celebId,
-//       children,
-//     });
-//     children.length = 0;
-//     await CallScheduleBase.save(parentEntity);
-//     return true;
-//   } catch (err) {
-//     console.error(err);
-//     return false;
-//   }
-// };
-
-// export const scheduleCallSlot = async (celebId: number, inputArray: CallScheduleInput[]) => {
-//   const schedule = processTimeSchedule(inputArray);
-//   const result = await createSchedule(celebId, schedule);
-//   return result;
-// };
-
-// export const updateCallSlot = async (celebId: number, updateItems: CallScheduleInput[]) => {
-//   const callScheduleTreerepo = AppDataSource.getTreeRepository(CallScheduleBase);
-//   const parent = await callScheduleTreerepo.findOne({ where: { celebId, parent: false } });
-//   if (parent) {
-//     await callScheduleTreerepo.remove(parent);
-//   }
-//   const schedule = processTimeSchedule(updateItems);
-//   const result = await createSchedule(celebId, schedule);
-//   return result;
-// };
+dayjs.extend(utc);
 
 const dateToFormattedString = (date: Date) => {
-  return dayjs(date).format('HH:mm:ss');
+  return dayjs(date).utc(false).format();
 };
 
 const generateMinutes = (startTime: Date, endTime: Date): CallSlotMin[] => {
@@ -95,8 +33,8 @@ export const generateCallTimeSlots = (input: CallScheduleInput[]) => {
   input.forEach((x) => {
     g.push({
       day: x.day,
-      start: dayjs(x.startTime).format('HH:mm:ss'),
-      end: dayjs(x.endTime).format('HH:mm:ss'),
+      start: dateToFormattedString(x.startTime),
+      end: dateToFormattedString(x.endTime),
       hourSlots: (() => {
         /// break time into hourly chunks
         const arr: CallSlotHrs[] = [];

@@ -10,13 +10,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import CacheControl from '../cache/cacheControl';
-import { CacheControlScope, SignInMethod } from '../types';
-import { CardAuthorization } from './CardAuthorization';
+import { SignInMethod } from '../types';
 import { Celebrity } from './Celebrity';
 import { Role } from './Role';
 import { Shoutout } from './Shoutout';
-import { Wallet } from './Wallet';
 
 @ObjectType()
 @Entity()
@@ -65,15 +62,6 @@ export class User extends BaseEntity {
   @JoinColumn()
   celebrity?: Celebrity;
 
-  @Field({ nullable: true })
-  @CacheControl({ maxAge: 60, scope: CacheControlScope.PRIVATE })
-  @OneToOne(() => Wallet, {
-    nullable: true,
-    cascade: true,
-  })
-  @JoinColumn()
-  wallet?: Wallet;
-
   @OneToMany(() => Role, (role) => role.user, { cascade: true })
   userRoles: Role[];
 
@@ -81,9 +69,9 @@ export class User extends BaseEntity {
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user)
   shoutouts: Shoutout[];
 
-  @Field(() => [CardAuthorization], { nullable: true })
-  @OneToMany(() => CardAuthorization, (card) => card.user, {
-    nullable: true,
-  })
-  cards: CardAuthorization[];
+  // @Field(() => [CardAuthorization], { nullable: true })
+  // @OneToMany(() => CardAuthorization, (card) => card.user, {
+  //   nullable: true,
+  // })
+  // cards: CardAuthorization[];
 }

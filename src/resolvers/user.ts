@@ -79,7 +79,6 @@ export class UserResolver {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.shoutouts', 'shoutouts')
       .leftJoinAndSelect('user.celebrity', 'celebrity')
-      .leftJoinAndSelect('user.cards', 'cards')
       .where('user.email = :email', { email })
       .getOne();
 
@@ -130,7 +129,7 @@ export class UserResolver {
       where: {
         email: auth.email?.toLowerCase(),
       },
-      relations: ['shoutouts', 'celebrity', 'cards'],
+      relations: ['shoutouts', 'celebrity'],
     });
     if (user) {
       await redis.del(user.sessionKey);
@@ -368,7 +367,6 @@ export class UserResolver {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.shoutouts', 'shoutouts')
       .leftJoinAndSelect('user.celebrity', 'celebrity')
-      .leftJoinAndSelect('user.cards', 'cards')
       .where('user.userId = :userId', { userId })
       .getOne();
 

@@ -47,7 +47,7 @@ export class Requests extends BaseEntity {
   @Column({
     type: 'enum',
     enum: RequestStatus,
-    default: RequestStatus.VALIDATING,
+    default: RequestStatus.PENDING,
   })
   status: RequestStatus;
 
@@ -68,6 +68,7 @@ export class Requests extends BaseEntity {
   @Column({ default: 0 })
   callAttempts: number;
 
+  @Field(() => String)
   @Column({ type: 'timestamp', nullable: true })
   callRequestBegins: Date;
 

@@ -1,6 +1,6 @@
-import { TransactionsMetadata } from '../../../types';
-import { saveCardPaystack } from '../saveCard';
-import { saveTransaction } from '../transactions';
+import { PAYSTACK_API } from '../../../../constants';
+import { TransactionsMetadata } from '../../../../types';
+import { saveTransaction } from '../../transactions';
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {
@@ -30,14 +30,12 @@ const initializeTransaction = (apiUrl: string, secretKey: string) => {
           throw new Error(message);
         }
 
-        // const accessCode = data.access_code;
-        const authUrl = data.authorization_url;
-        const ref = data.reference;
+        const authUrl = data.authorization_url as string;
 
-        return { authUrl, ref };
+        return authUrl;
       } catch (err) {
         console.error(err);
-        return false;
+        return null;
       }
     },
   };
@@ -91,7 +89,7 @@ const chargeAuthorization = (apiUrl: string, secretKey: string) => {
 
 const verifyTransaction = (apiUrl: string, secretKey: string) => {
   return {
-    verifyPayment: async (ref: string, newCard?: boolean) => {
+    verifyPayment: async (ref: string) => {
       const endpoint = `${apiUrl}/transaction/verify/${ref}`;
       try {
         const response = await fetch(endpoint, {
@@ -110,9 +108,6 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
         }
         const transactionStatus = data.status;
         if (transactionStatus === 'success') {
-          if (newCard) {
-            saveCardPaystack(data);
-          }
           saveTransaction(data);
           return true;
         }
@@ -125,13 +120,36 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
   };
 };
 
+const verifyAccount = (apiUrl: string, secretKey: string) => {
+  return {
+    verifyAccountNumber: async (bankCode: string, acctNumber: string) => {
+      try {
+        const endpoint = `${apiUrl}/bank/resolve?account_number=${acctNumber}&bank_code=${bankCode}`;
+        const response = await fetch(endpoint, {
+          method: 'get',
+          headers: {
+            Authorization: `Bearer ${secretKey}`,
+            'cache-control': 'no-cache',
+          },
+        });
+        const payload = await response.json();
+        return payload;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    },
+  };
+};
+
 const paystack = () => {
-  const apiUrl = process.env.PAYSTACK_API;
+  const apiUrl = PAYSTACK_API;
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   return {
     ...initializeTransaction(apiUrl, secretKey),
     ...verifyTransaction(apiUrl, secretKey),
     ...chargeAuthorization(apiUrl, secretKey),
+    ...verifyAccount(apiUrl, secretKey),
   };
 };
 

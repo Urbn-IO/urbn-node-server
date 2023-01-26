@@ -42,7 +42,7 @@ const app = express();
 const httpServer = createServer(app);
 const redis = redisClient;
 const main = async () => {
-  const Port = parseInt(process.env.PORT) || 4000;
+  const Port = 8000;
   AppDataSource;
   initializeApp(firebaseConfig);
   // initializeSearch();

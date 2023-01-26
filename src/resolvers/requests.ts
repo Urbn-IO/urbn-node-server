@@ -19,6 +19,7 @@ import { sendInstantNotification } from '../services/notifications/handler';
 import paymentManager from '../services/payments/payments';
 import {
   AppContext,
+  AvailableDay,
   CallType,
   ContentType,
   DayOfTheWeek,
@@ -31,6 +32,7 @@ import {
 import createhashString from '../utils/createHashString';
 import {
   GenericResponse,
+  RequestResponse,
   ShoutoutRequestInput,
   VideoCallRequestInputs,
   VideoUploadResponse,
@@ -41,89 +43,75 @@ dayjs.extend(duration);
 
 @Resolver()
 export class RequestsResolver {
-  @Mutation(() => GenericResponse)
+  @Mutation(() => RequestResponse)
   @Authorized()
   async createShoutoutRequest(
     @Arg('input') input: ShoutoutRequestInput,
-    @Arg('cardId', () => Int) cardId: number,
     @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
+  ): Promise<RequestResponse> {
     const userId = req.session.userId as string;
     const celebId = input.celebId;
-    const user = await AppDataSource.getRepository(User)
-      .createQueryBuilder('user')
-      .select(['user.email', 'user.displayName'])
-      .leftJoin('user.cards', 'cards')
-      .where('cards.id = :cardId', { cardId })
-      .addSelect(['cards.authorizationCode'])
-      .getRawOne();
 
-    if (!user)
-      return {
-        errorMessage: "We don't have this card anymore, try adding it again or try another",
+    try {
+      const user = await User.findOne({ where: { userId } });
+
+      if (!user) return { errorMessage: 'An error occured' };
+
+      const email = user.email;
+      const customerDisplayName = input.for ? input.for : (user.displayName as string);
+
+      const celeb = await Celebrity.findOne({ where: { id: celebId } });
+      if (!celeb) return { errorMessage: 'This celebrity is no longer available' };
+      if (celeb.userId === userId) return { errorMessage: 'You cannot make a request to yourself' };
+      const acceptsShoutOut = celeb.acceptsShoutout;
+      const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
+      if (acceptsShoutOut === false) {
+        return {
+          errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts`,
+        };
+      }
+      if (acceptsInstantShoutOut === false && input.instantShoutout === true) {
+        return {
+          errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts`,
+        };
+      }
+      const requestType = input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
+      const transactionAmount = input.instantShoutout
+        ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
+        : (celeb.shoutout * 100).toString();
+
+      const requestExpires = input.requestExpiration;
+      const reference = createhashString([userId, celeb.userId, requestExpires.toString()]);
+      const request: Partial<Requests> | string = {
+        reference,
+        customer: userId,
+        customerDisplayName,
+        celebrity: celeb.userId,
+        celebrityAlias: celeb.alias,
+        requestType,
+        amount: transactionAmount,
+        description: input.description.trim(),
+        requestExpires,
       };
 
-    const email = user.user_email as string;
-    const customerDisplayName = input.for ? input.for : (user.user_displayName as string);
-    const cardAuth = user.cards_authorizationCode as string;
+      // const result = await Requests.create(request).save();
 
-    const celeb = await Celebrity.findOne({ where: { id: celebId } });
-    if (!celeb) return { errorMessage: 'This celebrity is no longer available' };
-    if (celeb.userId === userId) return { errorMessage: 'You cannot make a request to yourself' };
-    const acceptsShoutOut = celeb.acceptsShoutout;
-    const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
-    if (acceptsShoutOut === false)
-      return {
-        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts`,
-      };
-    if (acceptsInstantShoutOut === false && input.instantShoutout === true) {
-      return {
-        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts`,
-      };
+      const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
+      if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
+
+      return { authUrl };
+    } catch (err) {
+      console.error(err);
+      return { errorMessage: 'We are unable to place a request for you at the moment, Please try again later' };
     }
-    const requestType = input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
-    const transactionAmount = input.instantShoutout
-      ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
-      : (celeb.shoutout * 100).toString();
-
-    const reference = createhashString([userId, celeb.userId, cardAuth]);
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
-      userId,
-      celebrity: celeb.userId,
-      reference,
-    });
-    if (!chargePayment) return { errorMessage: 'Payment Error! Try again' };
-
-    const requestExpires = new Date(dayjs(input.requestExpiration).utc(false).format());
-
-    const request: Partial<Requests> = {
-      reference,
-      customer: userId,
-      customerDisplayName,
-      celebrity: celeb.userId,
-      celebrityAlias: celeb.alias,
-      requestType,
-      amount: transactionAmount,
-      description: input.description.trim(),
-      requestExpires,
-    };
-    const result = await Requests.create(request).save();
-    if (result) {
-      return { success: 'Request Sent!' };
-    }
-
-    return {
-      errorMessage: 'Failed to create your request at this time. Try again later',
-    };
   }
 
-  @Mutation(() => GenericResponse)
+  @Mutation(() => RequestResponse)
   @Authorized()
   async createVideoCallRequest(
     @Arg('input') input: VideoCallRequestInputs,
-    @Arg('cardId', () => Int) cardId: number,
     @Ctx() { req }: AppContext
-  ): Promise<GenericResponse> {
+  ): Promise<RequestResponse> {
     let callRequestType;
     let callDurationInSeconds;
     let callSlotId = '';
@@ -131,130 +119,120 @@ export class RequestsResolver {
     let callStartTime = '';
     const userId = req.session.userId as string;
     const celebId = input.celebId;
-    const user = await AppDataSource.getRepository(User)
-      .createQueryBuilder('user')
-      .select(['user.displayName', 'user.email'])
-      .leftJoin('user.cards', 'cards')
-      .where('cards.id = :cardId', { cardId })
-      .addSelect(['cards."authorizationCode"'])
-      .getRawOne();
 
-    if (!user)
-      return {
-        errorMessage: "We don't have this card anymore, try adding it again or try another",
-      };
+    try {
+      const user = await User.findOne({ where: { userId } });
 
-    const email = user.user_email;
-    const customerDisplayName = user.user_displayName;
-    const cardAuth = user.authorizationCode;
-    const celeb = await Celebrity.findOne({
-      where: { id: celebId },
-      select: [
-        'userId',
-        'alias',
-        'thumbnail',
-        'acceptsCallTypeA',
-        'acceptsCallTypeB',
-        'availableTimeSlots',
-        'callTypeA',
-        'callTypeB',
-      ],
-    });
-    if (!celeb) {
-      return { errorMessage: 'This celebrity is no longer available' };
-    }
-    // if (celeb.userId === userId)
-    //   return { errorMessage: "You cannot make a request to yourself" };
-    const availableTimeSlots = celeb.availableTimeSlots;
-    const acceptsCallTypeA = celeb.acceptsCallTypeA;
-    const acceptsCallTypeB = celeb.acceptsCallTypeB;
-    if (acceptsCallTypeA === true && input.callType === CallType.CALL_TYPE_A) {
-      callRequestType = RequestType.CALL_TYPE_A;
-      callDurationInSeconds = VIDEO_CALL_TYPE_A_DURATION;
-    } else if (acceptsCallTypeB === true && input.callType === CallType.CALL_TYPE_B) {
-      callRequestType = RequestType.CALL_TYPE_B;
-      callDurationInSeconds = VIDEO_CALL_TYPE_B_DURATION;
-    } else
-      return {
-        errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request`,
-      };
+      if (!user) return { errorMessage: 'An error occured' };
 
-    let wasNotFound = true;
+      const email = user.email;
+      const customerDisplayName = user.displayName;
+      const celeb = await Celebrity.findOne({
+        where: { id: celebId },
+        select: [
+          'userId',
+          'alias',
+          'thumbnail',
+          'acceptsCallTypeA',
+          'acceptsCallTypeB',
+          'availableTimeSlots',
+          'callTypeA',
+          'callTypeB',
+        ],
+      });
+      if (!celeb) {
+        return { errorMessage: 'This celebrity is no longer available' };
+      }
+      // if (celeb.userId === userId)
+      //   return { errorMessage: "You cannot make a request to yourself" };
+      const availableTimeSlots = celeb.availableTimeSlots;
+      const acceptsCallTypeA = celeb.acceptsCallTypeA;
+      const acceptsCallTypeB = celeb.acceptsCallTypeB;
+      if (acceptsCallTypeA === true && input.callType === CallType.CALL_TYPE_A) {
+        callRequestType = RequestType.CALL_TYPE_A;
+        callDurationInSeconds = VIDEO_CALL_TYPE_A_DURATION;
+      } else if (acceptsCallTypeB === true && input.callType === CallType.CALL_TYPE_B) {
+        callRequestType = RequestType.CALL_TYPE_B;
+        callDurationInSeconds = VIDEO_CALL_TYPE_B_DURATION;
+      } else
+        return {
+          errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request`,
+        };
 
-    loop: for (const x of availableTimeSlots) {
-      if (x.day === input.selectedTimeSlot.day) {
-        for (const y of x.hourSlots) {
-          for (const z of y.minSlots) {
-            if (z.id === input.selectedTimeSlot.slotId && z.available === true) {
-              wasNotFound = false;
-              callSlotDay = x.day;
-              callSlotId = z.id;
-              callStartTime = z.start;
-              break loop;
-            } else if (z.id === input.selectedTimeSlot.slotId && z.available === false) {
-              return {
-                errorMessage: 'The selected time slot is no longer available, please select another time for this call',
-              };
+      let wasNotFound = true;
+
+      loop: for (const x of availableTimeSlots) {
+        if (x.day === input.selectedTimeSlot.day) {
+          for (const y of x.hourSlots) {
+            for (const z of y.minSlots) {
+              if (z.id === input.selectedTimeSlot.slotId && z.available === true) {
+                wasNotFound = false;
+                callSlotDay = x.day;
+                callSlotId = z.id;
+                callStartTime = z.start;
+                break loop;
+              } else if (z.id === input.selectedTimeSlot.slotId && z.available === false) {
+                return {
+                  errorMessage:
+                    'The selected time slot is no longer available, please select another time for this call',
+                };
+              }
             }
           }
         }
       }
+
+      if (wasNotFound) {
+        return { errorMessage: 'slotId was not found for supplied day' };
+      }
+
+      const transactionAmount =
+        callRequestType === RequestType.CALL_TYPE_A
+          ? (celeb.callTypeA * 100).toString()
+          : (celeb.callTypeB * 100).toString();
+
+      const availabeDate = getNextAvailableDate(callSlotDay);
+
+      const startTime = dayjs.utc(callStartTime).format('HH:mm:ss');
+      const startTimeSplit = startTime.split(':');
+
+      const availableDay = availabeDate
+        .utc(true)
+        .set('hour', parseInt(startTimeSplit[0]))
+        .set('minute', parseInt(startTimeSplit[1]))
+        .set('second', parseInt(startTimeSplit[2]));
+
+      const callRequestBegins = new Date(availableDay.format());
+      const requestExpires = new Date(availableDay.add(5, 'minute').format());
+
+      const reference = createhashString([userId, celeb.userId, callSlotId, requestExpires.toString()]);
+
+      const request: Partial<Requests> | AvailableDay = {
+        reference,
+        customer: userId,
+        customerDisplayName,
+        celebrity: celeb.userId,
+        celebrityAlias: celeb.alias,
+        requestType: callRequestType,
+        amount: transactionAmount,
+        description: `Video call request from ${customerDisplayName} to ${celeb.alias}`,
+        callSlotId,
+        callDurationInSeconds: callDurationInSeconds.toString(),
+        callRequestBegins,
+        requestExpires,
+        availableDay: input.selectedTimeSlot.day,
+      };
+
+      const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
+
+      if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
+      // const result = await Requests.create(request).save();
+
+      return { authUrl };
+    } catch (err) {
+      console.error(err);
+      return { errorMessage: 'We are unable to place a request for you at the moment, Please try again later' };
     }
-
-    if (wasNotFound) {
-      return { errorMessage: 'slotId was not found for supplied day' };
-    }
-
-    const transactionAmount =
-      callRequestType === RequestType.CALL_TYPE_A
-        ? (celeb.callTypeA * 100).toString()
-        : (celeb.callTypeB * 100).toString();
-
-    const reference = createhashString([userId, celeb.userId, cardAuth, callSlotId]);
-
-    const chargePayment = await paymentManager().chargeCard(email, transactionAmount, cardAuth, {
-      userId,
-      celebrity: celeb.userId,
-      reference,
-      availableSlotId: callSlotId,
-      availableDay: input.selectedTimeSlot.day,
-    });
-
-    if (!chargePayment) return { errorMessage: 'Payment Error! Try again' };
-
-    const availabeDate = getNextAvailableDate(callSlotDay);
-    const startTime = callStartTime;
-    const startTimeSplit = startTime.split(':');
-    const availableDay = availabeDate
-      .set('hour', parseInt(startTimeSplit[0]))
-      .set('minute', parseInt(startTimeSplit[1]))
-      .set('second', parseInt(startTimeSplit[2]));
-
-    const callRequestBegins = availableDay;
-    const requestExpires = availableDay.add(5, 'minute');
-
-    const request = {
-      reference,
-      customer: userId,
-      customerDisplayName,
-      celebrity: celeb.userId,
-      celebrityAlias: celeb.alias,
-      celebrityThumbnail: celeb.thumbnail,
-      requestType: callRequestType,
-      amount: transactionAmount,
-      description: `Video call request from ${customerDisplayName} to ${celeb.alias}`,
-      callSlotId,
-      callDurationInSeconds: callDurationInSeconds.toString(),
-      callRequestBegins,
-      requestExpires,
-    };
-    const result = await Requests.create(request).save();
-    if (result) {
-      return { success: 'Request Sent!' };
-    }
-    return {
-      errorMessage: 'Failed to create your request at this time. Try again later',
-    };
   }
 
   @Mutation(() => VideoUploadResponse)

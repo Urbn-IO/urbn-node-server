@@ -1,13 +1,12 @@
 import { Consumer, ConsumerOptions } from 'sqs-consumer-v3';
+import { AWS_SQS_VOD_QUEUE_URL } from '../../../constants';
 import saveVideoBanner from '../../../lib/banner/saveBanner';
 import saveShoutout from '../../../lib/shoutout/saveShoutout';
 import { ContentType, VideoOutput } from '../../../types';
 import { sqsClient } from '../clients/sqs';
 
-const queueUrl = process.env.AWS_SQS_VOD_QUEUE_URL;
-
 const consumerOptions: ConsumerOptions = {
-  queueUrl,
+  queueUrl: AWS_SQS_VOD_QUEUE_URL,
   batchSize: 10,
   waitTimeSeconds: 20,
   visibilityTimeout: 120,

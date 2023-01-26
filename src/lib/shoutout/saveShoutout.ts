@@ -1,6 +1,6 @@
 import { In } from 'typeorm';
 import AppDataSource from '../../config/ormconfig';
-import { SHOUTOUT_PLAYER_URL } from '../../constants';
+import { APP_BASE_URL, SHOUTOUT_PLAYER_URL } from '../../constants';
 import { Requests } from '../../entities/Requests';
 import { Shoutout } from '../../entities/Shoutout';
 import { User } from '../../entities/User';
@@ -13,6 +13,7 @@ import { badEmailNotifier } from '../../utils/helpers';
 const saveShoutout = async (data: Partial<VideoOutput>[]) => {
   try {
     const shoutouts: Shoutout[] = [];
+    const emailList = [];
     const badEmailUsers: string[] = [];
     const ownerIds = data.map((x) => x.owner);
     const user = await User.find({ where: { userId: In(ownerIds) } });
@@ -22,36 +23,45 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
 
     const userIds = user.map((x) => x.userId);
 
-    const emailData = data.map(async (x) => {
-      const userObj = user.find((y) => y.userId === x.owner);
+    for (const video of data) {
+      const userObj = user.find((y) => y.userId === video.owner);
+      const playerLink = `${SHOUTOUT_PLAYER_URL}?hls=${video.hlsUrl}&mp4=${video.mp4Url}&thumbnail=${video.thumbnailUrl}`;
+      const playerUrl = await createDynamicLink(playerLink, true, 'shoutout', {
+        socialTitle: `Shoutout video from ${video.alias}`,
+        socialDescription: `View shoutout video shared to you from ${video.alias}`,
+        socialImageLink: video.thumbnailUrl,
+      });
       const shoutOutObj = Shoutout.create({
-        celebAlias: x.alias,
-        celebId: x.userId,
-        workFlowId: x.workFlowId,
-        srcVideo: x.srcVideo,
-        datePublished: x.datePublished,
-        hlsUrl: x.hlsUrl,
-        mp4Url: x.mp4Url,
-        thumbnailUrl: x.thumbnailUrl,
-        durationInSeconds: x.durationInSeconds,
+        celebAlias: video.alias,
+        celebId: video.userId,
+        shareUrl: playerUrl,
+        workFlowId: video.workFlowId,
+        srcVideo: video.srcVideo,
+        datePublished: video.datePublished,
+        hlsUrl: video.hlsUrl,
+        mp4Url: video.mp4Url,
+        thumbnailUrl: video.thumbnailUrl,
+        durationInSeconds: video.durationInSeconds,
         user: userObj,
       });
 
       shoutouts.push(shoutOutObj);
 
-      const link = `${SHOUTOUT_PLAYER_URL}?hls=${x.hlsUrl}&mp4=${x.mp4Url}&thumbnail=${x.thumbnailUrl}`;
-      const url = await createDynamicLink(link, false);
-      if (!url) return;
+      const profileLink = `${APP_BASE_URL}/profile`;
+      const profileUrl = await createDynamicLink(profileLink, false);
+
+      if (!profileUrl) continue;
       const data = {
         userId: userObj?.userId,
         name: userObj?.displayName,
         email: userObj?.email,
         isEmailActive: userObj?.isEmailActive,
-        celebAlias: x.alias,
-        url,
+        celebAlias: video.alias,
+        url: profileUrl,
       };
-      return data;
-    });
+
+      emailList.push(data);
+    }
 
     await Shoutout.save(shoutouts);
     const references = data.map((x) => x.reference) as string[];
@@ -67,9 +77,6 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
       'You have received a new shoutout video!',
       NotificationRouteCode.PROFILE_SHOUTOUT
     );
-
-    const emailDataResolved = await Promise.all(emailData);
-    const emailList = emailDataResolved.filter((x) => x);
 
     emailList.forEach((x) => {
       if (x?.isEmailActive === true) {

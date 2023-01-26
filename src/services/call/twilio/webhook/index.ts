@@ -1,11 +1,12 @@
 import express from 'express';
 import { validateRequest } from 'twilio';
+import { TWILIO_WEBHOOK } from '../../../../constants';
 import { VideoCallEvent } from '../../../../utils/graphqlTypes';
 import eventManager from '../eventsManager';
 
 const router = express.Router();
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const url = process.env.TWILIO_WEBHOOK;
+const url = TWILIO_WEBHOOK;
 
 router.post('/', async (req, res) => {
   try {

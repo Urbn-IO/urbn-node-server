@@ -1,15 +1,9 @@
 import { TransactionsMetadata } from '../../types';
-import paystack from './paystack/paystack';
+import paystack from './paystack/api';
 
 const initialize = () => {
   return {
-    initializeCard: async (email: string, userId: string, amount: string, defaultCard = false) => {
-      const metadata: TransactionsMetadata = {
-        userId,
-        email,
-        newCard: true,
-        defaultCard,
-      };
+    initializePayment: async <T>(email: string, amount: string, metadata: T) => {
       const result = await paystack().initializePayment(email, amount, metadata);
       return result;
     },
@@ -18,8 +12,8 @@ const initialize = () => {
 
 const verify = () => {
   return {
-    verifyPayment: async (ref: string, newCard?: boolean) => {
-      const result = await paystack().verifyPayment(ref, newCard);
+    verifyPayment: async (ref: string) => {
+      const result = await paystack().verifyPayment(ref);
       return result;
     },
   };
@@ -34,11 +28,21 @@ const pay = () => {
   };
 };
 
+const verifyAccount = () => {
+  return {
+    verifyAccountNumber: async (bankCode: string, acctNumber: string) => {
+      const result = await paystack().verifyAccountNumber(bankCode, acctNumber);
+      return result;
+    },
+  };
+};
+
 const paymentManager = () => {
   return {
     ...initialize(),
     ...verify(),
     ...pay(),
+    ...verifyAccount(),
   };
 };
 

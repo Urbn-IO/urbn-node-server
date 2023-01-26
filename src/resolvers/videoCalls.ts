@@ -12,6 +12,7 @@ import {
   Subscription,
 } from 'type-graphql';
 import { CALL_RETRY_PREFIX } from '../constants';
+import { Celebrity } from '../entities/Celebrity';
 import { Requests } from '../entities/Requests';
 import { changeRequestState } from '../request/manage';
 import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
@@ -28,6 +29,7 @@ export class VideoCallResolver {
     @Ctx() { redis }: AppContext
   ): Promise<InitiateVideoCallResponse> {
     let request;
+    let celeb;
     let expiry;
     let data: Partial<CallRetriesState> = {};
     let attempts;
@@ -39,17 +41,23 @@ export class VideoCallResolver {
         request = await Requests.findOne({ where: { reference } });
         if (!request) return { errorMessage: 'An error occured!' };
         if (request.status !== RequestStatus.ACCEPTED) return { errorMessage: 'This request is no longer valid!' };
+        celeb = await Celebrity.findOne({ where: { userId: request.celebrity } });
+        if (!celeb?.thumbnail) {
+          console.log(`Thumbnail Image for celebrity with userId: `, request.celebrity);
+          return { errorMessage: 'An error occured!' };
+        }
         expiry = dayjs(request.requestExpires).unix();
         data = {
           attempts: 1,
           expiry,
           requestId: request.id,
           celebrity: request.celebrity,
+          celebThumbnail: celeb.thumbnail,
           customerDisplayName: request.customerDisplayName,
         };
         await redis.set(CALL_RETRY_PREFIX + reference, JSON.stringify(data), 'EXAT', expiry);
         await sendCallNotification(request.celebrity, reference, request.customerDisplayName);
-        return { attempts: data.attempts };
+        return { attempts: data.attempts, celebThumbnail: celeb.thumbnail };
       // subsequent call attempts
       default:
         data = JSON.parse(res);
@@ -70,7 +78,7 @@ export class VideoCallResolver {
         data.attempts = attempts;
         await redis.set(CALL_RETRY_PREFIX + reference, JSON.stringify(data), 'EXAT', expiry);
         await sendCallNotification(data.celebrity, reference, data.customerDisplayName);
-        return { attempts };
+        return { attempts, celebThumbnail: data.celebThumbnail };
     }
   }
 

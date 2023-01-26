@@ -40,7 +40,7 @@ export class ShoutoutResolver {
     if (!url) return { errorMessage: 'An error ouccred, try agin later' };
 
     await sendMail({
-      emailAddresses: [email],
+      emailAddresses: [email.toLowerCase()],
       subject: EmailSubject.GIFT_SHOUTOUT,
       name: user.displayName,
       url,

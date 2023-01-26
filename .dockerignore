@@ -1,3 +1,7 @@
 node_modules
 npm-debug.log
 config/letsencrypt
+keys
+docker-compose.yaml
+dist
+.env

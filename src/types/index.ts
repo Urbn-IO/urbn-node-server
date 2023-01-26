@@ -84,6 +84,7 @@ export interface CallRetriesState {
   expiry: number;
   requestId: number;
   celebrity: string;
+  celebThumbnail: string;
   customerDisplayName: string;
 }
 export type TransactionsMetadata = {
@@ -130,6 +131,12 @@ export type CallLogInput = {
   elapsedDuration?: number;
 };
 
+export type BankAccountCachedPayload = {
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
+};
+
 export type PartialWithRequired<T, K extends keyof T> = Pick<T, K> & Partial<T>;
 
 export enum Roles {
@@ -146,7 +153,7 @@ export enum RequestStatus {
   PENDING = 'Pending',
   ACCEPTED = 'Accepted',
   REJECTED = 'Rejected',
-  VALIDATING = 'Validating',
+  // VALIDATING = 'Validating',
   PROCESSING = 'Processing',
   FAILED = 'Failed',
   FULFILLED = 'Fulfilled',
@@ -169,8 +176,7 @@ export enum CallType {
 export enum SubscriptionTopics {
   VIDEO_CALL = 'video_call',
   CALL_STATUS = 'call_status',
-  NEW_CARD = 'new_card',
-  TEST_TOPIC = 'test',
+  Verify_Payment = 'verify_payment',
 }
 
 export enum NotificationRouteCode {
@@ -193,6 +199,9 @@ export enum DayOfTheWeek {
   THURSDAY,
   FRIDAY,
   SATURDAY,
+}
+export interface AvailableDay {
+  availableDay: DayOfTheWeek;
 }
 
 export enum PlatformOptions {
