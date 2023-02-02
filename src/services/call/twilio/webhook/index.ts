@@ -15,7 +15,6 @@ router.post('/', async (req, res) => {
     const validRequest = validateRequest(authToken, signature, url, payload);
     const emittableEvents = ['participant-connected', 'participant-disconnected', 'room-ended'];
     if (validRequest) {
-      console.log('Packet receieved from twilio!');
       res.sendStatus(200);
       if (emittableEvents.includes(payload.StatusCallbackEvent)) {
         const {
@@ -44,7 +43,7 @@ router.post('/', async (req, res) => {
       return;
     } else return res.sendStatus(401).send('Unauthorized');
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return;
   }
 });

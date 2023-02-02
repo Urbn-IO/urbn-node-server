@@ -61,6 +61,7 @@
     "@aws-sdk/client-ses": "^3.241.0",
     "@aws-sdk/client-sns": "^3.241.0",
     "@aws-sdk/client-sqs": "^3.241.0",
+    "@aws-sdk/cloudfront-signer": "^3.257.0",
     "@aws-sdk/s3-request-presigner": "^3.241.0",
     "@babel/runtime": "^7.20.7",
     "@keyv/redis": "^2.5.4",

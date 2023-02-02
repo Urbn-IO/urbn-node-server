@@ -29,7 +29,6 @@ const updateClientCallDuration = async ({ roomSid }: UpdateCallDurationArgs) => 
     CallDuration: duration,
     StatusCallbackEvent: '',
   };
-  console.log('call duration updated from job queue worker');
   eventManager().publishVideoCallEvent(event);
   if (duration <= 0) await endVideoCallRoom(payload.roomSid);
   return;

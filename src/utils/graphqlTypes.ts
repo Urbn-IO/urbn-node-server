@@ -118,7 +118,7 @@ export class OnboardCelebrityInputs {
   @Field(() => Int, { nullable: true })
   callTypeB: number;
 
-  @Length(10, 50, {
+  @Length(9, 101, {
     message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field()
@@ -184,7 +184,7 @@ export class UpdateCelebrityInputs {
   @Field(() => Int, { nullable: true })
   callTypeB: number;
 
-  @Length(10, 50, {
+  @Length(9, 101, {
     message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
   })
   @Field({ nullable: true })

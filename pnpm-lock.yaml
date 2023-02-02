@@ -8,6 +8,7 @@ specifiers:
   '@aws-sdk/client-ses': ^3.241.0
   '@aws-sdk/client-sns': ^3.241.0
   '@aws-sdk/client-sqs': ^3.241.0
+  '@aws-sdk/cloudfront-signer': ^3.257.0
   '@aws-sdk/s3-request-presigner': ^3.241.0
   '@babel/runtime': ^7.20.7
   '@keyv/redis': ^2.5.4
@@ -76,6 +77,7 @@ dependencies:
   '@aws-sdk/client-ses': 3.241.0
   '@aws-sdk/client-sns': 3.241.0
   '@aws-sdk/client-sqs': 3.241.0
+  '@aws-sdk/cloudfront-signer': 3.257.0
   '@aws-sdk/s3-request-presigner': 3.241.0
   '@babel/runtime': 7.20.7
   '@keyv/redis': 2.5.4
@@ -346,7 +348,7 @@ packages:
     resolution: {integrity: sha512-TvE1r2CUueyXOuHdEigYjIZVesInd9KN+K/TFFNfkkxRThiNxO6i4ZqqAVMoEjAamZZ1AA8WXJkjCz7YShHPQA==}
     dependencies:
       '@aws-crypto/util': 2.0.2
-      '@aws-sdk/types': 3.226.0
+      '@aws-sdk/types': 3.257.0
       tslib: 1.14.1
     dev: false
 
@@ -354,7 +356,7 @@ packages:
     resolution: {integrity: sha512-vF0eMdMHx3O3MoOXUfBZry8Y4ZDtcuskjjKgJz8YfIDjLStxTZrYXk+kZqtl6A0uCmmiN/Eb/JbC/CndTV1MHg==}
     dependencies:
       '@aws-crypto/util': 2.0.2
-      '@aws-sdk/types': 3.226.0
+      '@aws-sdk/types': 3.257.0
       tslib: 1.14.1
     dev: false
 
@@ -405,7 +407,7 @@ packages:
   /@aws-crypto/util/2.0.2:
     resolution: {integrity: sha512-Lgu5v/0e/BcrZ5m/IWqzPUf3UYFTy/PpeED+uc9SWUR1iZQL8XXbGQg10UfllwwBryO3hFF5dizK+78aoXC1eA==}
     dependencies:
-      '@aws-sdk/types': 3.226.0
+      '@aws-sdk/types': 3.257.0
       '@aws-sdk/util-utf8-browser': 3.188.0
       tslib: 1.14.1
     dev: false
@@ -758,6 +760,13 @@ packages:
       tslib: 2.4.1
     transitivePeerDependencies:
       - aws-crt
+    dev: false
+
+  /@aws-sdk/cloudfront-signer/3.257.0:
+    resolution: {integrity: sha512-DU9HzSE1oTs6Gps1fvCAB3FL3A2SiVW772KXjsOyFyvKYjo8Wb2bDlBMfaidv7y3+qvY466ZOxySw22j0vFsJA==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@aws-sdk/url-parser': 3.257.0
     dev: false
 
   /@aws-sdk/config-resolver/3.234.0:
@@ -1193,6 +1202,14 @@ packages:
       tslib: 2.4.1
     dev: false
 
+  /@aws-sdk/querystring-parser/3.257.0:
+    resolution: {integrity: sha512-UDrE1dEwWrWT8dG2VCrGYrPxCWOkZ1fPTPkjpkR4KZEdQDZBqU5gYZF2xPj8Nz7pjQVHFuW2wFm3XYEk56GEjg==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@aws-sdk/types': 3.257.0
+      tslib: 2.4.1
+    dev: false
+
   /@aws-sdk/s3-request-presigner/3.241.0:
     resolution: {integrity: sha512-8W9F/do9ufnDVZ7hEL7VwTyqN6FLNv1p8h8XmMUbvJvb0iASsly5s2BgMcMVuQNiH1olUPmZQsfL6upqItGecg==}
     engines: {node: '>=14.0.0'}
@@ -1280,11 +1297,26 @@ packages:
       tslib: 2.4.1
     dev: false
 
+  /@aws-sdk/types/3.257.0:
+    resolution: {integrity: sha512-LmqXuBQBGeaGi/3Rp7XiEX1B5IPO2UUfBVvu0wwGqVsmstT0SbOVDZGPmxygACbm64n+PRx3uTSDefRfoiWYZg==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      tslib: 2.4.1
+    dev: false
+
   /@aws-sdk/url-parser/3.226.0:
     resolution: {integrity: sha512-p5RLE0QWyP0OcTOLmFcLdVgUcUEzmEfmdrnOxyNzomcYb0p3vUagA5zfa1HVK2azsQJFBv28GfvMnba9bGhObg==}
     dependencies:
       '@aws-sdk/querystring-parser': 3.226.0
       '@aws-sdk/types': 3.226.0
+      tslib: 2.4.1
+    dev: false
+
+  /@aws-sdk/url-parser/3.257.0:
+    resolution: {integrity: sha512-Qe/AcFe/NFZHa6cN2afXEQn9ehXxh57dWGdRjfjd2lQqNV4WW1R2pl2Tm1ZJ1dwuCNLJi4NHLMk8lrD3QQ8rdg==}
+    dependencies:
+      '@aws-sdk/querystring-parser': 3.257.0
+      '@aws-sdk/types': 3.257.0
       tslib: 2.4.1
     dev: false
 

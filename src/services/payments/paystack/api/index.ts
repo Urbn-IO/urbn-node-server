@@ -101,7 +101,6 @@ const verifyTransaction = (apiUrl: string, secretKey: string) => {
         });
         const payload = await response.json();
         const { status, message, data } = payload;
-        console.log(data);
         if (!status) {
           console.error(message);
           return false;

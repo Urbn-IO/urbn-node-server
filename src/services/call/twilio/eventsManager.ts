@@ -81,7 +81,6 @@ const timeOperator = async (options: CallTimerOptions) => {
     const startTime = new Date(startTimestring);
     const currentTime = new Date();
     const duration = callDuration(payload.callLength, startTime, currentTime);
-    console.log('call duration updated!');
     const participantA = payload.participantA;
     const participantB = payload.participantB;
     return {
@@ -119,7 +118,6 @@ const checkParticipant = async (event: VideoCallEvent) => {
           const time = await timeOperator({ start: true, payload });
           event.CallDuration = time.countDown;
           event.participantB = participant;
-          console.log('both participants joined');
           return event;
         }
         await endVideoCallRoom(event.RoomSid);
@@ -150,7 +148,6 @@ const checkParticipant = async (event: VideoCallEvent) => {
       startTime: undefined,
     };
     redis.set(payload.roomSid, JSON.stringify(payload));
-    console.log('first participant joined');
     event.CallDuration = callLength;
     event.participantA = participant;
     return event;
@@ -171,7 +168,6 @@ const publishEventTodevice = () => {
 const processCallEvent = () => {
   return {
     processCall: async (event: VideoCallEvent) => {
-      console.log(`procesing call event with statusCallBack: ${event.StatusCallbackEvent}`);
       if (event.StatusCallbackEvent === 'participant-connected') {
         const storedEvent = await checkParticipant(event);
         return storedEvent;
@@ -205,8 +201,6 @@ const processCallEvent = () => {
           elapsedDuration: elapsedDuration,
         });
         await redis.del(event.RoomSid);
-
-        console.log('call session terminated');
       }
       return null;
     },

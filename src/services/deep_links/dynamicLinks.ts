@@ -27,7 +27,7 @@ export const createDynamicLink = async (
   const suffix: Suffix = complex ? { option: 'UNGUESSABLE' } : { option: 'SHORT' };
 
   try {
-    const { shortLink, previewLink } = await firebaseDynamicLinks.createLink({
+    const { shortLink } = await firebaseDynamicLinks.createLink({
       dynamicLinkInfo: {
         domainUriPrefix: urlPrefix,
         socialMetaTagInfo,
@@ -42,11 +42,9 @@ export const createDynamicLink = async (
       },
       suffix,
     });
-    console.log(shortLink);
-    console.log(previewLink);
     return shortLink;
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return undefined;
   }
 };

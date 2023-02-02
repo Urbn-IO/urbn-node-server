@@ -36,7 +36,7 @@ export class ShoutoutResolver {
     const thumbnail = shoutout.thumbnailUrl;
     const link = `${viewerUrl}?hls=${hls}&mp4=${mp4}&thumbnail=${thumbnail}`;
 
-    const url = await createDynamicLink(link, false);
+    const url = await createDynamicLink(link, false, 'shoutout');
     if (!url) return { errorMessage: 'An error ouccred, try agin later' };
 
     await sendMail({

@@ -43,7 +43,6 @@ export class VideoCallResolver {
         if (request.status !== RequestStatus.ACCEPTED) return { errorMessage: 'This request is no longer valid!' };
         celeb = await Celebrity.findOne({ where: { userId: request.celebrity } });
         if (!celeb?.thumbnail) {
-          console.log(`Thumbnail Image for celebrity with userId: `, request.celebrity);
           return { errorMessage: 'An error occured!' };
         }
         expiry = dayjs(request.requestExpires).unix();

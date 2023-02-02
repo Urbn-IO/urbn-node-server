@@ -33,7 +33,7 @@ export class Categories extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @OneToMany(() => CelebCategories, (celebCat) => celebCat.category)
+  @OneToMany(() => CelebCategories, (celebCat) => celebCat.category, { onDelete: 'CASCADE' })
   celebConn: Promise<CelebCategories[]>;
   //dataloader takes in the categoryId and maps the Id to the celebs
   @Field(() => [Celebrity], { nullable: true })

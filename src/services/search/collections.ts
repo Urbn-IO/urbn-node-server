@@ -4,7 +4,7 @@ export const initializeSearch = async () => {
   const celebsSchema = {
     name: 'celebrity',
     fields: [
-      { name: 'id', type: 'string' },
+      { name: 'celeb_id', type: 'int32' },
       { name: 'alias', type: 'string' },
       { name: 'thumbnail', type: 'string' },
       { name: 'video_banner', type: 'string' },
@@ -22,9 +22,8 @@ export const initializeSearch = async () => {
       { name: 'category_name', type: 'string' },
     ],
   };
-  const celebrityCollectionExists = await client.collections('celebrity').exists();
-  const categoryCollectionExists = await client.collections('category').exists();
-  if (!celebrityCollectionExists) {
+
+  if (!(await client.collections('celebrity').exists())) {
     client
       .collections()
       .create(celebsSchema as any)
@@ -34,12 +33,12 @@ export const initializeSearch = async () => {
           console.log(data);
         },
         (err) => {
-          console.log('failure creating collection');
-          console.log(err);
+          console.error('failure creating collection');
+          console.error(err);
         }
       );
   }
-  if (!categoryCollectionExists) {
+  if (!(await client.collections('category').exists())) {
     client
       .collections()
       .create(categorySchema as any)
@@ -49,8 +48,8 @@ export const initializeSearch = async () => {
           console.log(data);
         },
         (err) => {
-          console.log('failure creating collection');
-          console.log(err);
+          console.error('failure creating collection');
+          console.error(err);
         }
       );
   }

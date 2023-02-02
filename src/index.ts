@@ -1,12 +1,14 @@
 import { ApolloServer } from '@apollo/server';
 import responseCachePlugin from '@apollo/server-plugin-response-cache';
 import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import KeyvRedis from '@keyv/redis';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
-import 'dotenv-safe/config.js';
+// import 'dotenv-safe/config.js';
 import express from 'express';
 import session from 'express-session';
 import { initializeApp } from 'firebase-admin/app';
@@ -33,19 +35,21 @@ import sqsImageConsumer from './services/aws/queues/imageProcessing';
 import sqsVODConsumer from './services/aws/queues/videoOnDemand';
 import video from './services/call/twilio/webhook';
 import payment from './services/payments/paystack/webhook';
+import { initializeSearch } from './services/search/collections';
 import { AppContext } from './types';
 import { createCategoriesLoader } from './utils/categoriesLoader';
 import { createCelebsLoader } from './utils/celebsLoader';
 import { getSessionContext } from './utils/helpers';
 
 const app = express();
+app.disable('x-powered-by');
 const httpServer = createServer(app);
 const redis = redisClient;
 const main = async () => {
   const Port = 8000;
   AppDataSource;
   initializeApp(firebaseConfig);
-  // initializeSearch();
+  initializeSearch();
   initializeWorkers();
 
   sqsVODConsumer.start();
@@ -83,10 +87,14 @@ const main = async () => {
   app.set('trust proxy', true);
   app.use(
     cors({
-      origin: ['http://localhost:8000', 'https://geturbn.io'],
+      origin: ['http://localhost:8000', 'https://geturbn.io', 'https://api.geturbn.io'],
       credentials: true,
     })
   );
+
+  app.get('/', (_, res) => {
+    res.status(200).send("<p>Woah! You shouldn't be here....</p>");
+  });
 
   app.use('/twilio', video);
   app.use('/paystack', payment);
@@ -119,7 +127,7 @@ const main = async () => {
       context: async ({ extra }) => {
         const sess = await getSessionContext(extra.request.headers.cookie as string, store);
         if (!sess?.userId) {
-          throw new Error('User not logged in');
+          throw new Error('User not logged to accept websockets');
         }
         return { userId: sess.userId };
       },
@@ -138,24 +146,15 @@ const main = async () => {
     cache: new KeyvAdapter(new Keyv({ store: keyvRedis, namespace: 'cached-query' })),
     csrfPrevention: true,
     plugins: [
+      __prod__ ? ApolloServerPluginLandingPageDisabled() : ApolloServerPluginLandingPageLocalDefault(),
       //response caching
       responseCachePlugin({
-        sessionId: async (requestContext) => {
-          const cookie = requestContext?.request?.http?.headers.get('cookie') || null;
-          if (cookie) {
-            const sess = await getSessionContext(cookie, store);
-            if (!sess) {
-              throw new Error('An error occured');
-            }
-            return sess.sessionId;
-          }
-          return null;
-        },
+        sessionId: async ({ contextValue }) => (contextValue.req.session.id ? contextValue.req.session.id : null),
       }),
       // Proper shutdown for the HTTP server.
       ApolloServerPluginDrainHttpServer({ httpServer }),
 
-      // Proper shutdown for the WebSocket server.
+      // Proper shutdown for the gql server.
       {
         async serverWillStart() {
           return {

@@ -14,7 +14,7 @@ export class CategoryResolver {
     @Arg('limit', () => Int, {
       description: 'Number of celebrities associated with category to be fetched per request. Max: 18',
     })
-    limit: number,
+    limit = 8,
     @Arg('cursor', () => String, { nullable: true, description: 'Cursor pagination for celebrities in category' })
     cursor?: string
   ): Promise<CategoryResponse> {
@@ -44,7 +44,7 @@ export class CategoryResolver {
   @Query(() => [Categories], { nullable: true })
   @CacheControl({ maxAge: 300 })
   async getCategories(
-    @Arg('limit', () => Int) limit: number,
+    @Arg('limit', () => Int, { description: 'Limit does not apply if isPrimary is set to true' }) limit = 7,
     @Arg('isPrimary', { defaultValue: false }) primary: boolean
   ) {
     if (primary) {

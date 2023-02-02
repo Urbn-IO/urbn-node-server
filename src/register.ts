@@ -16,6 +16,7 @@ import { CategoryResolver } from './resolvers/category';
 import { UserCategoriesResolver } from './resolvers/celebCategories';
 import { CelebrityResolver } from './resolvers/celebrity';
 import { ExtrasResolver } from './resolvers/featured';
+import { NotificationResolver } from './resolvers/notifications';
 import { PaymentsResolver } from './resolvers/payments';
 import { RequestsResolver } from './resolvers/requests';
 import { ShoutoutResolver } from './resolvers/shoutout';
@@ -45,6 +46,7 @@ export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
   UserCategoriesResolver,
   CelebrityResolver,
   RequestsResolver,
+  NotificationResolver,
   PaymentsResolver,
   VideoCallResolver,
   ExtrasResolver,

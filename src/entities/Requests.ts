@@ -68,7 +68,7 @@ export class Requests extends BaseEntity {
   @Column({ default: 0 })
   callAttempts: number;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @Column({ type: 'timestamp', nullable: true })
   callRequestBegins: Date;
 

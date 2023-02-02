@@ -13,7 +13,6 @@ import {
 import { CelebCategories } from '../entities/CelebCategories';
 import { Celebrity } from '../entities/Celebrity';
 import { CelebrityApplications } from '../entities/CelebrityApplications';
-import { Role } from '../entities/Role';
 import { User } from '../entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
 import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
@@ -115,16 +114,11 @@ export class CelebrityResolver {
         .returning('*')
         .execute();
 
-      const user = await User.findOne({ where: { userId } });
-      if (user) {
-        await Role.create({ user, role: Roles.CELEBRITY }).save();
-      }
-
       return {
-        success: `You're set! Time to make someone's dreams come through ⭐️`,
+        success: `You're set! ⭐️`,
       };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return { errorMessage: 'An Error Occured' };
     }
   }
@@ -181,7 +175,7 @@ export class CelebrityResolver {
   @CacheControl({ maxAge: 300 })
   async celebrities(
     @Arg('celebId', () => Int, { nullable: true }) celebId: number,
-    @Arg('limit', () => Int, { nullable: true }) limit: number,
+    @Arg('limit', () => Int, { nullable: true }) limit = 8,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null
   ): Promise<Celebrity[]> {
     if (celebId) {
@@ -223,7 +217,7 @@ export class CelebrityResolver {
 
   @Query(() => [Celebrity])
   @CacheControl({ maxAge: 3600 })
-  async similarToCelebrity(@Arg('celebId') celebId: number, @Arg('limit', () => Int) limit: number) {
+  async similarToCelebrity(@Arg('celebId') celebId: number, @Arg('limit', () => Int) limit = 8) {
     const maxLimit = Math.min(8, limit);
     try {
       const catIds = [];
@@ -277,6 +271,7 @@ export class CelebrityResolver {
         contentType: ContentType.BANNER,
       },
     });
+
     return data;
   }
 }

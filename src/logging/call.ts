@@ -11,6 +11,6 @@ export const logCallSession = async (data: CallLogInput) => {
       elapsedDurationInSeconds: data.elapsedDuration,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 };

@@ -1,5 +1,7 @@
+import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 import crypto from 'crypto';
-import { existsSync, readFileSync } from 'fs';
+import dayjs from 'dayjs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from '../../constants';
 import { PartialWithRequired } from '../../types';
@@ -10,21 +12,17 @@ import {
   VideoMetadata,
   VideoUploadResponse,
 } from '../../utils/graphqlTypes';
-import { Signer } from './cloudFront';
 
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
 const vodKeyPairId = process.env.AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR;
 
 const pathToPrivateKey = join(config.APP_ROOT, '../keys/private_key.pem');
-const privateKey = existsSync(pathToPrivateKey)
-  ? readFileSync(pathToPrivateKey, 'utf8')
-  : (process.env.CLOUDFRONT_PRIVATE_KEY as string);
-
-const staticImageSigner = new Signer(staticImageDistKeyPairId, privateKey);
-const vodSigner = new Signer(vodKeyPairId, privateKey);
+const privateKey = process.env.CLOUDFRONT_PRIVATE_KEY
+  ? process.env.CLOUDFRONT_PRIVATE_KEY
+  : readFileSync(pathToPrivateKey, 'utf8');
 
 export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
-  const duration = 1000 * 60; // 60 secs
+  // const duration = 1000 * 60; // 60 secs
   const randomNumber = Math.random().toString();
   const datetime = Date.now();
   const hash = crypto
@@ -38,10 +36,17 @@ export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
   const metadata: ImageUploadMetadata = { userId, key, type: 'thumbnail' };
   const keys = [key, metadataKey];
   const urls = keys.map((key) => {
-    const signedUrl = staticImageSigner.getSignedUrl({
+    const signedUrl = getSignedUrl({
       url: `https://${STATIC_IMAGE_CDN}/upload/${key}`,
-      expires: Math.floor((Date.now() + duration) / 1000),
+      keyPairId: staticImageDistKeyPairId,
+      dateLessThan: dayjs.utc().add(1, 'minute').toString(),
+      privateKey,
     });
+
+    // const signedUrl = staticImageSigner.getSignedUrl({
+    //   url: `https://${STATIC_IMAGE_CDN}/upload/${key}`,
+    //   expires: Math.floor((Date.now() + duration) / 1000),
+    // });
     return signedUrl;
   });
 
@@ -60,7 +65,7 @@ export const getSignedVideoMetadata = (
   const userId = customMetadata.userId;
   if (!userId) throw new Error('An error occured');
   const ownedBy = customMetadata.owner ? customMetadata.owner : userId;
-  const duration = 1000 * 60; // 60 secs
+  // const duration = 1000 * 60; // 60 secs
   const randomNumber = Math.random().toString();
   const datetime = Date.now();
   const hash = crypto
@@ -76,10 +81,16 @@ export const getSignedVideoMetadata = (
 
   const keys = [videoKey, metadataKey];
   const urls = keys.map((key) => {
-    const signedUrl = vodSigner.getSignedUrl({
+    const signedUrl = getSignedUrl({
       url: `https://${STATIC_VIDEO_CDN}/upload/${key}`,
-      expires: Math.floor((Date.now() + duration) / 1000),
+      keyPairId: vodKeyPairId,
+      dateLessThan: dayjs.utc().add(1, 'minute').toString(),
+      privateKey,
     });
+    // const signedUrl = vodSigner.getSignedUrl({
+    //   url: `https://${STATIC_VIDEO_CDN}/upload/${key}`,
+    //   expires: Math.floor((Date.now() + duration) / 1000),
+    // });
     return signedUrl;
   });
 

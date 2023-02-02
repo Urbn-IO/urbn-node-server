@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
     }
     await saveTransaction(data);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return;
   }
 });

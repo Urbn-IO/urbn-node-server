@@ -123,7 +123,6 @@ export class UserResolver {
     const key = await redis.exists(session);
     if (key !== 0) return { errorMessage: "You're already logged in" };
     const auth = await getUserOAuth(uid);
-    console.log('auth is: ', auth);
     if (auth === null) return { errorMessage: "Couldn't authenticate your account" };
     let user = await User.findOne({
       where: {
@@ -203,7 +202,7 @@ export class UserResolver {
       await redis.del(key);
       return { success: 'Email succesfully updated' };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return { errorMessage: 'An error occured' };
     }
   }
@@ -279,7 +278,7 @@ export class UserResolver {
       await redis.del(key);
       return { success: 'successfully changed password' };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return { errorMessage: 'An error occured' };
     }
   }
@@ -316,7 +315,7 @@ export class UserResolver {
       });
       return { success: 'successfully changed password' };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return { errorMessage: 'An error occured' };
     }
   }
@@ -333,7 +332,7 @@ export class UserResolver {
       req.session.destroy((err: unknown) => {
         res.clearCookie(SESSION_COOKIE_NAME);
         if (err) {
-          console.log(err);
+          console.error(err);
           reject(err);
           return;
         }

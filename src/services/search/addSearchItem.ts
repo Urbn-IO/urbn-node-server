@@ -25,7 +25,7 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
     });
 
     const celebObj = {
-      id: celebrity.id.toString(),
+      celeb_id: celebrity.id,
       alias: celebrity.alias,
       thumbnail: celebrity.thumbnail,
       placeholder: celebrity.placeholder,
@@ -38,7 +38,7 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
     try {
       await client.collections('celebrity').documents().upsert(celebObj);
     } catch (err) {
-      console.log('typesense error: ', err);
+      console.error('typesense error: ', err);
     }
   }
 };
@@ -56,7 +56,7 @@ export const upsertCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
     try {
       await client.collections('celebrity').documents().import(celebObj, { action: 'upsert' });
     } catch (err) {
-      console.log('typesense error: ', err);
+      console.error('typesense error: ', err);
     }
   }
 };
@@ -70,7 +70,7 @@ export const upsertCategorySearchItem = async (category: Categories[] | undefine
     try {
       await client.collections('category').documents().import(catObj, { action: 'upsert' });
     } catch (err) {
-      console.log('typesense error: ', err);
+      console.error('typesense error: ', err);
     }
   }
 };

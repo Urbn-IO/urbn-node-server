@@ -31,7 +31,7 @@ export const expireRequest = async (job: Job) => {
     if (status === RequestStatus.PENDING || status === RequestStatus.ACCEPTED) {
       const userId = request.customer;
       const messageTitle = 'Expired Request Alert 🛑';
-      const messageBody = `Unfortunately ${request.celebrityAlias} missed the deadline to make your request 🥲😔. Your money will be refunded to you within the next 30 days`;
+      const messageBody = `Unfortunately ${request.celebrityAlias} missed the deadline to make your request 🥲😔. Your money will be refunded to you within the next 5 working days`;
       const route = NotificationRouteCode.DEFAULT;
       const prevStatus = status === RequestStatus.ACCEPTED ? RequestStatus.ACCEPTED : null;
       const result = await changeRequestState(request.id, RequestStatus.EXPIRED, prevStatus);
@@ -77,7 +77,7 @@ export const changeRequestState = async (
     const request = result[0];
     return request[0];
   } catch (err) {
-    console.log(err);
+    console.error(err);
     throw err;
   }
 };

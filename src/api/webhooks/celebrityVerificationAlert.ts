@@ -23,8 +23,7 @@ router.post('/', async (req, res) => {
   sendInstantNotification(
     userIds,
     "You've been verified! ✅",
-    `Thank you for joining us, we look forward to working with you. All that's left is to complete your profile,
-     and start receiving requests from your fans, open the app and get started!`,
+    `Thank you for joining us, we look forward to working with you. All that's left is to complete your profile and start receiving requests from your fans, open the app to get started!`,
     NotificationRouteCode.DEFAULT
   );
   const link = APP_BASE_URL;

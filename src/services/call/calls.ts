@@ -25,7 +25,7 @@ export const createVideoCallRoom = async (requestId: number, callDurationInSecon
     });
     return result.uniqueName;
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return null;
   }
 };

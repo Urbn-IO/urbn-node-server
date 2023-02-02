@@ -22,17 +22,15 @@ export const propagateMessage = async (
     await getMessaging()
       .sendMulticast(message)
       .then((response) => {
-        if (response.successCount > 0) {
-          console.log('Notification sent!');
-        }
         if (response.failureCount > 0) {
           const failedTokens: string[] = [];
           response.responses.forEach((resp, idx) => {
             if (!resp.success) {
+              console.error('notification error message: ', resp.error);
               failedTokens.push(tokens[idx]);
             }
           });
-          console.log('List of tokens that caused failures: ' + failedTokens);
+          console.error('List of notification tokens that caused failures: ' + failedTokens);
           tokensManager().removeNotificationTokens(undefined, failedTokens);
         }
       });

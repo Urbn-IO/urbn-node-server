@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/client-sns';
 import express, { Request } from 'express';
 import { In } from 'typeorm';
+import { __prod__ } from '../../../../constants';
 import { User } from '../../../../entities/User';
 import client from '../../clients/sns';
 
@@ -13,16 +14,22 @@ const router = express.Router();
 
 const topicArnBounce = 'arn:aws:sns:eu-west-2:234408821758:ses-bounces-topic-prod';
 const topicArnComplaint = 'arn:aws:sns:eu-west-2:234408821758:ses-complaints-topic-prod';
+const bounceEndpoint = __prod__
+  ? 'https://api.geturbn.io/sns/email-bounces'
+  : 'https://api.geturbn.io/sns/email-bounces';
+const complaintEndpoint = __prod__
+  ? 'https://api.geturbn.io/sns/email-complaints'
+  : 'https://api.geturbn.io/sns/email-complaints';
 
 const bounceSubscriptionInput: SubscribeCommandInput = {
   Protocol: 'https',
   TopicArn: topicArnBounce,
-  Endpoint: 'https://geturbn.io/sns/email-bounces',
+  Endpoint: bounceEndpoint,
 };
 const complaintSubscriptionInput: SubscribeCommandInput = {
   Protocol: 'https',
   TopicArn: topicArnComplaint,
-  Endpoint: 'https://geturbn.io/sns/email-complaints',
+  Endpoint: complaintEndpoint,
 };
 
 const bounceSubscribeCommand = new SubscribeCommand(bounceSubscriptionInput);
@@ -78,8 +85,7 @@ const handleResponse = async (topicArn: string, req: Request) => {
     const confirmSubscriptionCommand = new ConfirmSubscriptionCommand(confirmSubscriptionInput);
 
     try {
-      const data = await client.send(confirmSubscriptionCommand);
-      console.log(data);
+      await client.send(confirmSubscriptionCommand);
     } catch (err) {
       console.error(err);
     }

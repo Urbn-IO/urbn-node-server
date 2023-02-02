@@ -1,7 +1,7 @@
 export const APP_NAME = 'Urbn';
 export const APP_BUNDLE_NAME = 'io.urbn.urbn';
 export const APP_BASE_URL = 'https://geturbn.io';
-export const __prod__ = process.env.Node_ENV === 'production';
+export const __prod__ = process.env.NODE_ENV === 'production';
 export const AWS_REGION = 'eu-west-2';
 export const DEFUALT_CURRENCY = 'NGN';
 export const APP_LOGO_URL = 'https://imgstatic.geturbn.io/assets/Urbn.png';
@@ -12,7 +12,7 @@ export const AWS_SQS_IMAGE_PROCESSOR_QUEUE_URL = 'https://sqs.eu-west-2.amazonaw
 export const URBN_MAIL_BOT = 'Urbn <bot@mailer.geturbn.io>';
 export const URBN_CONTACT_MAIL = 'mailto:support@geturbn.io';
 export const PAYSTACK_API = 'https://api.paystack.co';
-export const TWILIO_WEBHOOK = 'https://geturbn.io/twilio';
+export const TWILIO_WEBHOOK = 'https://api.geturbn.io/twilio';
 export const STATIC_IMAGE_CDN = 'imgstatic.geturbn.io';
 export const STATIC_VIDEO_CDN = 'videostatic.geturbn.io';
 export const PREMIUM_VIDEO_CDN = 'premiumstatic.geturbn.io';

@@ -22,7 +22,6 @@ export const addToken = async (
   } catch (err) {
     if (err.code === '23505') {
       await NotificationToken.update({ userId }, token);
-      console.log('Token Updated');
     }
     return 'An Error occured while storing token';
   }
@@ -62,7 +61,6 @@ export const getServiceCallTokens = async (userId: string[]) => {
         tokens.push(x.notificationToken);
       }
     });
-    console.log('pushkit tokens: ', pushkitTokens);
     return { tokens, pushkitTokens };
   }
   return {};

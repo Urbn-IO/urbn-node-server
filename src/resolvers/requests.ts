@@ -328,7 +328,7 @@ export class RequestsResolver {
   @Query(() => [Requests])
   @Authorized()
   async sentRequests(
-    @Arg('limit', () => Int) limit: number,
+    @Arg('limit', () => Int) limit = 8,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
   ) {
@@ -359,7 +359,7 @@ export class RequestsResolver {
   @Query(() => [Requests])
   @Authorized(Roles.CELEBRITY)
   async receivedRequests(
-    @Arg('limit', () => Int) limit: number,
+    @Arg('limit', () => Int) limit = 8,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
   ) {
@@ -386,7 +386,7 @@ export class RequestsResolver {
   @Query(() => [Requests])
   @Authorized()
   async acceptedRequests(
-    @Arg('limit', () => Int) limit: number,
+    @Arg('limit', () => Int) limit = 8,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: AppContext
   ) {

@@ -1,4 +1,4 @@
-FROM node:18.5.0
+FROM --platform=linux/amd64 node:18.5.0
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -13,7 +13,7 @@ COPY ["package.json", "pnpm-lock.yaml", "./"]
 
 RUN pnpm install
 # If you are building your code for production
-# RUN npm ci --only=production
+# RUN pnpm ci --only=production
 
 # Bundle app source
 COPY . .
@@ -21,7 +21,7 @@ COPY . .
 
 RUN pnpm build
 
-# ENV NODE_ENV production
+ENV NODE_ENV production
 
 EXPOSE 8000
 

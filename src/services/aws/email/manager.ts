@@ -24,7 +24,7 @@ const sendMail = async (data: SendEmailInputType) => {
   const { emailAddresses, subject, ccTo } = data;
   const template = templateMap.get(subject);
   if (!template) {
-    console.log('Email Template not found');
+    console.error('Email Template not found');
     return;
   }
 
