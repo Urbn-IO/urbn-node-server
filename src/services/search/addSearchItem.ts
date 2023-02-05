@@ -25,7 +25,7 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
     });
 
     const celebObj = {
-      celeb_id: celebrity.id,
+      id: celebrity.id.toString(),
       alias: celebrity.alias,
       thumbnail: celebrity.thumbnail,
       placeholder: celebrity.placeholder,
@@ -43,7 +43,7 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
   }
 };
 
-export const upsertCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
+export const importCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
   if (celebs.length > 0) {
     const celebObj = celebs.map((x) => ({
       id: x.id.toString(),
@@ -61,7 +61,7 @@ export const upsertCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
   }
 };
 
-export const upsertCategorySearchItem = async (category: Categories[] | undefined) => {
+export const importCategorySearchItem = async (category: Categories[] | undefined) => {
   if (category && category.length > 0) {
     const catObj = category.map((x) => ({
       category_id: x.id,

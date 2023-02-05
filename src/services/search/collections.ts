@@ -4,7 +4,7 @@ export const initializeSearch = async () => {
   const celebsSchema = {
     name: 'celebrity',
     fields: [
-      { name: 'celeb_id', type: 'int32' },
+      { name: 'id', type: 'string' },
       { name: 'alias', type: 'string' },
       { name: 'thumbnail', type: 'string' },
       { name: 'video_banner', type: 'string' },

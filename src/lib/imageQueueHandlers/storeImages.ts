@@ -2,7 +2,7 @@ import { In } from 'typeorm';
 import { APP_BASE_URL } from '../../constants';
 import { Celebrity } from '../../entities/Celebrity';
 import { createDynamicLink } from '../../services/deep_links/dynamicLinks';
-import { upsertCelebritySearchBulkImages } from '../../services/search/addSearchItem';
+import { importCelebritySearchBulkImages } from '../../services/search/addSearchItem';
 import { ImageProcessorQueueOutput } from '../../types';
 import { hashRow } from '../../utils/hashRow';
 
@@ -32,7 +32,7 @@ const storeImages = async (data: ImageProcessorQueueOutput[]) => {
 
     const resolvedUpdatedCelebs = await Promise.all(updatedCelebs);
     const res = await Celebrity.save(resolvedUpdatedCelebs);
-    await upsertCelebritySearchBulkImages(res);
+    await importCelebritySearchBulkImages(res);
   } catch (err) {
     console.error(err);
     return;

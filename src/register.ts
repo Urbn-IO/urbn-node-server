@@ -16,7 +16,6 @@ import { CategoryResolver } from './resolvers/category';
 import { UserCategoriesResolver } from './resolvers/celebCategories';
 import { CelebrityResolver } from './resolvers/celebrity';
 import { ExtrasResolver } from './resolvers/featured';
-import { NotificationResolver } from './resolvers/notifications';
 import { PaymentsResolver } from './resolvers/payments';
 import { RequestsResolver } from './resolvers/requests';
 import { ShoutoutResolver } from './resolvers/shoutout';
@@ -24,31 +23,30 @@ import { UserResolver } from './resolvers/user';
 import { VideoCallResolver } from './resolvers/videoCalls';
 
 export const entities = [
-  User,
-  Categories,
-  CelebCategories,
-  Celebrity,
-  Requests,
-  NotificationToken,
-  Shoutout,
-  Transactions,
-  CallLogs,
-  CelebrityApplications,
-  Role,
-  Featured,
-  Banks,
+    User,
+    Categories,
+    CelebCategories,
+    Celebrity,
+    Requests,
+    NotificationToken,
+    Shoutout,
+    Transactions,
+    CallLogs,
+    CelebrityApplications,
+    Role,
+    Featured,
+    Banks,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
-  CategoryResolver,
-  UserResolver,
-  UserCategoriesResolver,
-  CelebrityResolver,
-  RequestsResolver,
-  NotificationResolver,
-  PaymentsResolver,
-  VideoCallResolver,
-  ExtrasResolver,
-  ShoutoutResolver,
+    CategoryResolver,
+    UserResolver,
+    UserCategoriesResolver,
+    CelebrityResolver,
+    RequestsResolver,
+    PaymentsResolver,
+    VideoCallResolver,
+    ExtrasResolver,
+    ShoutoutResolver,
 ];

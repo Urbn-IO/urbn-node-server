@@ -39,9 +39,9 @@ export const APNS_DEV_URL = 'https://api.sandbox.push.apple.com';
 export const APNS_PROD_URL = 'https://api.push.apple.com';
 export const APNS_DEVICE_ENDPOINT = '/3/device/';
 export const config = {
-  APP_ROOT: __dirname,
-  BULL_QUEUE_CONCURRENCY: 20,
-  CALL_QUEUE_NAME: 'call_status',
-  MAIL_QUEUE_NAME: 'mail',
-  OPERATIONS_QUEUE_NAME: 'operations',
+    APP_ROOT: __dirname,
+    BULL_QUEUE_CONCURRENCY: 20,
+    CALL_QUEUE_NAME: 'call_status',
+    MAIL_QUEUE_NAME: 'mail',
+    REQUEST_EXPIRATION_QUEUE_NAME: 'operations',
 };
