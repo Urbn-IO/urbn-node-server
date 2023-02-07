@@ -4,7 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import { DeepPartial } from 'typeorm';
 import AppDataSource from '../config/ormconfig';
 import { Requests } from '../entities/Requests';
-import { addJob, expiredRequestQueue } from '../queues/job_queue/producer';
+import { addJob, expiredRequestQueue, requestReminderQueue } from '../queues/job_queue/producer';
 import { sendInstantNotification } from '../services/notifications/handler';
 import { NotificationRouteCode, RequestStatus, RequestType, SubscriptionTopics } from '../types';
 import { VerifyPaymentResponse } from '../utils/graphqlTypes';
@@ -18,6 +18,19 @@ const setupExpiration = async (request: Requests) => {
     await addJob(expiredRequestQueue, 'request-expiration', request, {
         attempts: 6,
         backoff: { type: 'fixed', delay: 30000 },
+        delay,
+        removeOnFail: true,
+        removeOnComplete: true,
+    });
+};
+
+const setupCallReminder = async (request: Requests) => {
+    //notify user about call 30mins before the call start time
+    const callStartTime = request.callRequestBegins;
+    const delay = dayjs.utc(callStartTime).subtract(30, 'minute').valueOf() - dayjs.utc().valueOf();
+    await addJob(requestReminderQueue, 'call-reminder', request, {
+        attempts: 6,
+        backoff: { type: 'fixed', delay: 60000 },
         delay,
         removeOnFail: true,
         removeOnComplete: true,
@@ -100,6 +113,8 @@ export const updateRequestAndNotify = async (data: DeepPartial<Requests>, succes
             });
             //automagically check and update state of request on expiration
             await setupExpiration(request);
+            //set up call reminders
+            if (request.callRequestBegins) await setupCallReminder(request);
             //send notification
             userId = request.celebrity;
             messageTitle = 'New Request Alert! 🚨';

@@ -42,6 +42,7 @@ export const config = {
     APP_ROOT: __dirname,
     BULL_QUEUE_CONCURRENCY: 20,
     CALL_QUEUE_NAME: 'call_status',
+    REQUEST_REMINDER_QUEUE_NAME: 'request_reminder',
     MAIL_QUEUE_NAME: 'mail',
     REQUEST_EXPIRATION_QUEUE_NAME: 'operations',
 };

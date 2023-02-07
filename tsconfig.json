@@ -21,7 +21,10 @@
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "src/*": ["src/*"]
+    }
   },
   "exclude": ["node_modules"],
   "include": ["./src/**/*.tsx", "./src/**/*.ts", "src/lib/env.d.ts"]
