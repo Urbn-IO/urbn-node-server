@@ -1,6 +1,6 @@
 import { Field, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { RequestStatus, RequestType } from '../types';
+import { RequestStatus, RequestType } from 'types';
 
 @ObjectType()
 @Entity()

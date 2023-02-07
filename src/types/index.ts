@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Redis } from 'ioredis';
-import { createCategoriesLoader } from '../utils/categoriesLoader';
-import { createCelebsLoader } from '../utils/celebsLoader';
-import { VideoCallEvent } from '../utils/graphqlTypes';
+import { createCategoriesLoader } from 'utils/categoriesLoader';
+import { createCelebsLoader } from 'utils/celebsLoader';
+import { VideoCallEvent } from 'utils/graphqlTypes';
 
 export type AppContext = {
   req: Request;

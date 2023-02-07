@@ -5,7 +5,7 @@ import {
   APP_CELEBRITY_DYNAMIC_URL_PREFIX,
   APP_MAIN_DYNAMIC_URL_PREFIX,
   APP_SHOUTOUT_DYNAMIC_URL_PREFIX,
-} from '../../constants';
+} from 'constant';
 
 const appBundle = APP_BUNDLE_NAME;
 const appStoreId = process.env.APPLE_ID;

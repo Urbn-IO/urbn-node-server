@@ -1,5 +1,5 @@
 import { SNSClient, SNSClientConfig } from '@aws-sdk/client-sns';
-import { AWS_REGION } from '../../../../constants';
+import { AWS_REGION } from 'constant';
 
 const region = AWS_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;

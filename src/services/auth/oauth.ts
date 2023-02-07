@@ -1,5 +1,5 @@
 import { auth } from 'firebase-admin';
-import { OAuth } from '../../types';
+import { OAuth } from 'types';
 
 export const getUserOAuth = async (uid: string) => {
   const userRecord = await auth().getUser(uid);

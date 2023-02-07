@@ -1,4 +1,4 @@
-import { DeviceInfoInput } from '../../utils/graphqlTypes';
+import { DeviceInfoInput } from 'utils/graphqlTypes';
 import { addToken, deleteTokens, getServiceCallTokens, getTokens } from './notificationTokenManager';
 
 // export default class TokensManager {

@@ -12,7 +12,8 @@
     "migration:run": "pnpm typeorm migration:run -- -d ./src/config/ormconfig.ts",
     "migration:generate": "pnpm typeorm migration:generate ./migrations/$pnpm_config_name -- -d ./src/config/ormconfigs.ts",
     "migration:create": "pnpm typeorm -- migration:create ./migrations/$npm_config_name",
-    "migration:revert": "pnpm typeorm -- -d ./src/config/ormconfig.ts migration:revert"
+    "migration:revert": "pnpm typeorm -- -d ./src/config/ormconfig.ts migration:revert",
+    "lint": "eslint --fix --ext .ts, ."
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^5.48.0",
     "@typescript-eslint/parser": "^5.48.0",
     "eslint": "^8.31.0",
+    "eslint-plugin-no-relative-import-paths": "^1.5.2",
     "nodemon": "^2.0.20",
     "prettier": "2.8.1",
     "prettier-plugin-organize-imports": "^3.2.1",

@@ -1,8 +1,8 @@
 import express from 'express';
 import { validateRequest } from 'twilio';
-import { TWILIO_WEBHOOK } from '../../../../constants';
-import { VideoCallEvent } from '../../../../utils/graphqlTypes';
-import eventManager from '../eventsManager';
+import { TWILIO_WEBHOOK } from 'constant';
+import { VideoCallEvent } from 'utils/graphqlTypes';
+import eventManager from 'services/call/twilio/eventsManager';
 
 const router = express.Router();
 const authToken = process.env.TWILIO_AUTH_TOKEN;

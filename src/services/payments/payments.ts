@@ -1,4 +1,4 @@
-import { TransactionsMetadata } from '../../types';
+import { TransactionsMetadata } from 'types';
 import paystack from './paystack/api';
 
 const initialize = () => {

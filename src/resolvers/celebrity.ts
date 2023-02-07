@@ -1,7 +1,5 @@
-import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
-import { Brackets } from 'typeorm';
-import CacheControl from '../cache/cacheControl';
-import AppDataSource from '../config/ormconfig';
+import CacheControl from 'cache/cacheControl';
+import AppDataSource from 'config/ormconfig';
 import {
   ACCOUNT_NUMBER_PREFIX,
   AWS_STATIC_VIDEO_BUCKET,
@@ -9,15 +7,17 @@ import {
   AWS_VOD_STACK_NAME,
   CELEB_PREREGISTRATION_PREFIX,
   STATIC_VIDEO_CDN,
-} from '../constants';
-import { CelebCategories } from '../entities/CelebCategories';
-import { Celebrity } from '../entities/Celebrity';
-import { CelebrityApplications } from '../entities/CelebrityApplications';
-import { User } from '../entities/User';
-import { getSignedImageMetadata, getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
-import { generateCallTimeSlots } from '../scheduler/videoCallScheduler';
-import { upsertCelebritySearchItem } from '../services/search/addSearchItem';
-import { AppContext, BankAccountCachedPayload, ContentType, Roles } from '../types';
+} from 'constant';
+import { CelebCategories } from 'entities/CelebCategories';
+import { Celebrity } from 'entities/Celebrity';
+import { CelebrityApplications } from 'entities/CelebrityApplications';
+import { User } from 'entities/User';
+import { getSignedImageMetadata, getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
+import { generateCallTimeSlots } from 'scheduler/videoCallScheduler';
+import { upsertCelebritySearchItem } from 'services/search/addSearchItem';
+import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
+import { Brackets } from 'typeorm';
+import { AppContext, BankAccountCachedPayload, ContentType, Roles } from 'types';
 import {
   CelebrityApplicationInputs,
   GenericResponse,
@@ -25,8 +25,8 @@ import {
   OnboardCelebrityInputs,
   UpdateCelebrityInputs,
   VideoUploadResponse,
-} from '../utils/graphqlTypes';
-import { hashRow } from '../utils/hashRow';
+} from 'utils/graphqlTypes';
+import { hashRow } from 'utils/hashRow';
 
 @Resolver()
 export class CelebrityResolver {

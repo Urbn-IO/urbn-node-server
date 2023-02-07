@@ -1,6 +1,6 @@
-import { Categories } from '../../entities/Categories';
-import { CelebCategories } from '../../entities/CelebCategories';
-import { Celebrity } from '../../entities/Celebrity';
+import { Categories } from 'entities/Categories';
+import { CelebCategories } from 'entities/CelebCategories';
+import { Celebrity } from 'entities/Celebrity';
 import { client } from './client';
 
 export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {

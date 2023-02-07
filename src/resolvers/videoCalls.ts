@@ -11,14 +11,14 @@ import {
   Root,
   Subscription,
 } from 'type-graphql';
-import { CALL_RETRY_PREFIX } from '../constants';
-import { Celebrity } from '../entities/Celebrity';
-import { Requests } from '../entities/Requests';
-import { changeRequestState } from '../request/manage';
-import { createVideoCallRoom, getVideoCallToken } from '../services/call/calls';
-import { sendCallNotification } from '../services/notifications/handler';
-import { AppContext, CallRetriesState, RequestStatus, Roles, SubscriptionTopics } from '../types';
-import { CallTokenResponse, InitiateVideoCallResponse, VideoCallEvent } from '../utils/graphqlTypes';
+import { CALL_RETRY_PREFIX } from 'constant';
+import { Celebrity } from 'entities/Celebrity';
+import { Requests } from 'entities/Requests';
+import { changeRequestState } from 'request/manage';
+import { createVideoCallRoom, getVideoCallToken } from 'services/call/calls';
+import { sendCallNotification } from 'services/notifications/handler';
+import { AppContext, CallRetriesState, RequestStatus, Roles, SubscriptionTopics } from 'types';
+import { CallTokenResponse, InitiateVideoCallResponse, VideoCallEvent } from 'utils/graphqlTypes';
 
 @Resolver()
 export class VideoCallResolver {

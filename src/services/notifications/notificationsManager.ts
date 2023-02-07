@@ -1,5 +1,5 @@
 import { AndroidConfig, ApnsConfig, Notification } from 'firebase-admin/messaging';
-import { NotificationPriority, NotificationsPayload } from '../../types';
+import { NotificationPriority, NotificationsPayload } from 'types';
 import { propagateMessage } from './firebaseCloudMessaging';
 
 const sendMessage = () => {

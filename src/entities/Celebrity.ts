@@ -1,3 +1,4 @@
+import CacheControl from 'cache/cacheControl';
 import { Ctx, Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
@@ -8,9 +9,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import CacheControl from '../cache/cacheControl';
-import { AppContext } from '../types';
-import { CallSlots } from '../utils/graphqlTypes';
+import { AppContext } from 'types';
+import { CallSlots } from 'utils/graphqlTypes';
 import { Categories } from './Categories';
 import { CelebCategories } from './CelebCategories';
 

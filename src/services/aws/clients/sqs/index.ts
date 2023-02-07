@@ -1,5 +1,5 @@
 import { SQSClient, SQSClientConfig } from '@aws-sdk/client-sqs';
-import { AWS_REGION } from '../../../../constants';
+import { AWS_REGION } from 'constant';
 
 const awsRegion = AWS_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;

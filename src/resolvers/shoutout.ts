@@ -1,12 +1,12 @@
 import { isEmail } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
-import AppDataSource from '../config/ormconfig';
-import { GIFT_GRAPHIC, SHOUTOUT_PLAYER_URL } from '../constants';
-import { User } from '../entities/User';
-import sendMail from '../services/aws/email/manager';
-import { createDynamicLink } from '../services/deep_links/dynamicLinks';
-import { AppContext, EmailSubject } from '../types';
-import { GenericResponse } from '../utils/graphqlTypes';
+import AppDataSource from 'config/ormconfig';
+import { GIFT_GRAPHIC, SHOUTOUT_PLAYER_URL } from 'constant';
+import { User } from 'entities/User';
+import sendMail from 'services/aws/email/manager';
+import { createDynamicLink } from 'services/deep_links/dynamicLinks';
+import { AppContext, EmailSubject } from 'types';
+import { GenericResponse } from 'utils/graphqlTypes';
 
 @Resolver()
 export class ShoutoutResolver {

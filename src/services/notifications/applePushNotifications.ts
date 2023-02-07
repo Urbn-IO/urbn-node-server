@@ -3,7 +3,7 @@ import http2 from 'http2';
 import jwt from 'jsonwebtoken';
 import { join } from 'path';
 import { v4 } from 'uuid';
-import { APNS_DEVICE_ENDPOINT, APNS_DEV_URL, APNS_PROD_URL, APP_BUNDLE_NAME, __prod__ } from '../../constants';
+import { APNS_DEVICE_ENDPOINT, APNS_DEV_URL, APNS_PROD_URL, APP_BUNDLE_NAME, __prod__ } from 'constant';
 export const sendPushKitNotification = (tokens: string[], reference: string, callerName: string) => {
   const pathToKey = join(__dirname, '../../../keys/AuthKey_3334434673.p8');
   const key = process.env.APPLE_AUTH_KEY ? process.env.APPLE_AUTH_KEY : readFileSync(pathToKey, 'utf8');

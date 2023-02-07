@@ -1,5 +1,5 @@
 import { Directive } from 'type-graphql';
-import { CacheControlScope } from '../types';
+import { CacheControlScope } from 'types';
 
 interface CacheHint {
   maxAge: number;

@@ -1,5 +1,5 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { Currency, PaymentGateway, PaymentStatus } from '../types';
+import { Currency, PaymentGateway, PaymentStatus } from 'types';
 
 @Entity()
 @Index(['customer', 'recipientCeleb'])

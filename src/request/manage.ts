@@ -2,13 +2,13 @@ import { Job } from 'bullmq';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { DeepPartial } from 'typeorm';
-import AppDataSource from '../config/ormconfig';
-import { Requests } from '../entities/Requests';
-import { addJob, expiredRequestQueue, requestReminderQueue } from '../queues/job_queue/producer';
-import { sendInstantNotification } from '../services/notifications/handler';
-import { NotificationRouteCode, RequestStatus, RequestType, SubscriptionTopics } from '../types';
-import { VerifyPaymentResponse } from '../utils/graphqlTypes';
-import publish from '../utils/publish';
+import AppDataSource from 'config/ormconfig';
+import { Requests } from 'entities/Requests';
+import { addJob, expiredRequestQueue, requestReminderQueue } from 'queues/job_queue/producer';
+import { sendInstantNotification } from 'services/notifications/handler';
+import { NotificationRouteCode, RequestStatus, RequestType, SubscriptionTopics } from 'types';
+import { VerifyPaymentResponse } from 'utils/graphqlTypes';
+import publish from 'utils/publish';
 dayjs.extend(utc);
 
 const setupExpiration = async (request: Requests) => {

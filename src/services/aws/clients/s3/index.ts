@@ -1,5 +1,5 @@
 import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
-import { AWS_REGION } from '../../../../constants';
+import { AWS_REGION } from 'constant';
 
 const awsRegion = AWS_REGION;
 const accessKey = process.env.AWS_ACCESS_KEY;

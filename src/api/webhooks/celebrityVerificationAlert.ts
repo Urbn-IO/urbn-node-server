@@ -1,9 +1,9 @@
 import express from 'express';
-import { APP_BASE_URL } from '../../constants';
-import sendMail from '../../services/aws/email/manager';
-import { createDynamicLink } from '../../services/deep_links/dynamicLinks';
-import { sendInstantNotification } from '../../services/notifications/handler';
-import { EmailSubject, NotificationRouteCode } from '../../types';
+import { APP_BASE_URL } from 'constant';
+import sendMail from 'services/aws/email/manager';
+import { createDynamicLink } from 'services/deep_links/dynamicLinks';
+import { sendInstantNotification } from 'services/notifications/handler';
+import { EmailSubject, NotificationRouteCode } from 'types';
 const router = express.Router();
 
 router.post('/', async (req, res) => {

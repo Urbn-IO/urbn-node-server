@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { DataSource } from 'typeorm';
-import { __prod__ } from '../constants';
-import { entities } from '../register';
+import { __prod__ } from 'constant';
+import { entities } from 'register';
 
 const AppDataSource = new DataSource({
   type: 'postgres',

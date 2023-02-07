@@ -20,11 +20,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "isolatedModules": true,
-    "paths": {
-      "src/*": ["src/*"]
-    }
   },
   "exclude": ["node_modules"],
   "include": ["./src/**/*.tsx", "./src/**/*.ts", "src/lib/env.d.ts"]

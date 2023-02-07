@@ -1,6 +1,6 @@
 import { Job } from 'bullmq';
-import { Requests } from '../../../entities/Requests';
-import { sendInstantNotification } from '../../../services/notifications/handler';
+import { Requests } from 'entities/Requests';
+import { sendInstantNotification } from 'services/notifications/handler';
 
 const requestReminder = async (request: Requests) => {
     const userId = request.customer;

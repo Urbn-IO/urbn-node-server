@@ -1,6 +1,6 @@
-import { PAYSTACK_API } from '../../../../constants';
-import { TransactionsMetadata } from '../../../../types';
-import { saveTransaction } from '../../transactions';
+import { PAYSTACK_API } from 'constant';
+import { TransactionsMetadata } from 'types';
+import { saveTransaction } from 'services/payments/transactions';
 
 const initializeTransaction = (apiUrl: string, secretKey: string) => {
   return {

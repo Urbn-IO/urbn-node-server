@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { SignInMethod } from '../types';
+import { SignInMethod } from 'types';
 import { Celebrity } from './Celebrity';
 import { Role } from './Role';
 import { Shoutout } from './Shoutout';

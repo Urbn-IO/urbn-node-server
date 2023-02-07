@@ -1,10 +1,10 @@
 import { Arg, Authorized, Int, Mutation, Query, Resolver } from 'type-graphql';
-import CacheControl from '../cache/cacheControl';
-import AppDataSource from '../config/ormconfig';
-import { Categories } from '../entities/Categories';
-import { Celebrity } from '../entities/Celebrity';
-import { importCategorySearchItem } from '../services/search/addSearchItem';
-import { CategoryResponse } from '../utils/graphqlTypes';
+import CacheControl from 'cache/cacheControl';
+import AppDataSource from 'config/ormconfig';
+import { Categories } from 'entities/Categories';
+import { Celebrity } from 'entities/Celebrity';
+import { importCategorySearchItem } from 'services/search/addSearchItem';
+import { CategoryResponse } from 'utils/graphqlTypes';
 @Resolver()
 export class CategoryResolver {
     @Query(() => CategoryResponse, { nullable: true })

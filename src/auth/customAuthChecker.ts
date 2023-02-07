@@ -1,8 +1,8 @@
 import { GraphQLError } from 'graphql';
 import { AuthChecker } from 'type-graphql';
-import AppDataSource from '../config/ormconfig';
-import { User } from '../entities/User';
-import { AppContext, Roles } from '../types';
+import AppDataSource from 'config/ormconfig';
+import { User } from 'entities/User';
+import { AppContext, Roles } from 'types';
 
 export const customAuthChecker: AuthChecker<AppContext, Roles> = async ({ context }, roles) => {
   const userId = context.req.session.userId;

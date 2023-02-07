@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import createhashString from '../utils/createHashString';
-import { CallScheduleInput, CallSlotHrs, CallSlotMin, CallSlots } from '../utils/graphqlTypes';
+import createhashString from 'utils/createHashString';
+import { CallScheduleInput, CallSlotHrs, CallSlotMin, CallSlots } from 'utils/graphqlTypes';
 dayjs.extend(utc);
 
 const dateToFormattedString = (date: Date) => {

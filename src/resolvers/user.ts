@@ -2,22 +2,22 @@ import argon2 from 'argon2';
 import { isEmail, length } from 'class-validator';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { v4 } from 'uuid';
-import AppDataSource from '../config/ormconfig';
+import AppDataSource from 'config/ormconfig';
 import {
   APP_BASE_URL,
   APP_SESSION_PREFIX,
   CONFIRM_EMAIL_PREFIX,
   RESET_PASSWORD_PREFIX,
   SESSION_COOKIE_NAME,
-} from '../constants';
-import { Role } from '../entities/Role';
-import { User } from '../entities/User';
-import { getUserOAuth } from '../services/auth/oauth';
-import sendMail from '../services/aws/email/manager';
-import { createDynamicLink } from '../services/deep_links/dynamicLinks';
-import tokensManager from '../services/notifications/tokensManager';
-import { AppContext, EmailSubject, SignInMethod } from '../types';
-import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from '../utils/graphqlTypes';
+} from 'constant';
+import { Role } from 'entities/Role';
+import { User } from 'entities/User';
+import { getUserOAuth } from 'services/auth/oauth';
+import sendMail from 'services/aws/email/manager';
+import { createDynamicLink } from 'services/deep_links/dynamicLinks';
+import tokensManager from 'services/notifications/tokensManager';
+import { AppContext, EmailSubject, SignInMethod } from 'types';
+import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from 'utils/graphqlTypes';
 
 @Resolver()
 export class UserResolver {

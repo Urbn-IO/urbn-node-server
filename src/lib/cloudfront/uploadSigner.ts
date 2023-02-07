@@ -3,15 +3,15 @@ import crypto from 'crypto';
 import dayjs from 'dayjs';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from '../../constants';
-import { PartialWithRequired } from '../../types';
+import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from 'constant';
+import { PartialWithRequired } from 'types';
 import {
   ImageUpload,
   ImageUploadMetadata,
   ImageUploadResponse,
   VideoMetadata,
   VideoUploadResponse,
-} from '../../utils/graphqlTypes';
+} from 'utils/graphqlTypes';
 
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
 const vodKeyPairId = process.env.AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR;

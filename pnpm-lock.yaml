@@ -40,6 +40,7 @@ specifiers:
   dayjs: ^1.11.7
   dotenv-safe: ^8.2.0
   eslint: ^8.31.0
+  eslint-plugin-no-relative-import-paths: ^1.5.2
   express: ^4.18.2
   express-session: ^1.17.3
   firebase-admin: ^11.4.1
@@ -134,6 +135,7 @@ devDependencies:
   '@typescript-eslint/eslint-plugin': 5.48.0_k73wpmdolxikpyqun3p36akaaq
   '@typescript-eslint/parser': 5.48.0_iukboom6ndih5an6iafl45j2fe
   eslint: 8.31.0
+  eslint-plugin-no-relative-import-paths: 1.5.2
   nodemon: 2.0.20
   prettier: 2.8.1
   prettier-plugin-organize-imports: 3.2.1_2gbcgqmzq2pxiocqw2qs7hdeqe
@@ -2923,6 +2925,10 @@ packages:
       source-map: 0.6.1
     dev: false
     optional: true
+
+  /eslint-plugin-no-relative-import-paths/1.5.2:
+    resolution: {integrity: sha512-wMlL+TVuDhKk1plP+w3L4Hc7+u89vUkrOYq6/0ARjcYqwc9/YaS9uEXNzaqAk+WLoEgakzNL5JgJJw6m4qd5zw==}
+    dev: true
 
   /eslint-scope/5.1.1:
     resolution: {integrity: sha512-2NxwbF/hZ0KpepYN0cNbo+FN6XoK7GaHlQhgx/hIZl6Va0bF45RQOOwhLIy8lQDbuCiadSLCBnH2CFYquit5bw==}

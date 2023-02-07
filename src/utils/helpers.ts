@@ -3,10 +3,10 @@ import cookie from 'cookie';
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
-import { SESSION_COOKIE_NAME } from '../constants';
-import { Celebrity } from '../entities/Celebrity';
-import { sendInstantNotification } from '../services/notifications/handler';
-import { DayOfTheWeek, NotificationRouteCode } from '../types';
+import { SESSION_COOKIE_NAME } from 'constant';
+import { Celebrity } from 'entities/Celebrity';
+import { sendInstantNotification } from 'services/notifications/handler';
+import { DayOfTheWeek, NotificationRouteCode } from 'types';
 
 //Rip funcs from here into more suitable places in future
 

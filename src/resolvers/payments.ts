@@ -1,11 +1,11 @@
+import CacheControl from 'cache/cacheControl';
+import AppDataSource from 'config/ormconfig';
+import { ACCOUNT_NUMBER_PREFIX } from 'constant';
+import { Banks } from 'entities/Banks';
+import paymentManager from 'services/payments/payments';
 import { Arg, Authorized, Ctx, Query, Resolver, ResolverFilterData, Root, Subscription } from 'type-graphql';
-import CacheControl from '../cache/cacheControl';
-import AppDataSource from '../config/ormconfig';
-import { ACCOUNT_NUMBER_PREFIX } from '../constants';
-import { Banks } from '../entities/Banks';
-import paymentManager from '../services/payments/payments';
-import { AppContext, BankAccountCachedPayload, SubscriptionTopics } from '../types';
-import { AccountNumberInput, VerifyAccountNumberResponse, VerifyPaymentResponse } from '../utils/graphqlTypes';
+import { AppContext, BankAccountCachedPayload, SubscriptionTopics } from 'types';
+import { AccountNumberInput, VerifyAccountNumberResponse, VerifyPaymentResponse } from 'utils/graphqlTypes';
 
 @Resolver()
 export class PaymentsResolver {

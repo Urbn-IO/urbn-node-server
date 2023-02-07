@@ -1,6 +1,6 @@
 import express from 'express';
-import { Requests } from '../../entities/Requests';
-import { RequestStatus } from '../../types';
+import { Requests } from 'entities/Requests';
+import { RequestStatus } from 'types';
 const router = express.Router();
 
 router.post('/', async (req, res) => {

@@ -6,9 +6,9 @@ import {
 } from '@aws-sdk/client-sns';
 import express, { Request } from 'express';
 import { In } from 'typeorm';
-import { __prod__ } from '../../../../constants';
-import { User } from '../../../../entities/User';
-import client from '../../clients/sns';
+import { __prod__ } from 'constant';
+import { User } from 'entities/User';
+import client from 'services/aws/clients/sns';
 
 const router = express.Router();
 

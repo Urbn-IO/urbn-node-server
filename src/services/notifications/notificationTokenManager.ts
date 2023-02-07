@@ -1,7 +1,7 @@
 import { In } from 'typeorm';
-import AppDataSource from '../../config/ormconfig';
-import { NotificationToken } from '../../entities/NotificationToken';
-import { PlatformOptions } from '../../types';
+import AppDataSource from 'config/ormconfig';
+import { NotificationToken } from 'entities/NotificationToken';
+import { PlatformOptions } from 'types';
 
 export const addToken = async (
   userId: string,

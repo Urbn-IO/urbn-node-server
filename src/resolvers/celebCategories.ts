@@ -1,9 +1,9 @@
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
-import AppDataSource from '../config/ormconfig';
-import { CelebCategories } from '../entities/CelebCategories';
-import { Celebrity } from '../entities/Celebrity';
-import { AppContext } from '../types';
-import { celebCategoriesMapper } from '../utils/celebCategoriesMapper';
+import AppDataSource from 'config/ormconfig';
+import { CelebCategories } from 'entities/CelebCategories';
+import { Celebrity } from 'entities/Celebrity';
+import { AppContext } from 'types';
+import { celebCategoriesMapper } from 'utils/celebCategoriesMapper';
 
 @Resolver()
 export class UserCategoriesResolver {

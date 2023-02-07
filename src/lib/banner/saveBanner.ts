@@ -1,6 +1,6 @@
 import { In } from 'typeorm';
-import { Celebrity } from '../../entities/Celebrity';
-import { VideoOutput } from '../../types';
+import { Celebrity } from 'entities/Celebrity';
+import { VideoOutput } from 'types';
 
 const saveVideoBanner = async (data: Partial<VideoOutput>[]) => {
   try {

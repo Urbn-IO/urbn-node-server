@@ -1,4 +1,4 @@
-import { NotificationPriority, NotificationRouteCode, NotificationsPayload } from '../../types';
+import { NotificationPriority, NotificationRouteCode, NotificationsPayload } from 'types';
 import { sendPushKitNotification } from './applePushNotifications';
 import { notificationsManager } from './notificationsManager';
 import tokensManager from './tokensManager';

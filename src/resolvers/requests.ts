@@ -3,20 +3,20 @@ import duration from 'dayjs/plugin/duration';
 import utc from 'dayjs/plugin/utc';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
-import AppDataSource from '../config/ormconfig';
+import AppDataSource from 'config/ormconfig';
 import {
   INSTANT_SHOUTOUT_RATE,
   PREMIUM_VIDEO_CDN,
   VIDEO_CALL_TYPE_A_DURATION,
   VIDEO_CALL_TYPE_B_DURATION,
-} from '../constants';
-import { Celebrity } from '../entities/Celebrity';
-import { Requests } from '../entities/Requests';
-import { User } from '../entities/User';
-import { getSignedVideoMetadata } from '../lib/cloudfront/uploadSigner';
-import sendMail from '../services/aws/email/manager';
-import { sendInstantNotification } from '../services/notifications/handler';
-import paymentManager from '../services/payments/payments';
+} from 'constant';
+import { Celebrity } from 'entities/Celebrity';
+import { Requests } from 'entities/Requests';
+import { User } from 'entities/User';
+import { getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
+import sendMail from 'services/aws/email/manager';
+import { sendInstantNotification } from 'services/notifications/handler';
+import paymentManager from 'services/payments/payments';
 import {
   AppContext,
   AvailableDay,
@@ -28,16 +28,16 @@ import {
   RequestStatus,
   RequestType,
   Roles,
-} from '../types';
-import createhashString from '../utils/createHashString';
+} from 'types';
+import createhashString from 'utils/createHashString';
 import {
   GenericResponse,
   RequestResponse,
   ShoutoutRequestInput,
   VideoCallRequestInputs,
   VideoUploadResponse,
-} from '../utils/graphqlTypes';
-import { badEmailNotifier, getNextAvailableDate } from '../utils/helpers';
+} from 'utils/graphqlTypes';
+import { badEmailNotifier, getNextAvailableDate } from 'utils/helpers';
 dayjs.extend(utc);
 dayjs.extend(duration);
 

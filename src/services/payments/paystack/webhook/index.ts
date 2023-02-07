@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import express from 'express';
-import { Requests } from '../../../../entities/Requests';
-import { updateRequestAndNotify } from '../../../../request/manage';
-import { reserveVideoCallScheduleTimeSlot } from '../../../../utils/helpers';
-import { saveTransaction } from '../../transactions';
+import { Requests } from 'entities/Requests';
+import { updateRequestAndNotify } from 'request/manage';
+import { reserveVideoCallScheduleTimeSlot } from 'utils/helpers';
+import { saveTransaction } from 'services/payments/transactions';
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 

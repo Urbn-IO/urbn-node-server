@@ -1,10 +1,10 @@
 import { In } from 'typeorm';
-import { APP_BASE_URL } from '../../constants';
-import { Celebrity } from '../../entities/Celebrity';
-import { createDynamicLink } from '../../services/deep_links/dynamicLinks';
-import { importCelebritySearchBulkImages } from '../../services/search/addSearchItem';
-import { ImageProcessorQueueOutput } from '../../types';
-import { hashRow } from '../../utils/hashRow';
+import { APP_BASE_URL } from 'constant';
+import { Celebrity } from 'entities/Celebrity';
+import { createDynamicLink } from 'services/deep_links/dynamicLinks';
+import { importCelebritySearchBulkImages } from 'services/search/addSearchItem';
+import { ImageProcessorQueueOutput } from 'types';
+import { hashRow } from 'utils/hashRow';
 
 const storeImages = async (data: ImageProcessorQueueOutput[]) => {
   try {

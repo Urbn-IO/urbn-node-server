@@ -1,7 +1,7 @@
 import { Ctx, Field, Int, ObjectType } from 'type-graphql';
 import { BaseEntity, Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import CacheControl from '../cache/cacheControl';
-import { AppContext } from '../types';
+import CacheControl from 'cache/cacheControl';
+import { AppContext } from 'types';
 import { CelebCategories } from './CelebCategories';
 import { Celebrity } from './Celebrity';
 @ObjectType()

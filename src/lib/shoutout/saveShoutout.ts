@@ -1,14 +1,14 @@
 import { In } from 'typeorm';
-import AppDataSource from '../../config/ormconfig';
-import { APP_BASE_URL, SHOUTOUT_PLAYER_URL } from '../../constants';
-import { Requests } from '../../entities/Requests';
-import { Shoutout } from '../../entities/Shoutout';
-import { User } from '../../entities/User';
-import sendMail from '../../services/aws/email/manager';
-import { createDynamicLink } from '../../services/deep_links/dynamicLinks';
-import { sendInstantNotification } from '../../services/notifications/handler';
-import { EmailSubject, NotificationRouteCode, RequestStatus, VideoOutput } from '../../types';
-import { badEmailNotifier } from '../../utils/helpers';
+import AppDataSource from 'config/ormconfig';
+import { APP_BASE_URL, SHOUTOUT_PLAYER_URL } from 'constant';
+import { Requests } from 'entities/Requests';
+import { Shoutout } from 'entities/Shoutout';
+import { User } from 'entities/User';
+import sendMail from 'services/aws/email/manager';
+import { createDynamicLink } from 'services/deep_links/dynamicLinks';
+import { sendInstantNotification } from 'services/notifications/handler';
+import { EmailSubject, NotificationRouteCode, RequestStatus, VideoOutput } from 'types';
+import { badEmailNotifier } from 'utils/helpers';
 
 const saveShoutout = async (data: Partial<VideoOutput>[]) => {
   try {

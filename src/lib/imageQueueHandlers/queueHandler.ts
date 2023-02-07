@@ -1,5 +1,5 @@
-import { sendInstantNotification } from '../../services/notifications/handler';
-import { ImageProcessorQueueOutput, NotificationPriority, NotificationRouteCode } from '../../types';
+import { sendInstantNotification } from 'services/notifications/handler';
+import { ImageProcessorQueueOutput, NotificationPriority, NotificationRouteCode } from 'types';
 import storeImages from './storeImages';
 
 const handler = async (data: ImageProcessorQueueOutput[]) => {
