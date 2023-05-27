@@ -16,6 +16,9 @@ import { GraphQLError } from 'graphql';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import { createServer } from 'http';
 import Keyv from 'keyv';
+import sqsImageConsumer from 'services/aws/queues/imageProcessing';
+import sqsVODConsumer from 'services/aws/queues/videoOnDemand';
+import { initializeSearch } from 'services/search/collections';
 import { buildSchema } from 'type-graphql';
 import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
@@ -54,10 +57,10 @@ const main = async () => {
   AppDataSource;
   initializeApp(firebaseConfig);
   initializeWorkers();
-  // initializeSearch();
+  initializeSearch();
 
-  // sqsVODConsumer.start();
-  // sqsImageConsumer.start();
+  sqsVODConsumer.start();
+  sqsImageConsumer.start();
 
   const RedisStore = connectRedis(session);
 
@@ -181,17 +184,18 @@ const main = async () => {
   });
   await apolloServer.start();
 
-  console.log('app launched at: ', APP_LAUNCH_DATE);
-
   app.use(
     '/graphql',
     (_, res, next) => {
+      //check for client version and validate it later
+
       res.set({
         'instant-shoutout-rates': INSTANT_SHOUTOUT_RATE,
         'lockdown-mode': LOCKDOWN_STATUS, //lock down the app (i.e. disable all content requests)
         'lockdown-message': 'We are currently in lockdown mode. Please try again later.',
         'lockdown-expires': APP_LAUNCH_DATE,
         'display-lockdown-message': 'false',
+        'minimum-supported-client-version': '0.2.0',
       });
       next();
     },
