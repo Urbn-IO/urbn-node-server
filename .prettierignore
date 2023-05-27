@@ -7,3 +7,4 @@ coverage
 **/config/**
 *.yaml
 *-lock.yaml
+constants.ts

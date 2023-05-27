@@ -24,6 +24,7 @@ export const initializeSearch = async () => {
   };
 
   if (!(await client.collections('celebrity').exists())) {
+    console.log('Initializing celebrity collection');
     client
       .collections()
       .create(celebsSchema as any)
@@ -39,6 +40,7 @@ export const initializeSearch = async () => {
       );
   }
   if (!(await client.collections('category').exists())) {
+    console.log('Initializing category collection');
     client
       .collections()
       .create(categorySchema as any)

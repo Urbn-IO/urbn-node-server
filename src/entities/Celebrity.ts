@@ -72,19 +72,19 @@ export class Celebrity extends BaseEntity {
   @Column({ default: false })
   acceptsCallTypeB: boolean;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: 'decimal' })
   shoutout: number;
 
-  @Field(() => Int, { nullable: true })
+  @Field({ nullable: true })
   instantShoutout: number;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: 'decimal' })
   callTypeA: number;
 
-  @Field(() => Int, { nullable: true })
-  @Column({ nullable: true })
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: 'decimal' })
   callTypeB: number;
 
   @Field(() => [CallSlots], { nullable: true })
@@ -112,7 +112,7 @@ export class Celebrity extends BaseEntity {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @OneToMany(() => CelebCategories, (userCat) => userCat.celebrity)
+  @OneToMany(() => CelebCategories, (celebCat) => celebCat.celebrity, { cascade: ['remove'] })
   categoriesConn: Promise<CelebCategories[]>;
 
   //dataloader takes in the userId and maps the Id to the categories

@@ -1,4 +1,10 @@
+import { CALL_RETRY_PREFIX } from 'constant';
 import dayjs from 'dayjs';
+import { Celebrity } from 'entities/Celebrity';
+import { Requests } from 'entities/Requests';
+import { changeRequestState } from 'request/manage';
+import { createVideoCallRoom, getVideoCallToken } from 'services/call/calls';
+import { sendCallNotification } from 'services/notifications/handler';
 import {
   Arg,
   Authorized,
@@ -11,12 +17,6 @@ import {
   Root,
   Subscription,
 } from 'type-graphql';
-import { CALL_RETRY_PREFIX } from 'constant';
-import { Celebrity } from 'entities/Celebrity';
-import { Requests } from 'entities/Requests';
-import { changeRequestState } from 'request/manage';
-import { createVideoCallRoom, getVideoCallToken } from 'services/call/calls';
-import { sendCallNotification } from 'services/notifications/handler';
 import { AppContext, CallRetriesState, RequestStatus, Roles, SubscriptionTopics } from 'types';
 import { CallTokenResponse, InitiateVideoCallResponse, VideoCallEvent } from 'utils/graphqlTypes';
 
@@ -26,20 +26,23 @@ export class VideoCallResolver {
   @Authorized()
   async initiateVideoCall(
     @Arg('reference') reference: string,
-    @Ctx() { redis }: AppContext
+    @Ctx() { redis, req }: AppContext
   ): Promise<InitiateVideoCallResponse> {
+    const userId = req.session.userId as string;
     let request;
     let celeb;
     let expiry;
     let data: Partial<CallRetriesState> = {};
     let attempts;
-    const res = await redis.get(CALL_RETRY_PREFIX + reference);
 
+    const res = await redis.get(CALL_RETRY_PREFIX + reference);
+    //
     switch (res) {
       //first call attempt
       case null:
         request = await Requests.findOne({ where: { reference } });
         if (!request) return { errorMessage: 'An error occured!' };
+        if (request.customer !== userId) return { errorMessage: 'An error occured' };
         if (request.status !== RequestStatus.ACCEPTED) return { errorMessage: 'This request is no longer valid!' };
         celeb = await Celebrity.findOne({ where: { userId: request.celebrity } });
         if (!celeb?.thumbnail) {
@@ -50,6 +53,7 @@ export class VideoCallResolver {
           attempts: 1,
           expiry,
           requestId: request.id,
+          customer: request.customer,
           celebrity: request.celebrity,
           celebThumbnail: celeb.thumbnail,
           customerDisplayName: request.customerDisplayName,
@@ -62,7 +66,14 @@ export class VideoCallResolver {
         data = JSON.parse(res);
         attempts = data.attempts;
         expiry = data.expiry;
-        if (!attempts || !expiry || !data.celebrity || !data.customerDisplayName || !data.requestId) {
+        if (
+          !attempts ||
+          !expiry ||
+          !data.celebrity ||
+          !data.customerDisplayName ||
+          !data.requestId ||
+          data.customer !== userId
+        ) {
           return { errorMessage: 'An error occured' };
         }
         //User can only retry a call 3 times

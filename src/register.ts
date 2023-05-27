@@ -1,3 +1,4 @@
+import { Report } from 'entities/Report';
 import { NonEmptyArray } from 'type-graphql';
 import { Banks } from './entities/Banks';
 import { CallLogs } from './entities/CallLogs';
@@ -15,7 +16,7 @@ import { User } from './entities/User';
 import { CategoryResolver } from './resolvers/category';
 import { UserCategoriesResolver } from './resolvers/celebCategories';
 import { CelebrityResolver } from './resolvers/celebrity';
-import { ExtrasResolver } from './resolvers/featured';
+import { ExtrasResolver } from './resolvers/extras';
 import { PaymentsResolver } from './resolvers/payments';
 import { RequestsResolver } from './resolvers/requests';
 import { ShoutoutResolver } from './resolvers/shoutout';
@@ -23,30 +24,31 @@ import { UserResolver } from './resolvers/user';
 import { VideoCallResolver } from './resolvers/videoCalls';
 
 export const entities = [
-    User,
-    Categories,
-    CelebCategories,
-    Celebrity,
-    Requests,
-    NotificationToken,
-    Shoutout,
-    Transactions,
-    CallLogs,
-    CelebrityApplications,
-    Role,
-    Featured,
-    Banks,
+  User,
+  Categories,
+  CelebCategories,
+  Celebrity,
+  Requests,
+  NotificationToken,
+  Shoutout,
+  Transactions,
+  CallLogs,
+  CelebrityApplications,
+  Role,
+  Featured,
+  Banks,
+  Report,
 ];
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const resolvers: NonEmptyArray<Function> | NonEmptyArray<string> = [
-    CategoryResolver,
-    UserResolver,
-    UserCategoriesResolver,
-    CelebrityResolver,
-    RequestsResolver,
-    PaymentsResolver,
-    VideoCallResolver,
-    ExtrasResolver,
-    ShoutoutResolver,
+  CategoryResolver,
+  UserResolver,
+  UserCategoriesResolver,
+  CelebrityResolver,
+  RequestsResolver,
+  PaymentsResolver,
+  VideoCallResolver,
+  ExtrasResolver,
+  ShoutoutResolver,
 ];

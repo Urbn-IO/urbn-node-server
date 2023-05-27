@@ -50,6 +50,6 @@ export class Shoutout extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.shoutouts)
+  @ManyToOne(() => User, (user) => user.shoutouts, { onDelete: 'CASCADE', orphanedRowAction: 'delete' })
   user: User;
 }

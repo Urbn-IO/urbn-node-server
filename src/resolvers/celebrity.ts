@@ -14,7 +14,7 @@ import { CelebrityApplications } from 'entities/CelebrityApplications';
 import { User } from 'entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
 import { generateCallTimeSlots } from 'scheduler/videoCallScheduler';
-import { upsertCelebritySearchItem } from 'services/search/addSearchItem';
+import { upsertCelebritySearchItems } from 'services/search/functions';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import { AppContext, BankAccountCachedPayload, ContentType, Roles } from 'types';
@@ -111,7 +111,6 @@ export class CelebrityResolver {
         .createQueryBuilder('celebrity')
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
-        .returning('*')
         .execute();
 
       return {
@@ -162,7 +161,7 @@ export class CelebrityResolver {
       const celeb: Celebrity = queryBuilderResult.raw[0];
 
       if (celeb.thumbnail && celeb.placeholder && celeb.lowResPlaceholder && celeb.videoBanner) {
-        await upsertCelebritySearchItem(celeb);
+        await upsertCelebritySearchItems(celeb);
       }
 
       return { success: 'updated succesfully!' };
@@ -180,10 +179,7 @@ export class CelebrityResolver {
   ): Promise<Celebrity[]> {
     if (celebId) {
       const celeb = await Celebrity.findOne({ where: { id: celebId } });
-      if (!celeb) {
-        return [];
-      }
-      // const celebArray = attachInstantShoutoutPrice([celeb]);
+      if (!celeb) return [];
       return [celeb];
     }
     const maxLimit = Math.min(18, limit);

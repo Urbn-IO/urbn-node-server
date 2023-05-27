@@ -288,6 +288,21 @@ export class AccountNumberInput {
   accountNumber: string;
 }
 
+@InputType()
+export class ReportInput {
+  @Length(15, 300, {
+    message: '$property field should be between $constraint1 and $constraint2 characters inclusive in length',
+  })
+  @Field()
+  description: string;
+
+  @Field()
+  offender: string;
+
+  @Field({ description: 'Reference Id for a specific request' })
+  ref: string;
+}
+
 @ObjectType()
 export class VerifyAccountNumberResponse {
   @Field({ nullable: true })

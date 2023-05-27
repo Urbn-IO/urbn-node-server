@@ -10,7 +10,10 @@ export class CelebCategories extends BaseEntity {
   @PrimaryColumn()
   categoryId: number;
 
-  @ManyToOne(() => Celebrity, (celebrity) => celebrity.categoriesConn)
+  @ManyToOne(() => Celebrity, (celebrity) => celebrity.categoriesConn, {
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   @JoinColumn({ name: 'celebId' })
   celebrity: Promise<Celebrity>;
 

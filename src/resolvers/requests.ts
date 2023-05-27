@@ -1,22 +1,24 @@
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-import utc from 'dayjs/plugin/utc';
-import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
-import { Brackets } from 'typeorm';
 import AppDataSource from 'config/ormconfig';
 import {
   INSTANT_SHOUTOUT_RATE,
+  LOCKDOWN_STATUS,
   PREMIUM_VIDEO_CDN,
   VIDEO_CALL_TYPE_A_DURATION,
   VIDEO_CALL_TYPE_B_DURATION,
 } from 'constant';
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import utc from 'dayjs/plugin/utc';
 import { Celebrity } from 'entities/Celebrity';
 import { Requests } from 'entities/Requests';
 import { User } from 'entities/User';
 import { getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
+import { setupCallReminder, setupRequestReminder } from 'request/manage';
 import sendMail from 'services/aws/email/manager';
 import { sendInstantNotification } from 'services/notifications/handler';
 import paymentManager from 'services/payments/payments';
+import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
+import { Brackets } from 'typeorm';
 import {
   AppContext,
   AvailableDay,
@@ -52,6 +54,8 @@ export class RequestsResolver {
     const userId = req.session.userId as string;
     const celebId = input.celebId;
 
+    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Shoutouts are currently unavailable' };
+
     try {
       const user = await User.findOne({ where: { userId } });
 
@@ -63,6 +67,8 @@ export class RequestsResolver {
       const celeb = await Celebrity.findOne({ where: { id: celebId } });
       if (!celeb) return { errorMessage: 'This celebrity is no longer available' };
       if (celeb.userId === userId) return { errorMessage: 'You cannot make a request to yourself' };
+      //change this later
+      celeb.shoutout = 50;
       const acceptsShoutOut = celeb.acceptsShoutout;
       const acceptsInstantShoutOut = celeb.acceptsInstantShoutout;
       if (acceptsShoutOut === false) {
@@ -94,8 +100,6 @@ export class RequestsResolver {
         requestExpires,
       };
 
-      // const result = await Requests.create(request).save();
-
       const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
       if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
 
@@ -120,6 +124,8 @@ export class RequestsResolver {
     const userId = req.session.userId as string;
     const celebId = input.celebId;
 
+    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Video calls are currently unavailable' };
+
     try {
       const user = await User.findOne({ where: { userId } });
 
@@ -143,8 +149,9 @@ export class RequestsResolver {
       if (!celeb) {
         return { errorMessage: 'This celebrity is no longer available' };
       }
-      // if (celeb.userId === userId)
-      //   return { errorMessage: "You cannot make a request to yourself" };
+      //Change this later!!
+      celeb.callTypeA = 100;
+      celeb.callTypeB = 100;
       const availableTimeSlots = celeb.availableTimeSlots;
       const acceptsCallTypeA = celeb.acceptsCallTypeA;
       const acceptsCallTypeB = celeb.acceptsCallTypeB;
@@ -226,7 +233,6 @@ export class RequestsResolver {
       const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
 
       if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
-      // const result = await Requests.create(request).save();
 
       return { authUrl };
     } catch (err) {
@@ -275,8 +281,16 @@ export class RequestsResolver {
         const request: Requests = await (
           await Requests.createQueryBuilder().update({ status }).where({ reference }).returning('*').execute()
         ).raw[0];
+        let requestType: string;
+        let duration: string;
+        if (request.requestType === RequestType.SHOUTOUT || request.requestType === RequestType.INSTANT_SHOUTOUT) {
+          requestType = 'Shoutout';
+          duration = 'Not Applicable';
+        } else {
+          requestType = 'Video Call';
+          duration = `${dayjs.duration({ seconds: parseInt(request.callDurationInSeconds) }).asMinutes()} Minutes`;
+        }
 
-        const requestType = request.requestType === 'shoutout' ? 'Shoutout' : 'Video Call';
         const celebAlias = request.celebrityAlias;
         sendInstantNotification(
           [request.customer],
@@ -284,11 +298,17 @@ export class RequestsResolver {
           `Your ${requestType} request to ${celebAlias} has been ${status}`,
           NotificationRouteCode.DEFAULT
         );
+
+        //set up request & call reminders
+        if (request.callRequestBegins && request.status === RequestStatus.ACCEPTED) await setupCallReminder(request);
+        if (request.status === RequestStatus.ACCEPTED) await setupRequestReminder(request);
+
         const customer = await User.findOne({
           where: {
             userId: request.customer,
           },
         });
+
         if (customer) {
           if (customer.isEmailActive) {
             const subject =
@@ -296,11 +316,6 @@ export class RequestsResolver {
             const expiration = dayjs(request.requestExpires as Date)
               .utc()
               .toString();
-
-            const duration =
-              requestType === 'Shoutout'
-                ? 'Not Applicable'
-                : `${dayjs.duration({ seconds: parseInt(request.callDurationInSeconds) }).asMinutes()} Minutes`;
 
             sendMail({
               emailAddresses: [customer.email],
@@ -316,11 +331,12 @@ export class RequestsResolver {
           } else badEmailNotifier([customer.userId]);
         }
       } catch (err) {
+        console.log(err);
         return {
           errorMessage: 'Error processing request, Try again later',
         };
       }
-      return { success: 'Request reponse saved' };
+      return { success: `Request ${status}` };
     }
     return { errorMessage: 'Invalid response to request' };
   }

@@ -1,8 +1,8 @@
-import { In } from 'typeorm';
 import { APP_BASE_URL } from 'constant';
 import { Celebrity } from 'entities/Celebrity';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
-import { importCelebritySearchBulkImages } from 'services/search/addSearchItem';
+import { importCelebritySearchItemsBulk } from 'services/search/functions';
+import { In } from 'typeorm';
 import { ImageProcessorQueueOutput } from 'types';
 import { hashRow } from 'utils/hashRow';
 
@@ -32,7 +32,11 @@ const storeImages = async (data: ImageProcessorQueueOutput[]) => {
 
     const resolvedUpdatedCelebs = await Promise.all(updatedCelebs);
     const res = await Celebrity.save(resolvedUpdatedCelebs);
-    await importCelebritySearchBulkImages(res);
+    const celebList = res.filter((x) => {
+      if (x.thumbnail && x.videoBanner) return true;
+      return false;
+    });
+    await importCelebritySearchItemsBulk(celebList);
   } catch (err) {
     console.error(err);
     return;

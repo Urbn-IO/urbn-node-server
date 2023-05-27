@@ -1,12 +1,13 @@
-import { In } from 'typeorm';
 import AppDataSource from 'config/ormconfig';
 import { APP_BASE_URL, SHOUTOUT_PLAYER_URL } from 'constant';
 import { Requests } from 'entities/Requests';
 import { Shoutout } from 'entities/Shoutout';
 import { User } from 'entities/User';
+import { removeRequestReminder } from 'request/manage';
 import sendMail from 'services/aws/email/manager';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
 import { sendInstantNotification } from 'services/notifications/handler';
+import { In } from 'typeorm';
 import { EmailSubject, NotificationRouteCode, RequestStatus, VideoOutput } from 'types';
 import { badEmailNotifier } from 'utils/helpers';
 
@@ -65,11 +66,16 @@ const saveShoutout = async (data: Partial<VideoOutput>[]) => {
 
     await Shoutout.save(shoutouts);
     const references = data.map((x) => x.reference) as string[];
-    await AppDataSource.createQueryBuilder()
+    const updateResult = await AppDataSource.createQueryBuilder()
       .update(Requests)
       .set({ status: RequestStatus.FULFILLED })
       .where('reference In (:...references)', { references })
+      .returning('*')
       .execute();
+
+    const requests: Requests[] = updateResult.raw;
+
+    await removeRequestReminder(requests); //remove reminder for fulfilled requests
 
     sendInstantNotification(
       userIds,

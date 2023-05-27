@@ -1,23 +1,21 @@
 import argon2 from 'argon2';
 import { isEmail, length } from 'class-validator';
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { v4 } from 'uuid';
 import AppDataSource from 'config/ormconfig';
-import {
-  APP_BASE_URL,
-  APP_SESSION_PREFIX,
-  CONFIRM_EMAIL_PREFIX,
-  RESET_PASSWORD_PREFIX,
-  SESSION_COOKIE_NAME,
-} from 'constant';
+import { APP_BASE_URL, APP_SESSION_PREFIX, CONFIRM_EMAIL_PREFIX, RESET_PASSWORD_PREFIX } from 'constant';
+import { Celebrity } from 'entities/Celebrity';
+import { CelebrityApplications } from 'entities/CelebrityApplications';
 import { Role } from 'entities/Role';
 import { User } from 'entities/User';
 import { getUserOAuth } from 'services/auth/oauth';
 import sendMail from 'services/aws/email/manager';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
 import tokensManager from 'services/notifications/tokensManager';
+import { deleteCelebritySearchItem } from 'services/search/functions';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { AppContext, EmailSubject, SignInMethod } from 'types';
 import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from 'utils/graphqlTypes';
+import { destroySession } from 'utils/helpers';
+import { v4 } from 'uuid';
 
 @Resolver()
 export class UserResolver {
@@ -37,10 +35,6 @@ export class UserResolver {
     const id = v4();
     await redis.del(key);
     try {
-      // const role = new Role();
-      // role.roles.push(Roles.USER);
-      // await AppDataSource.manager.save(role);
-
       const user = await User.create({
         displayName: userInput.displayName,
         email,
@@ -162,14 +156,13 @@ export class UserResolver {
     @Arg('existingUser', { defaultValue: false }) existingUser: boolean,
     @Ctx() { redis }: AppContext
   ): Promise<GenericResponse> {
+    email = email.toLowerCase();
     const valid = isEmail(email);
     if (!valid)
       return {
         errorMessage: 'Invalid email address format, you might have a typo',
       };
-    let route = 'create-account';
-    if (existingUser) route = 'update-email';
-    email = email.toLowerCase();
+    const route = existingUser ? 'update-email' : 'create-account';
     const token = v4();
     const link = `${this.baseUrl}/${route}/${token}`;
     const url = await createDynamicLink(link);
@@ -208,7 +201,7 @@ export class UserResolver {
   }
 
   @Mutation(() => GenericResponse)
-  async resetPassword(@Arg('email') email: string, @Ctx() { redis }: AppContext): Promise<GenericResponse> {
+  async forgotPassword(@Arg('email') email: string, @Ctx() { redis }: AppContext): Promise<GenericResponse> {
     email = email.toLowerCase();
     const valid = isEmail(email);
     if (!valid)
@@ -237,10 +230,10 @@ export class UserResolver {
 
   //change password from reset password (forgot password)
   @Mutation(() => GenericResponse)
-  async changePassword(
-    @Arg('token') token: string,
+  async resetPassword(
     @Arg('newPassword') newPassword: string,
-    @Ctx() { redis }: AppContext
+    @Ctx() { redis, req }: AppContext,
+    @Arg('token', { nullable: true }) token?: string
   ): Promise<GenericResponse> {
     const min = 8;
     const max = 16;
@@ -250,6 +243,29 @@ export class UserResolver {
         errorMessage: `Password should be between ${min} and ${max} characters inclusive in length`,
       };
     }
+
+    if (!token) {
+      const userId = req.session.userId;
+      if (!userId) return { errorMessage: 'You must be logged in' };
+      const user = await User.findOne({
+        where: { userId },
+        select: ['id', 'password', 'authMethod', 'isTempPassword'],
+      });
+      if (!user || user.authMethod === SignInMethod.OAUTH) return { errorMessage: 'An error occured' };
+      if (user.isTempPassword) {
+        const isOldPassword = await argon2.verify(user.password, newPassword);
+        if (isOldPassword) {
+          return {
+            errorMessage: 'You cannot reuse your old password',
+          };
+        }
+        const hashedPassword = await argon2.hash(newPassword);
+        await User.update(user.id, { password: hashedPassword, isTempPassword: false });
+        return { success: 'Password succesfully updated' };
+      }
+      return { errorMessage: 'You must use the forgot password link' };
+    }
+
     const key = RESET_PASSWORD_PREFIX + token;
     const email = await redis.get(key);
     if (!email) return { errorMessage: 'Link expired' };
@@ -302,11 +318,12 @@ export class UserResolver {
     }
     const user = await User.findOne({
       where: { userId },
-      select: ['id', 'userId', 'authMethod', 'password'],
+      select: ['id', 'userId', 'authMethod', 'password', 'isTempPassword'],
     });
     if (!user || user.authMethod === SignInMethod.OAUTH || user.userId !== userId) {
       return { errorMessage: 'An error occured' };
     }
+    if (user.isTempPassword) user.isTempPassword = false; //if user is using a temp password, set isTempPassword to false
     const isOldPassword = await argon2.verify(user.password, oldPassword);
     if (!isOldPassword) return { errorMessage: 'Incorrect "Old password" ' };
     try {
@@ -328,18 +345,35 @@ export class UserResolver {
     if (userId) {
       await tokensManager().removeNotificationTokens(userId);
     }
-    return new Promise((resolve, reject) =>
-      req.session.destroy((err: unknown) => {
-        res.clearCookie(SESSION_COOKIE_NAME);
-        if (err) {
-          console.error(err);
-          reject(err);
-          return;
-        }
+    return await destroySession(req, res);
+  }
 
-        resolve(true);
-      })
-    );
+  @Mutation(() => GenericResponse)
+  @Authorized()
+  async destroyAccount(@Ctx() { req, res }: AppContext): Promise<GenericResponse> {
+    try {
+      const userId = req.session.userId;
+      const user = await AppDataSource.getRepository(User)
+        .createQueryBuilder('user')
+        .where('user.userId = :userId', { userId })
+        .leftJoinAndSelect('user.celebrity', 'celebrity')
+        .getOne();
+      if (!user) return { errorMessage: 'User not found' };
+      const deleted = await User.remove(user);
+      if (deleted) {
+        if (user.celebrity) {
+          await Celebrity.remove(user.celebrity);
+          await deleteCelebritySearchItem(user.celebrity.id);
+        }
+        await CelebrityApplications.delete({ userId });
+        await tokensManager().removeNotificationTokens(userId);
+        await destroySession(req, res);
+      }
+      return { success: 'Your account has been successfully deleted' };
+    } catch (err) {
+      console.error(err);
+      return { errorMessage: 'An error occured while attempting to delete your account, try again later' };
+    }
   }
 
   //validate user by password

@@ -1,10 +1,11 @@
 import connectRedis from 'connect-redis';
+import { SESSION_COOKIE_NAME } from 'constant';
 import cookie from 'cookie';
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
-import { SESSION_COOKIE_NAME } from 'constant';
 import { Celebrity } from 'entities/Celebrity';
+import { Request, Response } from 'express';
 import { sendInstantNotification } from 'services/notifications/handler';
 import { DayOfTheWeek, NotificationRouteCode } from 'types';
 
@@ -78,5 +79,40 @@ export const badEmailNotifier = (userIds: string[]) => {
     'Problems Sending you emails ⛔️',
     `We are unable to send you emails! Update your email address on the app with a valid email and remove emails from us from your spam`,
     NotificationRouteCode.DEFAULT
+  );
+};
+
+export const replacer = (_: any, value: any) => {
+  if (value instanceof Map) {
+    return {
+      dataType: 'Map',
+      value: [...value],
+    };
+  } else {
+    return value;
+  }
+};
+
+export const reviver = (_: any, value: any) => {
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value);
+    }
+  }
+  return value;
+};
+
+export const destroySession = (req: Request, res: Response): Promise<boolean> => {
+  return new Promise((resolve, reject) =>
+    req.session.destroy((err: unknown) => {
+      res.clearCookie(SESSION_COOKIE_NAME);
+      if (err) {
+        console.error(err);
+        reject(false);
+        return;
+      }
+
+      resolve(true);
+    })
   );
 };

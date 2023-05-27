@@ -1,7 +1,7 @@
 import { Categories } from 'entities/Categories';
 import { CelebCategories } from 'entities/CelebCategories';
 import { Celebrity } from 'entities/Celebrity';
-import { importCategorySearchItem } from 'services/search/addSearchItem';
+import { upsertCategorySearchItem } from 'services/search/functions';
 
 export async function celebCategoriesMapper(userId: string, categoryIds: number[], customCats: string[] | null) {
   const customCategories = await createCustomCategory(customCats);
@@ -41,7 +41,7 @@ async function createCustomCategory(customCats: string[] | null) {
     }
     try {
       newCategories = await Categories.save(categoryList);
-      await importCategorySearchItem(newCategories);
+      await upsertCategorySearchItem(newCategories);
       const catIds = newCategories.map((x) => x.id);
       return catIds;
     } catch (err) {

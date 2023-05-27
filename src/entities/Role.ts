@@ -10,6 +10,6 @@ export class Role extends BaseEntity {
   @Column({ type: 'enum', enum: Roles, default: Roles.USER })
   role: Roles;
 
-  @ManyToOne(() => User, (user) => user.userRoles)
+  @ManyToOne(() => User, (user) => user.userRoles, { onDelete: 'CASCADE', orphanedRowAction: 'delete' })
   user: User;
 }

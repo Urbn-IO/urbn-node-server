@@ -23,7 +23,7 @@ const timeOperator = async (options: CallTimerOptions) => {
     const { payload } = options;
     payload.startTime = new Date();
     //queue for processing call duration updates to clients after a certain interval
-    const limit = payload.callLength / 30 + 1;
+    const limit = payload.callLength / 30;
 
     // const queueString = JSON.stringify(queue);
     /// payload.queue = queueString;

@@ -23,7 +23,14 @@ import celebrityAlert from './api/webhooks/celebrityVerificationAlert';
 import requestState from './api/webhooks/request';
 import { customAuthChecker } from './auth/customAuthChecker';
 import AppDataSource from './config/ormconfig';
-import { APP_SESSION_PREFIX, INSTANT_SHOUTOUT_RATE, SESSION_COOKIE_NAME, __prod__ } from './constant';
+import {
+  APP_LAUNCH_DATE,
+  APP_SESSION_PREFIX,
+  INSTANT_SHOUTOUT_RATE,
+  LOCKDOWN_STATUS,
+  SESSION_COOKIE_NAME,
+  __prod__,
+} from './constant';
 import firebaseConfig from './firebaseConfig';
 import { snsChecker } from './middleware/snsChecker';
 import pubsub from './pubsub';
@@ -31,11 +38,8 @@ import initializeWorkers from './queues/job_queue';
 import redisClient from './redis/client';
 import { resolvers } from './register';
 import sns from './services/aws/email/api';
-import sqsImageConsumer from './services/aws/queues/imageProcessing';
-import sqsVODConsumer from './services/aws/queues/videoOnDemand';
 import video from './services/call/twilio/webhook';
 import payment from './services/payments/paystack/webhook';
-import { initializeSearch } from './services/search/collections';
 import { AppContext } from './types';
 import { createCategoriesLoader } from './utils/categoriesLoader';
 import { createCelebsLoader } from './utils/celebsLoader';
@@ -49,11 +53,12 @@ const main = async () => {
   const Port = 8000;
   AppDataSource;
   initializeApp(firebaseConfig);
-  initializeSearch();
   initializeWorkers();
+  // initializeSearch();
 
-  sqsVODConsumer.start();
-  sqsImageConsumer.start();
+  // sqsVODConsumer.start();
+  // sqsImageConsumer.start();
+
   const RedisStore = connectRedis(session);
 
   const store = new RedisStore({
@@ -73,7 +78,7 @@ const main = async () => {
       name: SESSION_COOKIE_NAME,
       store,
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 150, //max cookie age of 150 days
+        maxAge: 1000 * 60 * 60 * 24 * 365, //max cookie age of 365 days
         httpOnly: true,
         sameSite: __prod__ ? 'none' : 'lax',
         secure: __prod__,
@@ -176,10 +181,18 @@ const main = async () => {
   });
   await apolloServer.start();
 
+  console.log('app launched at: ', APP_LAUNCH_DATE);
+
   app.use(
     '/graphql',
     (_, res, next) => {
-      res.setHeader('Instant-Shoutout-Rates', INSTANT_SHOUTOUT_RATE);
+      res.set({
+        'instant-shoutout-rates': INSTANT_SHOUTOUT_RATE,
+        'lockdown-mode': LOCKDOWN_STATUS, //lock down the app (i.e. disable all content requests)
+        'lockdown-message': 'We are currently in lockdown mode. Please try again later.',
+        'lockdown-expires': APP_LAUNCH_DATE,
+        'display-lockdown-message': 'false',
+      });
       next();
     },
     expressMiddleware(apolloServer, {
