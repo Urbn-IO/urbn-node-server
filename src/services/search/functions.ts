@@ -1,9 +1,10 @@
 import { Categories } from 'entities/Categories';
 import { CelebCategories } from 'entities/CelebCategories';
 import { Celebrity } from 'entities/Celebrity';
+import { In } from 'typeorm';
 import { client } from './client';
 
-export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
+export const upsertCelebritySearchItems = async (celebrity: Celebrity) => {
   if (celebrity) {
     const celebId = celebrity.id;
     const categoriesObj = await CelebCategories.find({
@@ -43,16 +44,35 @@ export const upsertCelebritySearchItem = async (celebrity: Celebrity) => {
   }
 };
 
-export const importCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
+export const importCelebritySearchItemsBulk = async (celebs: Celebrity[]) => {
   if (celebs.length > 0) {
-    const celebObj = celebs.map((x) => ({
-      id: x.id.toString(),
-      profile_hash: x.profileHash,
-      thumbnail: x.thumbnail,
-      video_banner: x.videoBanner,
-      placeholder: x.placeholder,
-      low_res_placeholder: x.lowResPlaceholder,
-    }));
+    const celebIds = celebs.map((x) => x.id);
+    const categoriesObj = await CelebCategories.find({
+      join: {
+        alias: 'celebCategory',
+        innerJoinAndSelect: {
+          Celebrity: 'celebCategory.category',
+        },
+      },
+      where: {
+        celebId: In(celebIds),
+      },
+    });
+
+    const celebObj = celebs.map((x) => {
+      const categories = categoriesObj.filter((y) => y.celebId === x.id).map((z) => (z as any).__category__.name);
+      return {
+        id: x.id.toString(),
+        alias: x.alias,
+        thumbnail: x.thumbnail,
+        placeholder: x.placeholder,
+        low_res_placeholder: x.lowResPlaceholder,
+        video_banner: x.videoBanner,
+        description: x.description,
+        profile_hash: x.profileHash,
+        categories,
+      };
+    });
     try {
       await client.collections('celebrity').documents().import(celebObj, { action: 'upsert' });
     } catch (err) {
@@ -61,7 +81,7 @@ export const importCelebritySearchBulkImages = async (celebs: Celebrity[]) => {
   }
 };
 
-export const importCategorySearchItem = async (category: Categories[] | undefined) => {
+export const upsertCategorySearchItem = async (category: Categories[] | undefined) => {
   if (category && category.length > 0) {
     const catObj = category.map((x) => ({
       category_id: x.id,
@@ -72,5 +92,13 @@ export const importCategorySearchItem = async (category: Categories[] | undefine
     } catch (err) {
       console.error('typesense error: ', err);
     }
+  }
+};
+
+export const deleteCelebritySearchItem = async (id: number) => {
+  try {
+    await client.collections('celebrity').documents(id.toString()).delete();
+  } catch (err) {
+    console.error('typesense error: ', err);
   }
 };

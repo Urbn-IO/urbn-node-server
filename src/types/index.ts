@@ -83,9 +83,10 @@ export interface CallRetriesState {
   attempts: number;
   expiry: number;
   requestId: number;
+  customer: string;
+  customerDisplayName: string;
   celebrity: string;
   celebThumbnail: string;
-  customerDisplayName: string;
 }
 export type TransactionsMetadata = {
   userId: string;
@@ -183,6 +184,7 @@ export enum NotificationRouteCode {
   DEFAULT = '0', // notification to display response to client UI
   RECEIVED_REQUEST = '1', // notification to route the client to the received requests view
   PROFILE_SHOUTOUT = '2', //  notification to route the client to the user profile
+  ONBOARD_CELEB = '3', // notification to display response to client UI and call loggedinuser for celeb onboarding
 }
 
 export enum ContentType {

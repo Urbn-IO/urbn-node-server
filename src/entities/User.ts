@@ -39,6 +39,10 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   password: string;
 
+  @Field(() => Boolean)
+  @Column({ default: false })
+  isTempPassword: boolean;
+
   @Field(() => String)
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
@@ -55,23 +59,14 @@ export class User extends BaseEntity {
   authMethod: SignInMethod;
 
   @Field(() => Celebrity, { nullable: true })
-  @OneToOne(() => Celebrity, {
-    nullable: true,
-    cascade: true,
-  })
+  @OneToOne(() => Celebrity, { nullable: true })
   @JoinColumn()
   celebrity?: Celebrity;
 
-  @OneToMany(() => Role, (role) => role.user, { cascade: true })
+  @OneToMany(() => Role, (role) => role.user, { cascade: ['remove'] })
   userRoles: Role[];
 
   @Field(() => [Shoutout], { nullable: true })
-  @OneToMany(() => Shoutout, (shoutout) => shoutout.user)
+  @OneToMany(() => Shoutout, (shoutout) => shoutout.user, { cascade: ['remove'] })
   shoutouts: Shoutout[];
-
-  // @Field(() => [CardAuthorization], { nullable: true })
-  // @OneToMany(() => CardAuthorization, (card) => card.user, {
-  //   nullable: true,
-  // })
-  // cards: CardAuthorization[];
 }

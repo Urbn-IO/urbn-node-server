@@ -1,6 +1,6 @@
+import { TWILIO_WEBHOOK, VIDE_CALL_PREFIX } from 'constant';
 import crypto from 'crypto';
 import { jwt } from 'twilio';
-import { TWILIO_WEBHOOK, VIDE_CALL_PREFIX } from 'constant';
 import client from './twilio/client';
 
 export const createVideoCallRoom = async (requestId: number, callDurationInSeconds: string) => {
@@ -34,7 +34,7 @@ export const endVideoCallRoom = async (roomSid: string) => {
   const room = await client.video.rooms(roomSid).update({ status: 'completed' });
   const status = room.status;
   const duration = room.duration;
-  console.log(`room ${roomSid} ${status} in ${duration}`);
+  console.log(`room ${roomSid} ${status} in ${duration}s`);
 };
 
 export const getVideoCallToken = (identity: string[], roomName: string) => {

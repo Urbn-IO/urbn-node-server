@@ -1,5 +1,6 @@
-import { In } from 'typeorm';
 import { Celebrity } from 'entities/Celebrity';
+import { importCelebritySearchItemsBulk } from 'services/search/functions';
+import { In } from 'typeorm';
 import { VideoOutput } from 'types';
 
 const saveVideoBanner = async (data: Partial<VideoOutput>[]) => {
@@ -19,7 +20,12 @@ const saveVideoBanner = async (data: Partial<VideoOutput>[]) => {
 
       return celeb;
     });
-    await Celebrity.save(celebArr);
+    const res = await Celebrity.save(celebArr);
+    const celebList = res.filter((x) => {
+      if (x.thumbnail && x.videoBanner) return true;
+      return false;
+    });
+    await importCelebritySearchItemsBulk(celebList);
   } catch (err) {
     console.error(err);
     return;
