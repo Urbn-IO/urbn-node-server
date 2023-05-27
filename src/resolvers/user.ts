@@ -318,17 +318,17 @@ export class UserResolver {
     }
     const user = await User.findOne({
       where: { userId },
-      select: ['id', 'userId', 'authMethod', 'password', 'isTempPassword'],
+      select: ['id', 'userId', 'authMethod', 'password'],
     });
     if (!user || user.authMethod === SignInMethod.OAUTH || user.userId !== userId) {
       return { errorMessage: 'An error occured' };
     }
-    if (user.isTempPassword) user.isTempPassword = false; //if user is using a temp password, set isTempPassword to false
     const isOldPassword = await argon2.verify(user.password, oldPassword);
-    if (!isOldPassword) return { errorMessage: 'Incorrect "Old password" ' };
+    if (!isOldPassword) return { errorMessage: 'Your current password is not wrong! try again' };
     try {
       await User.update(user.id, {
         password: await argon2.hash(newPassword),
+        isTempPassword: false, //for users with a randomly generated old password (temp password). Set to false after first password change
       });
       return { success: 'successfully changed password' };
     } catch (err) {

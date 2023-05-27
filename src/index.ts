@@ -8,7 +8,7 @@ import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import KeyvRedis from '@keyv/redis';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
-import 'dotenv-safe/config.js';
+// import 'dotenv-safe/config.js';
 import express from 'express';
 import session from 'express-session';
 import { initializeApp } from 'firebase-admin/app';
