@@ -447,7 +447,7 @@ export class VideoMetadata {
   cloudFront?: string;
 }
 @ObjectType()
-export class VideoData {
+export class VideoUpload {
   @Field(() => String)
   videoUrl: string;
   @Field(() => String)
@@ -458,8 +458,8 @@ export class VideoData {
 
 @ObjectType()
 export class VideoUploadResponse {
-  @Field(() => VideoData, { nullable: true })
-  videoData?: VideoData;
+  @Field(() => VideoUpload, { nullable: true })
+  videoData?: VideoUpload;
   @Field({ nullable: true })
   errorMessage?: string;
 }

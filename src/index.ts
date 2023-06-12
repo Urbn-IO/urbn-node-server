@@ -184,6 +184,8 @@ const main = async () => {
   });
   await apolloServer.start();
 
+  const lockDownExpiration = APP_LAUNCH_DATE.getTime(); //epoch time in milliseconds
+
   app.use(
     '/graphql',
     (_, res, next) => {
@@ -193,7 +195,7 @@ const main = async () => {
         'instant-shoutout-rates': INSTANT_SHOUTOUT_RATE,
         'lockdown-mode': LOCKDOWN_STATUS, //lock down the app (i.e. disable all content requests)
         'lockdown-message': 'We are currently in lockdown mode. Please try again later.',
-        'lockdown-expires': APP_LAUNCH_DATE,
+        'lockdown-expires': lockDownExpiration,
         'display-lockdown-message': 'false',
         'minimum-supported-client-version': '0.2.0',
       });

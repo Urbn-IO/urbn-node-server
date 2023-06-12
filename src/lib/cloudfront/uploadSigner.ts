@@ -1,9 +1,10 @@
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
+import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from 'constant';
 import crypto from 'crypto';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { config, STATIC_IMAGE_CDN, STATIC_VIDEO_CDN } from 'constant';
 import { PartialWithRequired } from 'types';
 import {
   ImageUpload,
@@ -12,6 +13,7 @@ import {
   VideoMetadata,
   VideoUploadResponse,
 } from 'utils/graphqlTypes';
+dayjs.extend(utc);
 
 const staticImageDistKeyPairId = process.env.AWS_STATIC_IMAGE_DISTRIBUTION_KEYPAIR;
 const vodKeyPairId = process.env.AWS_VOD_STATIC_DISTRIBUTION_KEYPAIR;
@@ -42,12 +44,7 @@ export const getSignedImageMetadata = (userId: string): ImageUploadResponse => {
       dateLessThan: dayjs.utc().add(1, 'minute').toString(),
       privateKey,
     });
-
-    // const signedUrl = staticImageSigner.getSignedUrl({
-    //   url: `https://${STATIC_IMAGE_CDN}/upload/${key}`,
-    //   expires: Math.floor((Date.now() + duration) / 1000),
-    // });
-    return signedUrl;
+    return signedUrl as string;
   });
 
   const imageData: ImageUpload = {
@@ -87,11 +84,7 @@ export const getSignedVideoMetadata = (
       dateLessThan: dayjs.utc().add(1, 'minute').toString(),
       privateKey,
     });
-    // const signedUrl = vodSigner.getSignedUrl({
-    //   url: `https://${STATIC_VIDEO_CDN}/upload/${key}`,
-    //   expires: Math.floor((Date.now() + duration) / 1000),
-    // });
-    return signedUrl;
+    return signedUrl as string;
   });
 
   return {

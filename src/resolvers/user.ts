@@ -83,7 +83,7 @@ export class UserResolver {
       };
     const verifiedPassword = await argon2.verify(user.password, userInput.password);
     if (!verifiedPassword) return { errorMessage: 'Wrong Email or Password' };
-    await redis.del(user.sessionKey);
+    await redis.del(user.sessionKey); // delete any other session on other devices
     await User.update(user.id, {
       sessionKey: session,
     });
