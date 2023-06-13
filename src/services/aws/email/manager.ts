@@ -1,6 +1,6 @@
+import { APP_LOGO_URL, URBN_CONTACT_MAIL, URBN_MAIL_BOT } from 'constant';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { APP_LOGO_URL, URBN_CONTACT_MAIL, URBN_MAIL_BOT } from 'constant';
 import { EmailInput, EmailSubject, EmailTemplate, SendEmailInputType } from 'types';
 import sendTemplatedMail from './template';
 dayjs.extend(utc);
@@ -18,6 +18,7 @@ const templateMap = new Map<EmailSubject, EmailTemplate>([
   [EmailSubject.DECLINED_REQUEST, EmailTemplate.DeclinedRequestTemplate],
   [EmailSubject.GIFT_SHOUTOUT, EmailTemplate.GiftShoutoutTemplate],
   [EmailSubject.SHOUTOUT_RECEIEVED, EmailTemplate.ShoutoutReceivedTemplate],
+  [EmailSubject.CELEBRITY_REGISTRATION, EmailTemplate.CelebrityRegistrationTemplate],
 ]);
 
 const sendMail = async (data: SendEmailInputType) => {

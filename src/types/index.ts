@@ -222,6 +222,7 @@ export enum EmailTemplate {
   CelebrityVerifiedTemplate = 'CelebrityVerifiedTemplate',
   GiftShoutoutTemplate = 'GiftShoutoutTemplate',
   ShoutoutReceivedTemplate = 'ShoutoutReceivedTemplate',
+  CelebrityRegistrationTemplate = 'CelebrityRegistrationTemplate',
 }
 
 export enum EmailSubject {
@@ -233,6 +234,7 @@ export enum EmailSubject {
   CELEBRITY_VERIFIED,
   GIFT_SHOUTOUT,
   SHOUTOUT_RECEIEVED,
+  CELEBRITY_REGISTRATION,
 }
 
 export enum SignInMethod {

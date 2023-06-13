@@ -22,7 +22,7 @@ import { initializeSearch } from 'services/search/collections';
 import { buildSchema } from 'type-graphql';
 import { WebSocketServer } from 'ws';
 import search from './api/typeSense';
-import celebrityAlert from './api/webhooks/celebrityVerificationAlert';
+import celebrityAlerts from './api/webhooks/celebrityAlerts';
 import requestState from './api/webhooks/request';
 import { customAuthChecker } from './auth/customAuthChecker';
 import AppDataSource from './config/ormconfig';
@@ -108,7 +108,7 @@ const main = async () => {
   app.use('/paystack', payment);
   app.use('/search', search);
   app.use('/update-request-state', requestState);
-  app.use('/verification-alert', celebrityAlert);
+  app.use('/celebrity/notification', celebrityAlerts);
   app.use('/sns', snsChecker, sns);
 
   const schema = await buildSchema({
