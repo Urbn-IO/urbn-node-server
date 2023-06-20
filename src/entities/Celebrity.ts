@@ -27,7 +27,7 @@ export class Celebrity extends BaseEntity {
   profileUrl?: string;
 
   @Field()
-  @Column({ default: true })
+  @Column({ default: false })
   isNew: boolean;
 
   @Column({ unique: true, type: 'uuid' })
