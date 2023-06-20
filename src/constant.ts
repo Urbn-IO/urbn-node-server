@@ -4,7 +4,7 @@ dayjs.extend(utc);
 
 export const APP_NAME = 'Urbn';
 export const APP_BUNDLE_NAME = 'io.urbn.urbn';
-export const APP_LAUNCH_DATE = dayjs('2023-06-12T00:00:00').utc(true).toDate();
+export const APP_LAUNCH_DATE = dayjs('2023-06-30T00:00:00').utc(true).toDate();
 export const APP_BASE_URL = 'https://geturbn.io';
 export const __prod__ = process.env.NODE_ENV === 'production';
 export const AWS_REGION = 'eu-west-2';

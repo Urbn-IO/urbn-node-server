@@ -51,7 +51,7 @@ router.post('/registered', async (req, res) => {
 
     res.sendStatus(200);
 
-    const link = `${APP_BASE_URL}/celebrity/new?email=${data.emailAddress}&password=${data.password}`;
+    const link = `${APP_BASE_URL}/celebrity-new?email=${data.emailAddress}&password=${data.password}`;
     const url = await createDynamicLink(link);
     sendMail({
       emailAddresses: [data.emailAddress],
