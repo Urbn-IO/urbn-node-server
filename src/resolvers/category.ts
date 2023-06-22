@@ -55,12 +55,10 @@ export class CategoryResolver {
     @Arg('isPrimary', { defaultValue: false }) primary: boolean
   ): Promise<Categories[]> {
     if (primary) {
-      const categories = await Categories.find({
-        where: {
-          primary,
-        },
-      });
-
+      const categories = await Categories.createQueryBuilder('categories')
+        .innerJoin('categories.celebConn', 'celebConn')
+        .where('categories.primary = :primary', { primary })
+        .getMany();
       return categories;
     }
 
