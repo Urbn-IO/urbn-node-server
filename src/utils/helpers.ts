@@ -118,7 +118,7 @@ export const destroySession = (req: Request, res: Response): Promise<boolean> =>
   );
 };
 
-export default function PartialType<TClassType extends ClassType>(BaseClass: TClassType) {
+export function PartialType<TClassType extends ClassType>(BaseClass: TClassType) {
   const metadata = (global as any).TypeGraphQLMetadataStorage;
 
   @ObjectType({ isAbstract: true })

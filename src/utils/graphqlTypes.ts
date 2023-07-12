@@ -4,7 +4,7 @@ import { Categories } from 'entities/Categories';
 import { User } from 'entities/User';
 import { Field, InputType, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from 'types';
-import PartialType from './helpers';
+import { PartialType } from './helpers';
 
 registerEnumType(CallType, {
   name: 'CallType',
