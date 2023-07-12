@@ -14,16 +14,16 @@ import { CelebrityApplications } from 'entities/CelebrityApplications';
 import { User } from 'entities/User';
 import { getSignedImageMetadata, getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
 import { generateCallTimeSlots } from 'scheduler/videoCallScheduler';
-import { upsertCelebritySearchItems } from 'services/search/functions';
+import { upsertCelebritySearchItems } from 'services/typesense/search/functions';
 import { Arg, Authorized, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { Brackets } from 'typeorm';
 import { AppContext, BankAccountCachedPayload, ContentType, Roles } from 'types';
 import {
   CelebrityApplicationInputs,
+  CelebrityDataInputs,
   GenericResponse,
   ImageUploadResponse,
-  OnboardCelebrityInputs,
-  UpdateCelebrityInputs,
+  updateCelebrityDataInputs,
   VideoUploadResponse,
 } from 'utils/graphqlTypes';
 import { hashRow } from 'utils/hashRow';
@@ -76,7 +76,7 @@ export class CelebrityResolver {
   @Authorized()
   async onBoardCeleb(
     @Ctx() { req, redis }: AppContext,
-    @Arg('data') data: OnboardCelebrityInputs
+    @Arg('data') data: CelebrityDataInputs
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;
 
@@ -126,7 +126,7 @@ export class CelebrityResolver {
   @Mutation(() => GenericResponse, { nullable: true })
   @Authorized(Roles.CELEBRITY)
   async updateCelebDetails(
-    @Arg('data') data: UpdateCelebrityInputs,
+    @Arg('data') data: updateCelebrityDataInputs,
     @Ctx() { req }: AppContext
   ): Promise<GenericResponse> {
     const userId = req.session.userId as string;

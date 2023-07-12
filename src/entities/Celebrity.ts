@@ -77,15 +77,33 @@ export class Celebrity extends BaseEntity {
   shoutout: number;
 
   @Field({ nullable: true })
+  @Column({ nullable: true })
+  shoutoutIAP: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: 'decimal' })
   instantShoutout: number;
+
+  //saving the IAP product id for instant shoutout to db
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  instantShoutoutIAP: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true, type: 'decimal' })
   callTypeA: number;
 
   @Field({ nullable: true })
+  @Column({ nullable: true })
+  callTypeAIAP: string;
+
+  @Field({ nullable: true })
   @Column({ nullable: true, type: 'decimal' })
   callTypeB: number;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  callTypeBIAP: string;
 
   @Field(() => [CallSlots], { nullable: true })
   @Column('jsonb', { array: false, default: () => "'[]'", nullable: true })

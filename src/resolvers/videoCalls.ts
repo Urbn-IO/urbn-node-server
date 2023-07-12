@@ -3,8 +3,8 @@ import dayjs from 'dayjs';
 import { Celebrity } from 'entities/Celebrity';
 import { Requests } from 'entities/Requests';
 import { changeRequestState } from 'request/manage';
-import { createVideoCallRoom, getVideoCallToken } from 'services/call/calls';
 import { sendCallNotification } from 'services/notifications/handler';
+import { createVideoCallRoom, getVideoCallToken } from 'services/twilio/calls';
 import {
   Arg,
   Authorized,

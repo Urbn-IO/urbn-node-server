@@ -10,7 +10,7 @@ import { getUserOAuth } from 'services/auth/oauth';
 import sendMail from 'services/aws/email/manager';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
 import tokensManager from 'services/notifications/tokensManager';
-import { deleteCelebritySearchItem } from 'services/search/functions';
+import { deleteCelebritySearchItem } from 'services/typesense/search/functions';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { AppContext, EmailSubject, SignInMethod } from 'types';
 import { DeviceInfoInput, GenericResponse, UserInputs, UserInputsLogin, UserResponse } from 'utils/graphqlTypes';
@@ -41,6 +41,7 @@ export class UserResolver {
         password: hashedPassword,
         userId: id,
         sessionKey: APP_SESSION_PREFIX + req.session.id,
+        devicePlatform: device.platform,
       }).save();
 
       await Role.create({ user }).save();
@@ -86,6 +87,7 @@ export class UserResolver {
     await redis.del(user.sessionKey); // delete any other session on other devices
     await User.update(user.id, {
       sessionKey: session,
+      devicePlatform: device.platform,
     });
     await tokensManager().addNotificationToken(user.userId, device);
     const token = v4();
@@ -128,6 +130,7 @@ export class UserResolver {
       await redis.del(user.sessionKey);
       await User.update(user.id, {
         sessionKey: session,
+        devicePlatform: device.platform,
       });
       await tokensManager().addNotificationToken(user.userId, device);
       req.session.userId = user.userId;

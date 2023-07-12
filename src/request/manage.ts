@@ -139,7 +139,9 @@ export const updateRequestAndNotify = async (data: DeepPartial<Requests>, succes
       route = NotificationRouteCode.DEFAULT;
     }
     await sendInstantNotification([userId], messageTitle, messageBody, route);
+    return true;
   } catch (err) {
     console.error(err);
+    throw new Error(err);
   }
 };

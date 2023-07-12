@@ -4,6 +4,7 @@ import { Categories } from 'entities/Categories';
 import { User } from 'entities/User';
 import { Field, InputType, Int, ObjectType, registerEnumType } from 'type-graphql';
 import { CallType, ContentType, Currency, DayOfTheWeek, PlatformOptions, SignInMethod } from 'types';
+import PartialType from './helpers';
 
 registerEnumType(CallType, {
   name: 'CallType',
@@ -76,7 +77,7 @@ export class CelebrityApplicationInputs {
 }
 
 @InputType()
-export class OnboardCelebrityInputs {
+export class CelebrityDataInputs {
   @Field()
   acceptsShoutout: boolean;
 
@@ -98,7 +99,14 @@ export class OnboardCelebrityInputs {
   @Field(() => Int)
   shoutout: number;
 
+  @Field()
+  shoutoutIAP: string;
+
+  @Field(() => Int)
   instantShoutout: number;
+
+  @Field()
+  instantShoutoutIAP: string;
 
   @Min(REQUEST_MIN_RATE, {
     message: 'Call rate must be more than $constraint1',
@@ -109,6 +117,9 @@ export class OnboardCelebrityInputs {
   @Field(() => Int, { nullable: true })
   callTypeA: number;
 
+  @Field()
+  callTypeAIAP: string;
+
   @Min(REQUEST_MIN_RATE, {
     message: 'Call rate must be more than $constraint1',
   })
@@ -117,6 +128,9 @@ export class OnboardCelebrityInputs {
   })
   @Field(() => Int, { nullable: true })
   callTypeB: number;
+
+  @Field()
+  callTypeBIAP: string;
 
   @Length(9, 101, {
     message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
@@ -135,69 +149,9 @@ export class OnboardCelebrityInputs {
   profileHash: string;
   userId: string | undefined;
 }
+
 @InputType()
-export class UpdateCelebrityInputs {
-  @Length(2, 20, {
-    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
-  })
-  @Field({ nullable: true })
-  alias: string;
-
-  @Field({ nullable: true })
-  acceptsShoutout: boolean;
-
-  @Field({ nullable: true })
-  acceptsInstantShoutout: boolean;
-
-  @Field({ nullable: true })
-  acceptsCallTypeA: boolean;
-
-  @Field({ nullable: true })
-  acceptsCallTypeB: boolean;
-
-  @Min(REQUEST_MIN_RATE, {
-    message: 'Shoutout rate must be more than $constraint1',
-  })
-  @Max(REQUEST_MAX_RATE, {
-    message: 'Shoutout rate must not be less than $constraint1',
-  })
-  @Field(() => Int, { nullable: true })
-  shoutout: number;
-
-  instantShoutout: number;
-
-  @Min(REQUEST_MIN_RATE, {
-    message: 'Call rate must be more than $constraint1',
-  })
-  @Max(REQUEST_MAX_RATE, {
-    message: 'Call rate must not be less than $constraint1',
-  })
-  @Field(() => Int, { nullable: true })
-  callTypeA: number;
-
-  @Min(REQUEST_MIN_RATE, {
-    message: 'Call rate must be more than $constraint1',
-  })
-  @Max(REQUEST_MAX_RATE, {
-    message: 'Call rate must not be less than $constraint1',
-  })
-  @Field(() => Int, { nullable: true })
-  callTypeB: number;
-
-  @Length(9, 101, {
-    message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
-  })
-  @Field({ nullable: true })
-  description: string;
-
-  @Field(() => [CallScheduleInput], { nullable: true })
-  callScheduleSlots?: CallScheduleInput[];
-
-  availableTimeSlots: CallSlots[];
-
-  profileHash: string;
-  userId: string | undefined;
-}
+export class updateCelebrityDataInputs extends PartialType(CelebrityDataInputs) {}
 
 @InputType()
 export class UserInputsLogin {
@@ -331,9 +285,12 @@ export class CategoryResponse {
 }
 
 @ObjectType()
-export class RequestResponse {
+export class OrderResponse {
   @Field(() => String, { nullable: true })
   authUrl?: string;
+
+  @Field(() => String)
+  status: 'success' | 'failed';
 
   @Field({ nullable: true })
   errorMessage?: string;

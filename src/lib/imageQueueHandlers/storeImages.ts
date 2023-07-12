@@ -1,7 +1,7 @@
 import { APP_BASE_URL } from 'constant';
 import { Celebrity } from 'entities/Celebrity';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
-import { importCelebritySearchItemsBulk } from 'services/search/functions';
+import { importCelebritySearchItemsBulk } from 'services/typesense/search/functions';
 import { In } from 'typeorm';
 import { ImageProcessorQueueOutput } from 'types';
 import { hashRow } from 'utils/hashRow';

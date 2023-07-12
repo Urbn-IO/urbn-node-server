@@ -3,7 +3,7 @@ import { logCallSession } from 'logging/call';
 import { addJob, callStatusQueue, destroyRepeatableJob } from 'queues/job_queue/producer';
 import redisClient from 'redis/client';
 import { changeRequestState } from 'request/manage';
-import { endVideoCallRoom } from 'services/call/calls';
+import { endVideoCallRoom } from 'services/twilio/calls';
 import {
   CachedCallEventPayload,
   CallTimerOptions,

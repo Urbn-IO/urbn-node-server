@@ -1,11 +1,5 @@
 import AppDataSource from 'config/ormconfig';
-import {
-  INSTANT_SHOUTOUT_RATE,
-  LOCKDOWN_STATUS,
-  PREMIUM_VIDEO_CDN,
-  VIDEO_CALL_TYPE_A_DURATION,
-  VIDEO_CALL_TYPE_B_DURATION,
-} from 'constant';
+import { LOCKDOWN_STATUS, PREMIUM_VIDEO_CDN, VIDEO_CALL_TYPE_A_DURATION, VIDEO_CALL_TYPE_B_DURATION } from 'constant';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import utc from 'dayjs/plugin/utc';
@@ -13,7 +7,9 @@ import { Celebrity } from 'entities/Celebrity';
 import { Requests } from 'entities/Requests';
 import { User } from 'entities/User';
 import { getSignedVideoMetadata } from 'lib/cloudfront/uploadSigner';
-import { setupCallReminder, setupRequestReminder } from 'request/manage';
+import productMapping from 'productMapping';
+import { setupCallReminder, setupRequestReminder, updateRequestAndNotify } from 'request/manage';
+import getTransaction from 'services/apple/iap/transaction';
 import sendMail from 'services/aws/email/manager';
 import { sendInstantNotification } from 'services/notifications/handler';
 import paymentManager from 'services/payments/payments';
@@ -27,6 +23,7 @@ import {
   DayOfTheWeek,
   EmailSubject,
   NotificationRouteCode,
+  PlatformOptions,
   RequestStatus,
   RequestType,
   Roles,
@@ -34,39 +31,40 @@ import {
 import createhashString from 'utils/createHashString';
 import {
   GenericResponse,
-  RequestResponse,
+  OrderResponse,
   ShoutoutRequestInput,
   VideoCallRequestInputs,
   VideoUploadResponse,
 } from 'utils/graphqlTypes';
-import { badEmailNotifier, getNextAvailableDate } from 'utils/helpers';
+import { badEmailNotifier, getNextAvailableDate, reserveVideoCallScheduleTimeSlot } from 'utils/helpers';
 dayjs.extend(utc);
 dayjs.extend(duration);
 
 @Resolver()
 export class RequestsResolver {
-  @Mutation(() => RequestResponse)
+  @Mutation(() => OrderResponse)
   @Authorized()
   async createShoutoutRequest(
     @Arg('input') input: ShoutoutRequestInput,
-    @Ctx() { req }: AppContext
-  ): Promise<RequestResponse> {
-    const userId = req.session.userId as string;
-    const celebId = input.celebId;
+    @Ctx() { req }: AppContext,
+    @Arg('transactionIdIAP', { nullable: true }) transactionIdIAP?: string
+  ): Promise<OrderResponse> {
+    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Shoutouts are currently unavailable', status: 'failed' };
 
-    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Shoutouts are currently unavailable' };
+    const userId = req.session.userId as string;
 
     try {
       const user = await User.findOne({ where: { userId } });
 
-      if (!user) return { errorMessage: 'An error occured' };
-
+      if (!user) return { errorMessage: 'An error occured', status: 'failed' };
+      const celebId = input.celebId;
       const email = user.email;
       const customerDisplayName = input.for ? input.for : (user.displayName as string);
 
       const celeb = await Celebrity.findOne({ where: { id: celebId } });
-      if (!celeb) return { errorMessage: 'This celebrity is no longer available' };
-      if (celeb.userId === userId) return { errorMessage: 'You cannot make a request to yourself' };
+      if (!celeb) return { errorMessage: 'This celebrity is no longer available', status: 'failed' };
+      if (celeb.userId === user.userId)
+        return { errorMessage: 'You cannot make a request to yourself', status: 'failed' };
       //change this later
       celeb.shoutout = 50;
       const acceptsShoutOut = celeb.acceptsShoutout;
@@ -74,23 +72,46 @@ export class RequestsResolver {
       if (acceptsShoutOut === false) {
         return {
           errorMessage: `Sorry! ${celeb.alias} doesn't currently accept shoutouts`,
+          status: 'failed',
         };
       }
       if (acceptsInstantShoutOut === false && input.instantShoutout === true) {
         return {
           errorMessage: `Sorry! ${celeb.alias} doesn't currently accept instant shoutouts`,
+          status: 'failed',
         };
       }
       const requestType = input.instantShoutout ? RequestType.INSTANT_SHOUTOUT : RequestType.SHOUTOUT;
+      const requestExpires = input.requestExpiration;
+      const reference = createhashString([user.userId, celeb.userId, requestExpires.toString()]);
+
+      if (user.devicePlatform === PlatformOptions.IOS) {
+        if (!transactionIdIAP) return { errorMessage: 'Invalid transaction id', status: 'failed' };
+        const res = await getTransaction(transactionIdIAP);
+        if (!res) return { errorMessage: "We couldn't verify your payment to apple", status: 'failed' };
+        const request: Partial<Requests> = {
+          reference,
+          customer: user.userId,
+          customerDisplayName,
+          celebrity: celeb.userId,
+          celebrityAlias: celeb.alias,
+          requestType,
+          amount: productMapping.get(res.productId),
+          description: input.description.trim(),
+          requestExpires,
+          inAppPurchaseProductID: res.productId,
+        };
+        await updateRequestAndNotify(request, true);
+        return { status: 'success' };
+      }
+
       const transactionAmount = input.instantShoutout
-        ? (celeb.shoutout * 100 * INSTANT_SHOUTOUT_RATE).toString()
+        ? (celeb.instantShoutout * 100).toString()
         : (celeb.shoutout * 100).toString();
 
-      const requestExpires = input.requestExpiration;
-      const reference = createhashString([userId, celeb.userId, requestExpires.toString()]);
-      const request: Partial<Requests> | string = {
+      const request: Partial<Requests> = {
         reference,
-        customer: userId,
+        customer: user.userId,
         customerDisplayName,
         celebrity: celeb.userId,
         celebrityAlias: celeb.alias,
@@ -101,21 +122,25 @@ export class RequestsResolver {
       };
 
       const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
-      if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
+      if (!authUrl) return { errorMessage: 'Payment Error! Try again', status: 'failed' };
 
-      return { authUrl };
+      return { authUrl, status: 'success' };
     } catch (err) {
       console.error(err);
-      return { errorMessage: 'We are unable to place a request for you at the moment, Please try again later' };
+      return {
+        errorMessage: 'We are unable to place a request for you at the moment, Please try again later',
+        status: 'failed',
+      };
     }
   }
 
-  @Mutation(() => RequestResponse)
+  @Mutation(() => OrderResponse)
   @Authorized()
   async createVideoCallRequest(
     @Arg('input') input: VideoCallRequestInputs,
-    @Ctx() { req }: AppContext
-  ): Promise<RequestResponse> {
+    @Ctx() { req }: AppContext,
+    @Arg('transactionIdIAP', { nullable: true }) transactionIdIAP?: string
+  ): Promise<OrderResponse> {
     let callRequestType;
     let callDurationInSeconds;
     let callSlotId = '';
@@ -124,12 +149,12 @@ export class RequestsResolver {
     const userId = req.session.userId as string;
     const celebId = input.celebId;
 
-    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Video calls are currently unavailable' };
+    if (LOCKDOWN_STATUS == 'ON') return { errorMessage: 'Video calls are currently unavailable', status: 'failed' };
 
     try {
       const user = await User.findOne({ where: { userId } });
 
-      if (!user) return { errorMessage: 'An error occured' };
+      if (!user) return { errorMessage: 'An error occured', status: 'failed' };
 
       const email = user.email;
       const customerDisplayName = user.displayName;
@@ -147,7 +172,7 @@ export class RequestsResolver {
         ],
       });
       if (!celeb) {
-        return { errorMessage: 'This celebrity is no longer available' };
+        return { errorMessage: 'This celebrity is no longer available', status: 'failed' };
       }
       //Change this later!!
       celeb.callTypeA = 100;
@@ -164,6 +189,7 @@ export class RequestsResolver {
       } else
         return {
           errorMessage: `Sorry! ${celeb.alias} doesn't currently accept this type of request`,
+          status: 'failed',
         };
 
       let wasNotFound = true;
@@ -182,6 +208,7 @@ export class RequestsResolver {
                 return {
                   errorMessage:
                     'The selected time slot is no longer available, please select another time for this call',
+                  status: 'failed',
                 };
               }
             }
@@ -190,13 +217,8 @@ export class RequestsResolver {
       }
 
       if (wasNotFound) {
-        return { errorMessage: 'slotId was not found for supplied day' };
+        return { errorMessage: 'slotId was not found for supplied day', status: 'failed' };
       }
-
-      const transactionAmount =
-        callRequestType === RequestType.CALL_TYPE_A
-          ? (celeb.callTypeA * 100).toString()
-          : (celeb.callTypeB * 100).toString();
 
       const availabeDate = getNextAvailableDate(callSlotDay);
 
@@ -213,6 +235,35 @@ export class RequestsResolver {
       const requestExpires = new Date(availableDay.add(5, 'minute').format());
 
       const reference = createhashString([userId, celeb.userId, callSlotId, requestExpires.toString()]);
+
+      if (user.devicePlatform === PlatformOptions.IOS) {
+        if (!transactionIdIAP) return { errorMessage: 'Invalid transaction id', status: 'failed' };
+        const res = await getTransaction(transactionIdIAP);
+        if (!res) return { errorMessage: "We couldn't verify your payment to apple", status: 'failed' };
+        const request: Partial<Requests> = {
+          reference,
+          customer: user.userId,
+          customerDisplayName,
+          celebrity: celeb.userId,
+          celebrityAlias: celeb.alias,
+          requestType: callRequestType,
+          amount: productMapping.get(res.productId),
+          description: `Video call request from ${customerDisplayName} to ${celeb.alias}`,
+          callSlotId,
+          callDurationInSeconds: callDurationInSeconds.toString(),
+          callRequestBegins,
+          requestExpires,
+          inAppPurchaseProductID: res.productId,
+        };
+        await updateRequestAndNotify(request, true);
+        await reserveVideoCallScheduleTimeSlot(celeb.userId, callSlotId, input.selectedTimeSlot.day);
+        return { status: 'success' };
+      }
+
+      const transactionAmount =
+        callRequestType === RequestType.CALL_TYPE_A
+          ? (celeb.callTypeA * 100).toString()
+          : (celeb.callTypeB * 100).toString();
 
       const request: Partial<Requests> | AvailableDay = {
         reference,
@@ -232,12 +283,15 @@ export class RequestsResolver {
 
       const authUrl = await paymentManager().initializePayment(email, transactionAmount, request);
 
-      if (!authUrl) return { errorMessage: 'Payment Error! Try again' };
+      if (!authUrl) return { errorMessage: 'Payment Error! Try again', status: 'failed' };
 
-      return { authUrl };
+      return { authUrl, status: 'success' };
     } catch (err) {
       console.error(err);
-      return { errorMessage: 'We are unable to place a request for you at the moment, Please try again later' };
+      return {
+        errorMessage: 'We are unable to place a request for you at the moment, Please try again later',
+        status: 'failed',
+      };
     }
   }
 

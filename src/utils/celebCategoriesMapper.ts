@@ -1,7 +1,7 @@
 import { Categories } from 'entities/Categories';
 import { CelebCategories } from 'entities/CelebCategories';
 import { Celebrity } from 'entities/Celebrity';
-import { upsertCategorySearchItem } from 'services/search/functions';
+import { upsertCategorySearchItem } from 'services/typesense/search/functions';
 
 export async function celebCategoriesMapper(userId: string, categoryIds: number[], customCats: string[] | null) {
   const customCategories = await createCustomCategory(customCats);

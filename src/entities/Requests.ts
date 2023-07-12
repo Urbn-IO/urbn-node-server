@@ -35,8 +35,8 @@ export class Requests extends BaseEntity {
   requestType: RequestType;
 
   @Field()
-  @Column()
-  amount!: string;
+  @Column({ default: '' })
+  amount: string;
 
   @Field()
   @Column()
@@ -67,6 +67,9 @@ export class Requests extends BaseEntity {
 
   @Column({ default: 0 })
   callAttempts: number;
+
+  @Column({ nullable: true })
+  inAppPurchaseProductID: string;
 
   @Field(() => String, { nullable: true })
   @Column({ type: 'timestamp', nullable: true })

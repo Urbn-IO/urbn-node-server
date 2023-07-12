@@ -1,7 +1,7 @@
 import { Job } from 'bullmq';
 import redisClient from 'redis/client';
-import { endVideoCallRoom } from 'services/call/calls';
-import eventManager from 'services/call/twilio/eventsManager';
+import eventManager from 'services/twilio/call/eventsManager';
+import { endVideoCallRoom } from 'services/twilio/calls';
 import { CachedCallEventPayload, UpdateCallDurationArgs } from 'types';
 import { VideoCallEvent } from 'utils/graphqlTypes';
 import { callDuration } from 'utils/helpers';

@@ -1,5 +1,5 @@
 import { Celebrity } from 'entities/Celebrity';
-import { importCelebritySearchItemsBulk } from 'services/search/functions';
+import { importCelebritySearchItemsBulk } from 'services/typesense/search/functions';
 import { In } from 'typeorm';
 import { VideoOutput } from 'types';
 

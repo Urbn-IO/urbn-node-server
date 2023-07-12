@@ -1,9 +1,9 @@
 import crypto from 'crypto';
-import express from 'express';
 import { Requests } from 'entities/Requests';
+import express from 'express';
 import { updateRequestAndNotify } from 'request/manage';
-import { reserveVideoCallScheduleTimeSlot } from 'utils/helpers';
 import { saveTransaction } from 'services/payments/transactions';
+import { reserveVideoCallScheduleTimeSlot } from 'utils/helpers';
 const router = express.Router();
 const secret = process.env.PAYSTACK_SECRET_KEY;
 
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
     await updateRequestAndNotify(request, status);
 
     if (metadata.celebrity && metadata.callSlotId && metadata.availableDay) {
-      reserveVideoCallScheduleTimeSlot(metadata.celebrity, metadata.callSlotId, metadata.availableDayz);
+      reserveVideoCallScheduleTimeSlot(metadata.celebrity, metadata.callSlotId, metadata.availableDay);
     }
     await saveTransaction(data);
   } catch (err) {

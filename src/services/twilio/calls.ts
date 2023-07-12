@@ -1,7 +1,7 @@
 import { TWILIO_WEBHOOK, VIDE_CALL_PREFIX } from 'constant';
 import crypto from 'crypto';
 import { jwt } from 'twilio';
-import client from './twilio/client';
+import client from './call/client';
 
 export const createVideoCallRoom = async (requestId: number, callDurationInSeconds: string) => {
   try {

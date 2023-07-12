@@ -25,6 +25,8 @@ declare global {
       APPLE_ID: string;
       APPLE_TEAM_ID: string;
       APNS_KEY_ID: string;
+      APPLE_IN_APP_PURCHASE_KEY_ID: string;
+      APP_STORE_CONNECT_ISSUER_ID: string;
     }
   }
 }

@@ -2,7 +2,7 @@ import CacheControl from 'cache/cacheControl';
 import AppDataSource from 'config/ormconfig';
 import { Categories } from 'entities/Categories';
 import { Celebrity } from 'entities/Celebrity';
-import { upsertCategorySearchItem } from 'services/search/functions';
+import { upsertCategorySearchItem } from 'services/typesense/search/functions';
 import { Arg, Authorized, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { CategoryResponse } from 'utils/graphqlTypes';
 @Resolver()

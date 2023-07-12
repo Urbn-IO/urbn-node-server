@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { SignInMethod } from 'types';
+import { PlatformOptions, SignInMethod } from 'types';
 import { Celebrity } from './Celebrity';
 import { Role } from './Role';
 import { Shoutout } from './Shoutout';
@@ -69,4 +69,7 @@ export class User extends BaseEntity {
   @Field(() => [Shoutout], { nullable: true })
   @OneToMany(() => Shoutout, (shoutout) => shoutout.user, { cascade: ['remove'] })
   shoutouts: Shoutout[];
+
+  @Column({ type: 'enum', enum: PlatformOptions, default: PlatformOptions.ANDROID })
+  devicePlatform: PlatformOptions;
 }
