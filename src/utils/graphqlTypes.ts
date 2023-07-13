@@ -151,7 +151,10 @@ export class CelebrityDataInputs {
 }
 
 @InputType()
-export class updateCelebrityDataInputs extends PartialType(CelebrityDataInputs) {}
+export class updateCelebrityDataInputs extends PartialType(CelebrityDataInputs) {
+  @Field()
+  alias: string;
+}
 
 @InputType()
 export class UserInputsLogin {

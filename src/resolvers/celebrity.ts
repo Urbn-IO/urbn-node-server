@@ -146,8 +146,8 @@ export class CelebrityResolver {
 
     if (data.callScheduleSlots && data.callScheduleSlots.length > 0) {
       data.availableTimeSlots = generateCallTimeSlots(data.callScheduleSlots);
-      delete data.callScheduleSlots;
     }
+    delete data.callScheduleSlots;
 
     const hashString = hashRow(data);
     data.profileHash = hashString;
