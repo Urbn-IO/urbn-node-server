@@ -36,7 +36,7 @@ import {
   VideoCallRequestInputs,
   VideoUploadResponse,
 } from 'utils/graphqlTypes';
-import { badEmailNotifier, getNextAvailableDate, reserveVideoCallScheduleTimeSlot } from 'utils/helpers';
+import { badEmailNotifier, getNextAvailableDate } from 'utils/helpers';
 dayjs.extend(utc);
 dayjs.extend(duration);
 
@@ -138,8 +138,7 @@ export class RequestsResolver {
   @Authorized()
   async createVideoCallRequest(
     @Arg('input') input: VideoCallRequestInputs,
-    @Ctx() { req }: AppContext,
-    @Arg('transactionIdIAP', { nullable: true }) transactionIdIAP?: string
+    @Ctx() { req }: AppContext
   ): Promise<OrderResponse> {
     let callRequestType;
     let callDurationInSeconds;
@@ -235,30 +234,6 @@ export class RequestsResolver {
       const requestExpires = new Date(availableDay.add(5, 'minute').format());
 
       const reference = createhashString([userId, celeb.userId, callSlotId, requestExpires.toString()]);
-
-      if (user.devicePlatform === PlatformOptions.IOS) {
-        if (!transactionIdIAP) return { errorMessage: 'Invalid transaction id', status: 'failed' };
-        const res = await getTransaction(transactionIdIAP);
-        if (!res) return { errorMessage: "We couldn't verify your payment to apple", status: 'failed' };
-        const request: Partial<Requests> = {
-          reference,
-          customer: user.userId,
-          customerDisplayName,
-          celebrity: celeb.userId,
-          celebrityAlias: celeb.alias,
-          requestType: callRequestType,
-          amount: productMapping.get(res.productId),
-          description: `Video call request from ${customerDisplayName} to ${celeb.alias}`,
-          callSlotId,
-          callDurationInSeconds: callDurationInSeconds.toString(),
-          callRequestBegins,
-          requestExpires,
-          inAppPurchaseProductID: res.productId,
-        };
-        await updateRequestAndNotify(request, true);
-        await reserveVideoCallScheduleTimeSlot(celeb.userId, callSlotId, input.selectedTimeSlot.day);
-        return { status: 'success' };
-      }
 
       const transactionAmount =
         callRequestType === RequestType.CALL_TYPE_A

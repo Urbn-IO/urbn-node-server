@@ -94,16 +94,8 @@ export class Celebrity extends BaseEntity {
   callTypeA: number;
 
   @Field({ nullable: true })
-  @Column({ nullable: true })
-  callTypeAIAP: string;
-
-  @Field({ nullable: true })
   @Column({ nullable: true, type: 'decimal' })
   callTypeB: number;
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  callTypeBIAP: string;
 
   @Field(() => [CallSlots], { nullable: true })
   @Column('jsonb', { array: false, default: () => "'[]'", nullable: true })

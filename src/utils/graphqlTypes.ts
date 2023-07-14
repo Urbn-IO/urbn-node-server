@@ -117,9 +117,6 @@ export class CelebrityDataInputs {
   @Field(() => Int, { nullable: true })
   callTypeA: number;
 
-  @Field()
-  callTypeAIAP: string;
-
   @Min(REQUEST_MIN_RATE, {
     message: 'Call rate must be more than $constraint1',
   })
@@ -128,9 +125,6 @@ export class CelebrityDataInputs {
   })
   @Field(() => Int, { nullable: true })
   callTypeB: number;
-
-  @Field()
-  callTypeBIAP: string;
 
   @Length(9, 101, {
     message: '$property should be between $constraint1 and $constraint2 characters inclusive in length',
@@ -152,7 +146,7 @@ export class CelebrityDataInputs {
 
 @InputType()
 export class updateCelebrityDataInputs extends PartialType(CelebrityDataInputs) {
-  @Field()
+  @Field({ nullable: true })
   alias: string;
 }
 
