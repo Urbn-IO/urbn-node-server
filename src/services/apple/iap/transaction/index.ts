@@ -4,8 +4,6 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const pathToKey = join(config.APP_ROOT, '../keys/SubscriptionKey_MYN2N655KV.p8'); // For local development
-console.log('App root: ', config.APP_ROOT);
-console.log('path to key: ', pathToKey);
 const key = process.env.APPLE_IN_APP_PURCHASE_API_KEY
   ? process.env.APPLE_IN_APP_PURCHASE_API_KEY
   : readFileSync(pathToKey, 'utf8');

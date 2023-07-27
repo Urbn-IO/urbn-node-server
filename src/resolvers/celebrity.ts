@@ -206,8 +206,6 @@ export class CelebrityResolver {
     //
     const celebs = await queryBuilder.getMany();
 
-    // celebs = attachInstantShoutoutPrice(celebs);
-
     return celebs;
   }
 

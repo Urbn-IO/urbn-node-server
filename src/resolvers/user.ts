@@ -144,6 +144,7 @@ export class UserResolver {
       userId: id,
       sessionKey: session,
       authMethod: SignInMethod.OAUTH,
+      devicePlatform: device.platform,
     }).save();
 
     await Role.create({ user }).save();
