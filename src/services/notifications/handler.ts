@@ -23,6 +23,12 @@ export async function sendInstantNotification(
   notificationsManager().sendInstantMessage(message);
 }
 
+export async function sendInstantNotificationToTopic(
+  payload: Pick<NotificationsPayload, 'messageBody' | 'imageUrl' | 'topic'>
+) {
+  notificationsManager().sendInstantMessageToTopic(payload);
+}
+
 export async function sendCallNotification(userId: string, reference: string, callerName: string) {
   const tokensObj = await tokensManager().getCallTokens([userId]);
   if (tokensObj.pushkitTokens !== undefined && tokensObj.pushkitTokens.length > 0) {

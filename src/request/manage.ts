@@ -3,7 +3,7 @@ import { config, REQUEST_REMINDER_PREFIX } from 'constant';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { Requests } from 'entities/Requests';
-import { addJob, expiredRequestQueue, requestReminderQueue } from 'queues/job_queue/producer';
+import { addJob, alertsQueue, expiredRequestQueue } from 'queues/job_queue/producer';
 import redisClient from 'redis/client';
 import { sendInstantNotification } from 'services/notifications/handler';
 import { DeepPartial } from 'typeorm';
@@ -33,7 +33,7 @@ export const setupCallReminder = async (request: Requests) => {
   //notify user about call 30mins before the call start time
   const callStartTime = request.callRequestBegins;
   const delay = dayjs.utc(callStartTime).subtract(30, 'minute').valueOf() - dayjs.utc().valueOf();
-  await addJob(requestReminderQueue, config.CALL_REMINDER_JOB, request, {
+  await addJob(alertsQueue, config.CALL_REMINDER_JOB, request, {
     attempts: 6,
     backoff: { type: 'fixed', delay: 60000 },
     delay,

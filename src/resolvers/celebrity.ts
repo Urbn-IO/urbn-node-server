@@ -6,6 +6,7 @@ import {
   AWS_VOD_CUSTOM_JOB_TEMPLATE,
   AWS_VOD_STACK_NAME,
   CELEB_PREREGISTRATION_PREFIX,
+  NEW_CELEBRITY_ALERT_PREFIX,
   STATIC_VIDEO_CDN,
 } from 'constant';
 import { CelebCategories } from 'entities/CelebCategories';
@@ -27,6 +28,7 @@ import {
   VideoUploadResponse,
 } from 'utils/graphqlTypes';
 import { hashRow } from 'utils/hashRow';
+import { addToBatch } from 'utils/helpers';
 
 @Resolver()
 export class CelebrityResolver {
@@ -107,11 +109,16 @@ export class CelebrityResolver {
     const hashString = hashRow(data);
     data.profileHash = hashString;
     try {
-      await AppDataSource.getRepository(Celebrity)
+      const qb = await AppDataSource.getRepository(Celebrity)
         .createQueryBuilder('celebrity')
         .update(data)
         .where('celebrity."userId" = :userId', { userId })
+        .returning('id')
         .execute();
+
+      // save celeb id in redis for batch processing of new celeb alerts
+      const celebId: number = qb.raw[0].id;
+      await addToBatch(redis, NEW_CELEBRITY_ALERT_PREFIX, celebId);
 
       return {
         success: `You're set! ⭐️`,

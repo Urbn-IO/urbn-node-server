@@ -15,34 +15,6 @@ export class ExtrasResolver {
     return await Featured.find();
   }
 
-  // @Query(() => Boolean)
-  // @Authorized()
-  // async defaultNotificationTest(@Ctx() { req }: AppContext): Promise<boolean> {
-  //   const userId = req.session.userId as string;
-  //   const date = new Date();
-  //   await sendInstantNotification(
-  //     [userId],
-  //     `Farmer you are a bitch as at ${date}`,
-  //     `Default notification to show on screen`,
-  //     NotificationRouteCode.DEFAULT
-  //   );
-  //   return true;
-  // }
-
-  // @Query(() => Boolean)
-  // @Authorized()
-  // async celebOnboardNotificationTest(@Ctx() { req }: AppContext): Promise<boolean> {
-  //   const userId = req.session.userId as string;
-  //   const date = new Date();
-  //   await sendInstantNotification(
-  //     [userId],
-  //     `Farmer you are a bitch for onboarding celebs as at ${date} `,
-  //     `Default notification to show on screen`,
-  //     NotificationRouteCode.ONBOARD_CELEB
-  //   );
-  //   return true;
-  // }
-
   @Mutation(() => GenericResponse)
   @Authorized()
   async report(@Ctx() { req }: AppContext, @Arg('input') input: ReportInput): Promise<GenericResponse> {

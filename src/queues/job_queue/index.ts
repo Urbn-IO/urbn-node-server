@@ -1,15 +1,15 @@
 import {
-    initializeCallStatusWorker,
-    initializeEmailWorker,
-    initializeRequestExpiration,
-    initializeRequestReminderWorker,
+  initializeAlertsWorker,
+  initializeCallStatusWorker,
+  initializeEmailWorker,
+  initializeRequestExpiration,
 } from './worker';
 
 const initializeWorkers = () => {
-    initializeEmailWorker();
-    initializeCallStatusWorker();
-    initializeRequestExpiration();
-    initializeRequestReminderWorker();
+  initializeEmailWorker();
+  initializeCallStatusWorker();
+  initializeRequestExpiration();
+  initializeAlertsWorker();
 };
 
 export default initializeWorkers;

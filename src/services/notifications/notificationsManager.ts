@@ -1,6 +1,6 @@
-import { AndroidConfig, ApnsConfig, Notification } from 'firebase-admin/messaging';
+import { AndroidConfig, ApnsConfig, MulticastMessage, Notification, TopicMessage } from 'firebase-admin/messaging';
 import { NotificationPriority, NotificationsPayload } from 'types';
-import { propagateMessage } from './firebaseCloudMessaging';
+import { propagateMessageByTokens, propagateMessageByTopic } from './firebaseCloudMessaging';
 
 const sendMessage = () => {
   return {
@@ -28,7 +28,33 @@ const sendMessage = () => {
           'apns-priority': priorityProp.apns,
         },
       };
-      propagateMessage(tokens, notification, data, android, apns);
+
+      const message: MulticastMessage = {
+        notification,
+        android,
+        apns,
+        data,
+        tokens,
+      };
+      propagateMessageByTokens(message);
+    },
+    sendInstantMessageToTopic: ({
+      messageBody,
+      topic,
+      imageUrl,
+    }: Pick<NotificationsPayload, 'messageBody' | 'imageUrl' | 'topic'>) => {
+      const messages: TopicMessage = {
+        topic: topic as string,
+        notification: {
+          title: 'Urbn',
+          body: messageBody,
+          imageUrl: imageUrl,
+        },
+        android: { priority: 'normal' },
+        apns: { headers: { 'apns-priority': '5' } },
+      };
+
+      propagateMessageByTopic(messages);
     },
   };
 };
@@ -40,7 +66,12 @@ const calls = () => {
         priority: 'high',
         ttl: 0,
       };
-      propagateMessage(tokens, undefined, data, android);
+      const message: MulticastMessage = {
+        data,
+        tokens,
+        android,
+      };
+      propagateMessageByTokens(message);
     },
   };
 };

@@ -34,6 +34,7 @@ export const CELEB_PREREGISTRATION_PREFIX = 'celeb-prereg:';
 export const CALL_RETRY_PREFIX = 'call-retries:';
 export const ACCOUNT_NUMBER_PREFIX = 'account-number-for:';
 export const REQUEST_REMINDER_PREFIX = 'request_reminder:';
+export const NEW_CELEBRITY_ALERT_PREFIX = 'new_celebrity:';
 export const SHOUTOUT_PLAYER_URL = 'https://player.geturbn.io';
 export const APP_MAIN_DYNAMIC_URL_PREFIX = 'https://blink.geturbn.io';
 export const APP_SHOUTOUT_DYNAMIC_URL_PREFIX = 'https://shoutouts.geturbn.io';
@@ -51,10 +52,12 @@ export const APNS_DEVICE_ENDPOINT = '/3/device/';
 export const config = {
   APP_ROOT: __dirname,
   BULL_QUEUE_CONCURRENCY: 20,
-  CALL_QUEUE_NAME: 'call_status',
-  REQUEST_REMINDER_QUEUE_NAME: 'request_reminder',
-  MAIL_QUEUE_NAME: 'mail',
-  REQUEST_EXPIRATION_QUEUE_NAME: 'operations',
+  CALL_QUEUE_NAME: 'call_status_queue',
+  ALERTS_QUEUE_NAME: 'alerts_queue',
+  MAIL_QUEUE_NAME: 'mail_queue',
+  REQUEST_EXPIRATION_QUEUE_NAME: 'request_expiration_queue',
   CALL_REMINDER_JOB: 'call-reminder',
+  REQUEST_REMINDER: 'daily-request-reminder',
+  NEW_CELEBRITY_ALERT: 'new-celebrity-alert',
 };
 export const LOCKDOWN_STATUS = dayjs().utc().isAfter(APP_LAUNCH_DATE) ? 'OFF' : 'ON';

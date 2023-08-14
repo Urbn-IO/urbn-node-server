@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AppContext } from 'types';
+import { AppContext, CelebPopularityIndex } from 'types';
 import { CallSlots } from 'utils/graphqlTypes';
 import { Categories } from './Categories';
 import { CelebCategories } from './CelebCategories';
@@ -121,6 +121,9 @@ export class Celebrity extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @Column({ default: CelebPopularityIndex.REGIONAL, nullable: true })
+  popularityIndex: CelebPopularityIndex;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.celebrity, { cascade: ['remove'] })
   categoriesConn: Promise<CelebCategories[]>;

@@ -1,10 +1,14 @@
-import { APP_BASE_URL } from 'constant';
+import { APP_BASE_URL, NEW_CELEBRITY_ALERT_PREFIX } from 'constant';
 import express from 'express';
+import redisClient from 'redis/client';
 import sendMail from 'services/aws/email/manager';
 import { createDynamicLink } from 'services/deep_links/dynamicLinks';
 import { sendInstantNotification } from 'services/notifications/handler';
 import { EmailSubject, NotificationRouteCode } from 'types';
+import { addToBatch } from 'utils/helpers';
 const router = express.Router();
+
+const redis = redisClient;
 
 router.post('/verified', async (req, res) => {
   try {
@@ -44,6 +48,7 @@ router.post('/registered', async (req, res) => {
   try {
     const payload = req.body;
     const data: {
+      id: number;
       emailAddress: string;
       celebAlias: string;
       password: string;
@@ -59,6 +64,9 @@ router.post('/registered', async (req, res) => {
       celebAlias: data.celebAlias,
       url,
     });
+
+    // save celeb id in redis for batch processing of new celeb alerts
+    addToBatch(redis, NEW_CELEBRITY_ALERT_PREFIX, data.id);
     return;
   } catch (err) {
     console.error(err);

@@ -27,6 +27,8 @@ export interface NotificationsPayload {
   data?: { [key: string]: string };
   priority?: NotificationPriority;
   ttl?: number;
+  topic?: 'Celebrities' | 'General' | 'Test';
+  imageUrl?: string;
 }
 
 export interface VideoOutput {
@@ -144,6 +146,13 @@ export enum Roles {
   ADMIN = 'ADMIN',
   USER = 'USER',
   CELEBRITY = 'CELEBRITY',
+}
+
+export enum CelebPopularityIndex {
+  REGIONAL,
+  STAR,
+  SUPERSTAR,
+  ICON,
 }
 
 export enum NotificationPriority {

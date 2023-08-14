@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { Celebrity } from 'entities/Celebrity';
 import { Request, Response } from 'express';
+import Redis from 'ioredis';
 import { sendInstantNotification } from 'services/notifications/handler';
 import { ClassType, InputType, ObjectType } from 'type-graphql';
 import { DayOfTheWeek, NotificationRouteCode } from 'types';
@@ -139,4 +140,25 @@ export function PartialType<TClassType extends ClassType>(BaseClass: TClassType)
   });
 
   return PartialClass;
+}
+
+export function addToBatch<T>(redis: Redis, key: string, item: T) {
+  return redis.rpush(key, JSON.stringify(item));
+}
+
+export async function consumeBatchedData<T>(redis: Redis, key: string) {
+  //get all items in batch
+  return redis
+    .lrange(key, 0, -1)
+    .then((res) => {
+      //delete batch
+      redis.del(key);
+      //parse items
+      const items = res.map((x) => JSON.parse(x) as T);
+      return items;
+    })
+    .catch((err) => {
+      console.error(err);
+      return undefined;
+    });
 }
