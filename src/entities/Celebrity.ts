@@ -122,7 +122,7 @@ export class Celebrity extends BaseEntity {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ default: CelebPopularityIndex.REGIONAL, nullable: true })
+  @Column({ default: CelebPopularityIndex.REGIONAL })
   popularityIndex: CelebPopularityIndex;
 
   @OneToMany(() => CelebCategories, (celebCat) => celebCat.celebrity, { cascade: ['remove'] })
